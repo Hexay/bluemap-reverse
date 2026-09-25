@@ -100,6 +100,14 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
   explicit `.prbm.gz` → gzip bytes, no header; missing tile → 204; lowres PNG plain.
 - 26.3 flat worlds need explicit `generator-settings` layers (empty `{}` logs an ERROR and yields no layers).
 
+## Settled in phase 2 (2026-09-25)
+
+- PRBM layout confirmed against `PRBMWriter.java` v5.27 (`crates/bmr-prbm/src/parse.rs`). Textures: `flipY=false`
+  (v=0 is image top); animated UVs span the top square frame.
+- `bmr check-heights`: hires up-faces vs lowres lod-1 heights agree on 100% of superflat columns.
+- Signs (`oak_sign`) and chests (`entity/chest/normal`) do emit geometry on 26.3 + BlueMap 5.27.
+- Void-facing bottom faces of the lowest layer are emitted (bedrock ≈ half of superflat faces).
+
 ## Open questions — settle with quick experiments in phase 0/1
 
 - Debug world level-type string on a 26.3 server.

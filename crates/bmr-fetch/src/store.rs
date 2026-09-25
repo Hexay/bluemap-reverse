@@ -41,6 +41,10 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
     fs::rename(&tmp, path).with_context(|| path.display().to_string())
 }
 
+pub fn manifest_rel(map_id: &str) -> String {
+    format!("bmr-manifest/{map_id}.json")
+}
+
 /// Tiles already probed for one layer; `empty` = server answered 204/404. Never re-fetched.
 #[derive(Default, Serialize, Deserialize)]
 pub struct Probed {

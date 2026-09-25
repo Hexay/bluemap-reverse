@@ -3,10 +3,12 @@
 mod discover;
 pub mod grid;
 mod http;
+mod local;
 pub mod lowres;
 mod mirror;
 pub mod settings;
 pub mod store;
 
 pub use http::decompress;
+pub use local::LocalMap;
 pub use mirror::{MapSummary, Options, mirror};

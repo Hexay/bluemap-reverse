@@ -10,7 +10,7 @@ use rustc_hash::FxHashMap;
 
 use crate::chunk::Chunk;
 use crate::nbt::decode_chunk;
-use crate::region::read_region;
+use crate::region::read_region_where;
 use crate::registry::BlockRegistry;
 
 pub type ChunkPos = (i32, i32);
@@ -63,12 +63,22 @@ impl World {
     }
 
     /// Every chunk in region (rx, rz); empty if the file is absent.
-    pub fn read_region(&self, (rx, rz): (i32, i32)) -> Result<FxHashMap<ChunkPos, Chunk>> {
+    pub fn read_region(&self, region: (i32, i32)) -> Result<FxHashMap<ChunkPos, Chunk>> {
+        self.read_region_where(region, &|_| true)
+    }
+
+    /// Only chunks for which `keep(chunk pos)` holds are decompressed and decoded.
+    pub fn read_region_where(
+        &self,
+        (rx, rz): (i32, i32),
+        keep: &(dyn Fn(ChunkPos) -> bool + Sync),
+    ) -> Result<FxHashMap<ChunkPos, Chunk>> {
         let path = self.region_dir.join(format!("r.{rx}.{rz}.mca"));
         if !path.exists() {
             return Ok(FxHashMap::default());
         }
-        read_region(&path)?
+        let keep_local = |(lx, lz): (u8, u8)| keep((rx * 32 + lx as i32, rz * 32 + lz as i32));
+        read_region_where(&path, &keep_local)?
             .into_par_iter()
             .map(|((lx, lz), nbt)| {
                 let pos = (rx * 32 + lx as i32, rz * 32 + lz as i32);

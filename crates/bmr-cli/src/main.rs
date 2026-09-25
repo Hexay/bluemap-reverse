@@ -6,6 +6,7 @@ mod obj;
 mod probe;
 mod reverse;
 mod score;
+mod window;
 
 use std::path::PathBuf;
 use std::sync::Arc;

@@ -4,10 +4,9 @@
 //! liquid evidence without solid → liquid; solid evidence outweighing open → solid; else air.
 //! Cave caveat: below `remove-caves-below-y`, dark air also loses faces, so dark caves read as solid.
 
-use rustc_hash::FxHashMap;
-
 use bmr_invert::evidence::Evidence;
 use bmr_invert::face::Liquid;
+use rustc_hash::FxHashMap;
 
 pub type Column = (i32, i32);
 
@@ -37,16 +36,38 @@ pub struct Gap {
     pub floored: bool,
 }
 
+/// Evidence of one column, y sorted descending (the fill walks columns top-down).
 #[derive(Default)]
-struct ColumnEvidence {
-    solid: Vec<i32>,
-    liquid: Vec<(i32, Liquid)>,
-    open: Vec<i32>,
+pub struct ColumnEvidence {
+    pub solid: Vec<i32>,
+    pub liquid: Vec<(i32, Liquid)>,
+    pub open: Vec<i32>,
 }
 
-/// `observed_ys`: per column, y of every observed cell (any order).
-pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, ev: &Evidence, bounds: &Bounds) -> Vec<Gap> {
-    let mut by_col: FxHashMap<Column, ColumnEvidence> = FxHashMap::default();
+/// Membership test for a descending walk over a descending-sorted list: amortised O(1) per query.
+pub struct Cursor<'a> {
+    ys: &'a [i32],
+    i: usize,
+}
+
+impl<'a> Cursor<'a> {
+    pub fn new(ys: &'a [i32]) -> Self {
+        Self { ys, i: 0 }
+    }
+
+    /// Queries must come in non-increasing y.
+    pub fn hit(&mut self, y: i32) -> bool {
+        while self.i < self.ys.len() && self.ys[self.i] > y {
+            self.i += 1;
+        }
+        self.i < self.ys.len() && self.ys[self.i] == y
+    }
+}
+
+pub type EvidenceByColumn = FxHashMap<Column, ColumnEvidence>;
+
+pub fn evidence_by_column(ev: &Evidence) -> EvidenceByColumn {
+    let mut by_col: EvidenceByColumn = FxHashMap::default();
     for &(x, y, z) in &ev.solid {
         by_col.entry((x, z)).or_default().solid.push(y);
     }
@@ -56,7 +77,16 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, ev: &Evidence, bounds: &B
     for &(x, y, z) in &ev.open {
         by_col.entry((x, z)).or_default().open.push(y);
     }
+    for ce in by_col.values_mut() {
+        ce.solid.sort_unstable_by(|a, b| b.cmp(a));
+        ce.open.sort_unstable_by(|a, b| b.cmp(a));
+        ce.liquid.sort_unstable_by(|a, b| b.0.cmp(&a.0));
+    }
+    by_col
+}
 
+/// `observed_ys`: per column, y of every observed cell (any order).
+pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn, bounds: &Bounds) -> Vec<Gap> {
     let mut out = Vec::new();
     let empty = ColumnEvidence::default();
     for &col in &bounds.columns {

@@ -12,8 +12,9 @@ use rayon::prelude::*;
 
 const SECTOR: usize = 4096;
 
-/// Decompressed chunk NBT for every present slot, keyed by local (x, z) in 0..32.
-pub fn read_region(path: &Path) -> Result<Vec<((u8, u8), Vec<u8>)>> {
+/// Decompressed chunk NBT keyed by local (x, z) in 0..32, for present slots where `keep` holds
+/// (only those are decompressed).
+pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<Vec<((u8, u8), Vec<u8>)>> {
     let data = std::fs::read(path).with_context(|| path.display().to_string())?;
     if data.is_empty() {
         return Ok(Vec::new());
@@ -24,7 +25,7 @@ pub fn read_region(path: &Path) -> Result<Vec<((u8, u8), Vec<u8>)>> {
         .into_par_iter()
         .filter_map(|slot| {
             let loc = u32::from_be_bytes(data[slot * 4..slot * 4 + 4].try_into().unwrap());
-            (loc != 0).then_some((slot, (loc >> 8) as usize * SECTOR))
+            (loc != 0 && keep(((slot % 32) as u8, (slot / 32) as u8))).then_some((slot, (loc >> 8) as usize * SECTOR))
         })
         .map(|(slot, offset)| {
             let nbt = read_chunk(&data, offset).with_context(|| format!("{} slot {slot}", path.display()))?;
@@ -38,10 +39,15 @@ pub fn write_region(path: &Path, chunks: &[((u8, u8), Vec<u8>)]) -> Result<()> {
     let mut header = vec![0u8; 2 * SECTOR];
     let mut body = Vec::new();
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs() as u32;
-    for ((lx, lz), nbt) in chunks {
-        let mut enc = ZlibEncoder::new(Vec::new(), Compression::default());
-        enc.write_all(nbt)?;
-        let compressed = enc.finish()?;
+    let compressed: Vec<Vec<u8>> = chunks
+        .par_iter()
+        .map(|(_, nbt)| {
+            let mut enc = ZlibEncoder::new(Vec::new(), Compression::default());
+            enc.write_all(nbt)?;
+            Ok(enc.finish()?)
+        })
+        .collect::<Result<_>>()?;
+    for (((lx, lz), _), compressed) in chunks.iter().zip(compressed) {
         let len = compressed.len() + 1;
         let sectors = (len + 4).div_ceil(SECTOR);
         // 1 MiB+ chunks need the external .mcc mechanism

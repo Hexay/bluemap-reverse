@@ -11,13 +11,12 @@
 
 use anyhow::Result;
 use rustc_hash::FxHashMap;
-use bmr_invert::evidence::Evidence;
 use bmr_invert::face::{Cell, Liquid};
 use bmr_world::{BlockState, Chunk, ChunkPos, StateId, StateTable, World};
 use rayon::prelude::*;
 
 use crate::Segment;
-use crate::columns::{Fill, Gap};
+use crate::columns::{Cursor, EvidenceByColumn, Fill, Gap};
 
 struct RegenChunk {
     chunk: Chunk,
@@ -30,10 +29,16 @@ pub struct RegenWorld {
 }
 
 impl RegenWorld {
-    /// Regions decode in parallel; palettes are interned afterwards (few distinct states per section).
-    pub fn load(world: &World, table: &mut StateTable) -> Result<Self> {
-        let regions = world.regions()?;
-        let decoded = regions.par_iter().map(|&r| world.read_region(r)).collect::<Result<Vec<_>>>()?;
+    /// Chunks within `area` (inclusive chunk-coordinate box; `None` = everything). Regions decode in
+    /// parallel; palettes are interned afterwards (few distinct states per section).
+    pub fn load(world: &World, table: &mut StateTable, area: Option<(ChunkPos, ChunkPos)>) -> Result<Self> {
+        let inside = |(x, z): ChunkPos| area.is_none_or(|((x0, z0), (x1, z1))| (x0..=x1).contains(&x) && (z0..=z1).contains(&z));
+        let region_hit = |(rx, rz): (i32, i32)| {
+            area.is_none_or(|((x0, z0), (x1, z1))| rx * 32 <= x1 && rx * 32 + 31 >= x0 && rz * 32 <= z1 && rz * 32 + 31 >= z0)
+        };
+        let regions: Vec<_> = world.regions()?.into_iter().filter(|&r| region_hit(r)).collect();
+        // decode only the chunks in the area: windows overlap regions, whole-region decodes repeat work
+        let decoded = regions.par_iter().map(|&r| world.read_region_where(r, &inside)).collect::<Result<Vec<_>>>()?;
         let mut chunks = FxHashMap::default();
         for (pos, chunk) in decoded.into_iter().flatten().filter(|(_, c)| c.is_full()) {
             let palette_ids = chunk.sections.iter().map(|s| s.palette.iter().map(|b| table.intern(b)).collect()).collect();
@@ -48,17 +53,40 @@ impl RegenWorld {
 
     /// Interned state at a cell, `None` where not generated (air is returned as its id).
     pub fn id(&self, (x, y, z): Cell) -> Option<StateId> {
+        self.column(x, z)?.id(y)
+    }
+
+    /// One chunk lookup for a whole column (the fill walks columns).
+    pub fn column(&self, x: i32, z: i32) -> Option<RegenColumn<'_>> {
         let rc = self.chunks.get(&(x.div_euclid(16), z.div_euclid(16)))?;
-        let i = rc.chunk.sections.binary_search_by_key(&y.div_euclid(16), |s| s.y).ok()?;
-        let s = &rc.chunk.sections[i];
-        let idx = s.index(((y.rem_euclid(16) as usize) * 16 + z.rem_euclid(16) as usize) * 16 + x.rem_euclid(16) as usize);
-        Some(rc.palette_ids[i][idx as usize])
+        Some(RegenColumn { rc, xz: (z.rem_euclid(16) as usize) * 16 + x.rem_euclid(16) as usize })
+    }
+}
+
+pub struct RegenColumn<'a> {
+    rc: &'a RegenChunk,
+    /// `z*16 + x` within the chunk.
+    xz: usize,
+}
+
+impl RegenColumn<'_> {
+    pub fn id(&self, y: i32) -> Option<StateId> {
+        let sections = &self.rc.chunk.sections;
+        let sy = y.div_euclid(16);
+        // sections are sorted and normally contiguous: index directly, search only if there is a hole
+        let guess = (sy - sections.first()?.y) as usize;
+        let i = match sections.get(guess) {
+            Some(s) if s.y == sy => guess,
+            _ => sections.binary_search_by_key(&sy, |s| s.y).ok()?,
+        };
+        let idx = sections[i].index((y.rem_euclid(16) as usize) * 256 + self.xz);
+        Some(self.rc.palette_ids[i][idx as usize])
     }
 }
 
 pub struct Context<'a> {
     pub regen: &'a RegenWorld,
-    pub evidence: &'a Evidence,
+    pub evidence: &'a EvidenceByColumn,
     /// Indexed by `StateId`.
     pub full: &'a [bool],
     pub air: &'a [bool],
@@ -69,38 +97,40 @@ pub struct Context<'a> {
     pub cave_y: i32,
 }
 
-pub fn fill_gap(g: &Gap, cx: &Context) -> Vec<Segment> {
-    let (x, z) = g.column;
-    let mut out: Vec<Segment> = Vec::new();
+/// Append the gap's segments to `out` (one per-thread buffer, no allocation per gap).
+pub fn fill_gap_into(g: &Gap, cx: &Context, out: &mut Vec<Segment>) {
+    let column = cx.regen.column(g.column.0, g.column.1);
+    let ev = cx.evidence.get(&g.column);
+    let mut solid = Cursor::new(ev.map_or(&[][..], |e| &e.solid));
+    let mut open = Cursor::new(ev.map_or(&[][..], |e| &e.open));
+    let start = out.len();
     for y in (g.ylo..=g.yhi).rev() {
-        let Some(state) = cell_state(g, (x, y, z), cx) else { continue };
-        match out.last_mut() {
+        let r = column.as_ref().and_then(|c| c.id(y)).filter(|id| !cx.air[id.0 as usize]);
+        let Some(state) = cell_state(g, y, r, solid.hit(y), open.hit(y), cx) else { continue };
+        match out[start..].last_mut() {
             Some(s) if s.state == state && s.ylo == y + 1 => s.ylo = y,
             _ => out.push(Segment { column: g.column, ylo: y, yhi: y, state }),
         }
     }
-    out
 }
 
-fn cell_state(g: &Gap, cell: Cell, cx: &Context) -> Option<StateId> {
-    let r = cx.regen.id(cell).filter(|id| !cx.air[id.0 as usize]);
+fn cell_state(g: &Gap, y: i32, r: Option<StateId>, solid_ev: bool, open_ev: bool, cx: &Context) -> Option<StateId> {
     let full = r.is_some_and(|id| cx.full[id.0 as usize]);
-    let ev = cx.evidence;
-    if ev.solid.contains(&cell) {
-        return Some(if full { r.unwrap() } else { (cx.prior)(cell.1) });
+    if solid_ev {
+        return Some(if full { r.unwrap() } else { (cx.prior)(y) });
     }
-    if ev.open.contains(&cell) {
+    if open_ev {
         return if full { None } else { r };
     }
     match g.fill {
         // above the cut-off nothing is culled for darkness: a non-full cell here would have made the solid
         // block above it draw a face, so every cell of the gap is a full block
-        Fill::Solid if cell.1 >= cx.cave_y && !full => Some((cx.prior)(cell.1)),
+        Fill::Solid if y >= cx.cave_y && !full => Some((cx.prior)(y)),
         Fill::Solid => r,
         Fill::Liquid(l) if g.floored => Some((cx.liquid)(l)),
         // regen air deep down is a dark cave under the sea, not missing water
-        Fill::Liquid(l) => r.or_else(|| (cell.1 >= cx.cave_y).then(|| (cx.liquid)(l))),
-        Fill::Air if cell.1 < cx.cave_y => r,
+        Fill::Liquid(l) => r.or_else(|| (y >= cx.cave_y).then(|| (cx.liquid)(l))),
+        Fill::Air if y < cx.cave_y => r,
         Fill::Air => None,
     }
 }

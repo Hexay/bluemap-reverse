@@ -3,6 +3,7 @@
 //! - a liquid face is missing → neighbour is the same liquid or a full block (`liquid`)
 //! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`)
 
+use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::face::{Cell, CellFaces, DIRS, FaceKey, Liquid, step};
@@ -34,22 +35,38 @@ impl Observed<'_> {
 
 pub fn collect(lib: &Library, o: &Observed) -> Evidence {
     let mut ev = Evidence::default();
-    for (&cell, &entry) in o.blocks {
-        let observed = o.solid_faces.get(&cell).map_or(&[][..], |c| &c.keys[..]);
-        let mut remaining: Vec<&FaceKey> = observed.iter().collect();
-        for key in &lib.entries[entry].sig {
-            if let Some(i) = remaining.iter().position(|k| *k == key) {
-                remaining.swap_remove(i);
-            } else if let Some(n) = key.boundary_dir().map(|d| step(cell, d)).filter(|n| !o.contains(n)) {
-                ev.solid.insert(n);
-            }
-        }
-        for n in observed.iter().filter_map(|k| k.boundary_dir()).map(|d| step(cell, d)) {
-            if !o.contains(&n) {
-                ev.open.insert(n);
-            }
-        }
-    }
+    // sets are order-independent, so the block pass runs in parallel into per-thread buffers
+    let (solid, open) = o
+        .blocks
+        .par_iter()
+        .fold(
+            || (Vec::new(), Vec::new()),
+            |(mut solid, mut open), (&cell, &entry)| {
+                let observed = o.solid_faces.get(&cell).map_or(&[][..], |c| &c.keys[..]);
+                let mut remaining: Vec<&FaceKey> = observed.iter().collect();
+                for key in &lib.entries[entry].sig {
+                    if let Some(i) = remaining.iter().position(|k| *k == key) {
+                        remaining.swap_remove(i);
+                    } else if let Some(n) = key.boundary_dir().map(|d| step(cell, d)).filter(|n| !o.contains(n)) {
+                        solid.push(n);
+                    }
+                }
+                open.extend(observed.iter().filter_map(|k| k.boundary_dir()).map(|d| step(cell, d)).filter(|n| !o.contains(n)));
+                (solid, open)
+            },
+        )
+        .reduce(
+            || (Vec::new(), Vec::new()),
+            |(mut s1, mut o1), (s2, o2)| {
+                s1.extend(s2);
+                o1.extend(o2);
+                (s1, o1)
+            },
+        );
+    ev.solid.extend(solid);
+    ev.open.extend(open);
+
+    // sequential: the first liquid kind to claim a cell wins, keep that deterministic
 
     let liquid_cells = o
         .liquids

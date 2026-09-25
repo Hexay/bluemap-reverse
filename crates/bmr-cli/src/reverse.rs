@@ -5,9 +5,10 @@ use anyhow::{Context, Result};
 use bmr_fill::Bounds;
 use bmr_invert::Library;
 use bmr_invert::timings::Timings;
-use bmr_world::{BlockState, ChunkBuilder, ChunkLayout, StateTable, WorldWriter};
+use bmr_world::{BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, StateId, StateTable, WorldWriter};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
+use crate::window::{self, Window};
 use crate::{MirrorArgs, WorldArgs};
 
 #[derive(clap::Args)]
@@ -30,6 +31,12 @@ pub struct Args {
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for unseen cells + biomes
     #[arg(long)]
     regen: Option<PathBuf>,
+    /// Process the whole map at once instead of one region window at a time (memory grows with the map)
+    #[arg(long)]
+    no_window: bool,
+    /// Halo around each region window, in blocks
+    #[arg(long, default_value_t = 32)]
+    halo: i32,
     /// Dimension build height (overworld default)
     #[arg(long, default_value_t = -64, allow_hyphen_values = true)]
     min_y: i32,
@@ -47,6 +54,17 @@ pub struct Args {
     world_args: WorldArgs,
 }
 
+/// Map-wide sums over windows (window counts include their halo cells).
+#[derive(Default)]
+struct Totals {
+    cells: usize,
+    unmatched: usize,
+    solid: usize,
+    liquid: usize,
+    adopted: usize,
+    chunks: usize,
+}
+
 pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
@@ -56,62 +74,97 @@ pub fn run(a: Args) -> Result<()> {
         let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
         Library::build(&lib_map, &lib_world, &registry)
     })?;
+    t.extend("library", lib.stats.timings.clone());
     println!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
 
     let map = a.mirror.open()?;
-    let inv = t.time("invert", || bmr_invert::reverse(&map, &lib))?;
-    let s = &inv.stats;
-    let ev = &inv.evidence;
-    println!(
-        "cells {}: {:?}, liquid {}, waterlogged {}, overhang-only {}, unmatched {} | evidence solid {} liquid {} open {}",
-        s.cells, s.by_how, s.liquid_cells, s.waterlogged, s.overhang_cells, s.unmatched,
-        ev.solid.len(), ev.liquid.len(), ev.open.len()
-    );
-    for (textures, n) in s.unmatched_textures.iter().take(a.show_unmatched) {
-        println!("  unmatched {n:>6}  {textures}");
-    }
-
+    let textures = bmr_invert::map_textures(&map)?;
+    let windows =if a.no_window { window::whole_map(&map) } else { window::per_region(&map, a.halo) };
+    let regen_world = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
+    let writer = WorldWriter::create(&a.out, &a.template, &a.world_args.dimension, registry.clone())?;
     let mut table = StateTable::default();
     let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
+
+    let mut totals = Totals::default();
+    let mut per_window = Timings::default();
+    for (i, win) in windows.iter().enumerate() {
+        let ctx = Ctx { a: &a, lib: &lib, registry: &registry, map: &map, textures: &textures, regen_world: regen_world.as_ref(), air };
+        let (chunks, wt) = run_window(win, &ctx, &mut table, &mut totals)?;
+        totals.chunks += chunks.len();
+        let mut wt = wt;
+        wt.time("write", || writer.write_chunks(chunks))?;
+        per_window.accumulate(wt);
+        if windows.len() > 1 {
+            println!("window {}/{} {:?}: {} tiles, {} columns", i + 1, windows.len(), win.region, win.tiles.len(), win.columns.len());
+        }
+    }
+    println!(
+        "cells {} (unmatched {}), unseen solid {}, unseen liquid {}, adopted from regen {} → {} chunks in {}",
+        totals.cells, totals.unmatched, totals.solid, totals.liquid, totals.adopted, totals.chunks, a.out.display()
+    );
+    t.accumulate(per_window);
+    t.record("total", total.elapsed());
+    report(&t, a.timings.as_ref())
+}
+
+struct Ctx<'a> {
+    a: &'a Args,
+    lib: &'a Library,
+    registry: &'a BlockRegistry,
+    map: &'a bmr_fetch::LocalMap,
+    textures: &'a [bmr_invert::face::Tex],
+    regen_world: Option<&'a bmr_world::World>,
+    air: StateId,
+}
+
+/// Invert, fill and build one window; returns only the window's own chunks.
+fn run_window(win: &Window, cx: &Ctx, table: &mut StateTable, totals: &mut Totals) -> Result<(Vec<Chunk>, Timings)> {
+    let a = cx.a;
+    let mut t = Timings::default();
+    let inv = t.time("invert", || bmr_invert::reverse(cx.map, cx.lib, &win.tiles, cx.textures))?;
+    totals.cells += inv.stats.cells;
+    totals.unmatched += inv.stats.unmatched;
+    for (textures, n) in inv.stats.unmatched_textures.iter().take(a.show_unmatched) {
+        println!("  unmatched {n:>6}  {textures}");
+    }
     let regen = t.time("regen_load", || -> Result<_> {
-        a.regen
-            .as_ref()
-            .map(|p| bmr_fill::RegenWorld::load(&a.world_args.open(p, &Some(registry.clone()))?, &mut table))
-            .transpose()
+        cx.regen_world.map(|w| bmr_fill::RegenWorld::load(w, table, win.chunk_area)).transpose()
     })?;
+
     let mut builder = ChunkBuilder::new(
         ChunkLayout {
-            data_version: lib.data_version,
+            data_version: cx.lib.data_version,
             sections: (a.min_y.div_euclid(16), a.max_y.div_euclid(16)),
             biome: "minecraft:plains".into(),
         },
-        air,
+        cx.air,
     );
-    let mut fill_timings = None;
+    let emits = |(x, _, z): (i32, i32, i32)| win.emits(x, z);
+    let mut inner = Timings::default();
     if a.no_fill {
-        for (&c, &e) in &inv.blocks {
-            builder.set_block(c, table.intern(&lib.entries[e].state));
+        for (&c, &e) in inv.blocks.iter().filter(|(c, _)| emits(**c)) {
+            builder.set_block(c, table.intern(&cx.lib.entries[e].state));
         }
     } else {
-        let bounds = Bounds { columns: rendered_columns(&map), min_y: a.min_y, max_y: a.max_y, cave_y: a.cave_y };
+        // regen decides each cell on its own; only the prior fill searches neighbouring columns
+        let columns = if regen.is_some() { win.columns.clone() } else { win.halo_columns.clone() };
+        let bounds = Bounds { columns, min_y: a.min_y, max_y: a.max_y, cave_y: a.cave_y };
         let filled =
-            t.time("fill", || bmr_fill::complete(&inv, &lib, &registry, &bounds, regen.as_ref(), &mut table));
-        let fs = &filled.stats;
-        println!(
-            "fill: {} observed, {} unseen solid, {} unseen liquid, {} leaves adjusted, {} adopted from regen",
-            fs.observed, fs.solid_cells, fs.liquid_cells, fs.leaves_adjusted, fs.adopted_from_regen
-        );
+            t.time("fill", || bmr_fill::complete(&inv, cx.lib, cx.registry, &bounds, regen.as_ref(), table));
+        totals.solid += filled.stats.solid_cells;
+        totals.liquid += filled.stats.liquid_cells;
+        totals.adopted += filled.stats.adopted_from_regen;
         t.time("build_chunks", || {
-            for seg in &filled.segments {
+            for seg in filled.segments.iter().filter(|s| win.emits(s.column.0, s.column.1)) {
                 builder.fill_column(seg.column, seg.ylo, seg.yhi, seg.state);
             }
-            for (&c, s) in &filled.blocks {
+            for (&c, s) in filled.blocks.iter().filter(|(c, _)| emits(**c)) {
                 builder.set_block(c, table.intern(s));
             }
         });
-        fill_timings = Some(filled.stats.timings.clone());
+        inner.extend("fill", filled.stats.timings.clone());
     }
-    let mut chunks = t.time("finish_chunks", || builder.finish(&table));
+    let mut chunks = t.time("finish_chunks", || builder.finish(table));
     if let Some(r) = &regen {
         for c in &mut chunks {
             if let Some(src) = r.chunk((c.x, c.z)) {
@@ -119,21 +172,9 @@ pub fn run(a: Args) -> Result<()> {
             }
         }
     }
-    let n = chunks.len();
-    t.time("write", || -> Result<()> {
-        let writer = WorldWriter::create(&a.out, &a.template, &a.world_args.dimension, registry.clone())?;
-        writer.write_chunks(chunks)?;
-        Ok(())
-    })?;
-    println!("{n} chunks → {}", a.out.display());
-
-    t.extend("library", lib.stats.timings.clone());
     t.extend("invert", inv.stats.timings.clone());
-    if let Some(ft) = fill_timings {
-        t.extend("fill", ft);
-    }
-    t.record("total", total.elapsed());
-    report(&t, a.timings.as_ref())
+    t.accumulate(inner);
+    Ok((chunks, t))
 }
 
 /// Table on stdout; JSON `{stage: seconds, "<stage>.mb": resident MB}` for tools/bench.py.
@@ -151,16 +192,4 @@ fn report(t: &Timings, json: Option<&PathBuf>) -> Result<()> {
         std::fs::write(path, serde_json::to_vec_pretty(&map)?)?;
     }
     Ok(())
-}
-
-/// Every world column inside a rendered hires tile.
-fn rendered_columns(map: &bmr_fetch::LocalMap) -> Vec<(i32, i32)> {
-    let [w, h] = map.settings.hires.tile_size;
-    map.tiles(0)
-        .into_iter()
-        .flat_map(|t| {
-            let [x0, z0] = map.hires_origin(t);
-            (x0..x0 + w).flat_map(move |x| (z0..z0 + h).map(move |z| (x, z)))
-        })
-        .collect()
 }

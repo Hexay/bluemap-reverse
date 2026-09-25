@@ -52,6 +52,15 @@ def run_elevated(exe: Path, args: list[str], cwd: Path) -> int:
     return code.value
 
 
+def build_profiling() -> None:
+    """Profiling build of bmr with an MSVC linker map for symbolication (flag on the final crate only:
+    RUSTFLAGS would hit every build script and they'd all fight over one map file)."""
+    cargo = Path.home() / ".cargo" / "bin" / "cargo.exe"
+    map_arg = f"link-arg=/MAP:{ROOT / 'target' / 'profiling' / 'bmr.map'}"
+    subprocess.run([str(cargo), "rustc", "-q", "--profile", "profiling", "-p", "bmr-cli", "--bin", "bmr", "--", "-C", map_arg],
+                   check=True, cwd=ROOT)
+
+
 def record(name: str, cmd: list[str], rate: int) -> Path:
     PROF.mkdir(parents=True, exist_ok=True)
     out = PROF / f"{name}.json.gz"
@@ -227,10 +236,13 @@ def main() -> None:
     ap.add_argument("--top", type=int, default=30)
     ap.add_argument("--process", default="bmr.exe")
     ap.add_argument("--analyze-only", action="store_true")
+    ap.add_argument("--build", action="store_true", help="rebuild target/profiling/bmr.exe (+ map) first")
     ap.add_argument("--map", type=Path, default=ROOT / "target" / "profiling" / "bmr.map",
                     help="linker map of the profiled exe (build: RUSTFLAGS='-C link-arg=/MAP:<path>' cargo build --profile profiling)")
     args = ap.parse_args(argv[:split])
     out = PROF / f"{args.name}.json.gz"
+    if args.build:
+        build_profiling()
     if not args.analyze_only:
         if args.clean:
             shutil.rmtree(ROOT / args.clean, ignore_errors=True)

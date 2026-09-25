@@ -50,6 +50,9 @@ pub struct Args {
     /// Write per-stage timings as JSON {stage: seconds}
     #[arg(long)]
     timings: Option<PathBuf>,
+    /// Also package the output world as a zip (extracts to the world folder name; drop into saves/)
+    #[arg(long)]
+    zip: Option<PathBuf>,
     #[command(flatten)]
     world_args: WorldArgs,
 }
@@ -103,6 +106,10 @@ pub fn run(a: Args) -> Result<()> {
         totals.cells, totals.unmatched, totals.solid, totals.liquid, totals.adopted, totals.chunks, a.out.display()
     );
     t.accumulate(per_window);
+    if let Some(zip) = &a.zip {
+        let files = t.time("zip", || bmr_world::zip_world(&a.out, zip))?;
+        println!("{files} files → {} ({} MB)", zip.display(), std::fs::metadata(zip)?.len() >> 20);
+    }
     t.record("total", total.elapsed());
     report(&t, a.timings.as_ref())
 }

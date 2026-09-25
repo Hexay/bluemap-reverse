@@ -13,6 +13,10 @@ bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered col
 bmr probe <world> x,y,z ...             # print block states + biome
 bmr reverse --mirror <dir> <out_world>  # reconstruct (needs work/cache/debug + work/worlds/debug, see below)
 bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
+bmr reverse … --zip out.zip             # also package the world folder (extracts to <folder>/, drop into saves/)
+bmr schem <world> out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
+                                        # Sponge v3 .schem for WorldEdit/FAWE; trims to non-air by default
+py -3 tools/check_schem.py out.schem    # independent spec validator (own NBT parser)
 ```
 Library prerequisites: `py -3 tools/make_world.py debug && py -3 tools/mirror_fixture.py debug`, plus
 `template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`, then

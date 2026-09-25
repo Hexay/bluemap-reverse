@@ -59,7 +59,13 @@ mod tests {
 
     fn pack(textures: &[&str]) -> Pack {
         Pack {
-            meta: Meta { mc_version: "26.3".into(), data_version: 5023, bluemap_version: "5.27".into(), created_unix: 0 },
+            meta: Meta {
+                mc_version: "26.3".into(),
+                data_version: 5023,
+                bluemap_version: "5.27".into(),
+                compact_palette: true,
+                created_unix: 0,
+            },
             library: bmr_invert::Library::from_entries(Vec::new(), 5023),
             registry: Arc::new(bmr_world::BlockRegistry::from_blocks([])),
             template: Vec::new(),

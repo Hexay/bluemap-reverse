@@ -84,9 +84,10 @@ pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
     let registry = t.time("registry", || a.world_args.registry())?.context("reverse needs the block registry")?;
+    let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
+    let style = lib_world.palette_style()?.context("library world has no palettes")?;
     let lib = t.time("library", || -> Result<Library> {
         let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
-        let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
         Library::build(&lib_map, &lib_world, &registry)
     })?;
     t.extend("library", lib.stats.timings.clone());
@@ -101,6 +102,7 @@ pub fn run(a: Args) -> Result<()> {
         lib: &lib,
         registry: &registry,
         template: &template,
+        style,
         dimension: &a.world_args.dimension,
         regen: regen.as_ref(),
         out: &a.out,

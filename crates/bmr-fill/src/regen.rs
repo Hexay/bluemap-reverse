@@ -2,7 +2,7 @@
 //! evidence (gap-level classification is too coarse: one gap can hold a lit cavity above dark rock):
 //! - solid evidence: regen if it is a full block there, else the height prior
 //! - open evidence: air, unless regen has something non-full (water, plants)
-//! - no evidence: solid gap → regen; liquid gap with an observed floor → the liquid (a player pool must
+//! - no evidence: solid gap → regen (above the cave cut-off only full blocks); liquid gap with an observed floor → the liquid (a player pool must
 //!   not get regen dirt back), liquid gap running to the world floor → regen (real deep ocean floors,
 //!   dark caves below them), liquid only where regen is air above the cave cut-off;
 //!   air gap → regen below the cave cut-off (dark, may simply not be drawn), air above it.
@@ -97,6 +97,9 @@ fn cell_state(g: &Gap, cell: Cell, cx: &Context) -> Option<BlockState> {
         return if full { None } else { r.cloned() };
     }
     match g.fill {
+        // above the cut-off nothing is culled for darkness: a non-full cell here would have made the solid
+        // block above it draw a face, so every cell of the gap is a full block
+        Fill::Solid if cell.1 >= cx.cave_y && !full => Some((cx.prior)(cell)),
         Fill::Solid => r.cloned(),
         Fill::Liquid(l) if g.floored => Some((cx.liquid)(l)),
         // regen air deep down is a dark cave under the sea, not missing water

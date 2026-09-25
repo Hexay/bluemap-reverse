@@ -1,0 +1,14 @@
+[package]
+name = "bmr-fetch"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+flate2.workspace = true
+png.workspace = true
+rayon.workspace = true
+ureq.workspace = true
+serde.workspace = true
+serde_json.workspace = true

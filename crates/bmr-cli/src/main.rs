@@ -5,6 +5,7 @@ mod fetch;
 mod obj;
 mod probe;
 mod reverse;
+mod schem;
 mod score;
 mod window;
 
@@ -39,6 +40,8 @@ enum Cmd {
     Reverse(reverse::Args),
     /// Debug one cell: observed faces, candidates, diff against the true state's signature.
     Explain(explain::Args),
+    /// Export a world area as a Sponge v3 .schem (WorldEdit / FAWE).
+    Schem(schem::Args),
 }
 
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
@@ -94,5 +97,6 @@ fn main() -> Result<()> {
         Cmd::CopyWorld(a) => copy_world::run(a),
         Cmd::Reverse(a) => reverse::run(a),
         Cmd::Explain(a) => explain::run(a),
+        Cmd::Schem(a) => schem::run(a),
     }
 }

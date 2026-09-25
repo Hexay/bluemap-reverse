@@ -21,7 +21,8 @@ pub struct Args {
     #[arg(long, requires = "mirror")]
     map: Option<String>,
     /// Only score columns in x0,z0,x1,z1 (inclusive)
-    #[arg(long, value_delimiter = ',', num_args = 4)]
+    // see schem.rs: num_args breaks "--rect=a,b,c,d"
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
     rect: Vec<i32>,
     #[arg(long, default_value_t = 15)]
     top: usize,
@@ -45,6 +46,7 @@ pub fn run(a: Args) -> Result<()> {
     let tiles: Option<(HashSet<(i32, i32)>, bmr_fetch::grid::Grid)> =
         map.as_ref().map(|m| (m.tiles(0).into_iter().collect(), m.settings.hires_grid()));
     let rendered = map.as_ref().map(bmr_invert::rendered_cells).transpose()?;
+    anyhow::ensure!(a.rect.is_empty() || a.rect.len() == 4, "--rect takes x0,z0,x1,z1");
     let rect = a.rect.clone();
     let filter = move |x: i32, z: i32| {
         let in_rect = rect.is_empty() || (rect[0] <= x && x <= rect[2] && rect[1] <= z && z <= rect[3]);

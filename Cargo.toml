@@ -40,6 +40,8 @@ rustc-hash = "2"
 ureq = { version = "3", default-features = false, features = ["native-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# deflate via flate2 only: the default features pull C builds (bzip2, zstd) and crypto we don't need
+zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
 bmr-fetch = { path = "crates/bmr-fetch" }
 bmr-fill = { path = "crates/bmr-fill" }
 bmr-invert = { path = "crates/bmr-invert" }

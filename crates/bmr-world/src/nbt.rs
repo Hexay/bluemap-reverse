@@ -77,7 +77,7 @@ pub fn decode_chunk(nbt: &[u8], registry: Option<&BlockRegistry>) -> Result<Chun
         let Some(bs) = s.block_states else { continue };
         let palette: Vec<BlockState> =
             bs.palette.into_iter().map(|p| resolve(p, registry)).collect::<Result<_>>()?;
-        let blocks = unpack(bs.data.as_deref(), palette.len(), 4096, 4)?;
+        let blocks = if palette.len() <= 1 { Vec::new() } else { unpack(bs.data.as_deref(), palette.len(), 4096, 4)? };
         let (biome_palette, biomes) = match s.biomes {
             Some(b) => {
                 let idx = unpack(b.data.as_deref(), b.palette.len(), 64, 1)?;

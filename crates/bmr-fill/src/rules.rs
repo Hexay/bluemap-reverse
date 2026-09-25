@@ -1,6 +1,8 @@
 //! Properties the render does not show but game rules determine.
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
+
+use rustc_hash::FxHashMap;
 
 use bmr_invert::face::{Cell, DIRS};
 use bmr_world::BlockState;
@@ -8,8 +10,8 @@ use bmr_world::BlockState;
 /// Leaves `distance` = steps to the nearest log through leaves (1..=7, vanilla #logs ≈ logs, woods,
 /// stems, hyphae). Unreachable leaves (distance 7) must be persistent, or they would have decayed.
 /// Returns the number of leaves changed.
-pub fn leaves_distance(blocks: &mut HashMap<Cell, BlockState>) -> usize {
-    let mut dist: HashMap<Cell, u8> = HashMap::new();
+pub fn leaves_distance(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
+    let mut dist: FxHashMap<Cell, u8> = FxHashMap::default();
     let mut queue = VecDeque::new();
     for (&c, s) in blocks.iter() {
         if is_log(&s.name) {

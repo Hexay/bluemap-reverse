@@ -1,7 +1,7 @@
 //! Voxel-by-voxel comparison of an original world against a reconstruction, one region per task.
 //! All air variants compare equal (BlueMap cannot tell them apart).
 
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use anyhow::Result;
 use bmr_world::{BlockState, Chunk, ChunkPos, World};
@@ -17,7 +17,7 @@ pub type Cell = (i32, i32, i32);
 pub struct Scope<'a> {
     pub columns: ColumnFilter<'a>,
     /// Cells BlueMap drew faces for; enables the `rendered` metric.
-    pub rendered: Option<&'a HashSet<Cell>>,
+    pub rendered: Option<&'a FxHashSet<Cell>>,
     /// (original, reconstructed) labels whose positions to sample into `Report::samples`.
     pub sample: Option<(&'a str, &'a str)>,
 }
@@ -38,7 +38,7 @@ pub fn score(original: &World, reconstructed: &World, scope: &Scope, top_confusi
     Ok(report)
 }
 
-type Chunks = HashMap<ChunkPos, Chunk>;
+type Chunks = FxHashMap<ChunkPos, Chunk>;
 
 fn score_region(original: &World, reconstructed: &World, region: (i32, i32), scope: &Scope) -> Result<Report> {
     let filter = scope.columns;
@@ -80,7 +80,7 @@ fn score_column(
     lx: usize,
     lz: usize,
     (y0, y1): (i32, i32),
-    rendered: Option<&HashSet<Cell>>,
+    rendered: Option<&FxHashSet<Cell>>,
     sample: Option<(&str, &str)>,
 ) {
     let mut orig_top = None;

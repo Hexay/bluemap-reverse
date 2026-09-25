@@ -7,5 +7,6 @@ license.workspace = true
 [dependencies]
 anyhow.workspace = true
 rayon.workspace = true
+rustc-hash.workspace = true
 serde.workspace = true
 bmr-world.workspace = true

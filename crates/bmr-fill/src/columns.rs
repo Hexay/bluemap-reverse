@@ -4,7 +4,7 @@
 //! liquid evidence without solid → liquid; solid evidence outweighing open → solid; else air.
 //! Cave caveat: below `remove-caves-below-y`, dark air also loses faces, so dark caves read as solid.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use bmr_invert::evidence::Evidence;
 use bmr_invert::face::Liquid;
@@ -45,8 +45,8 @@ struct ColumnEvidence {
 }
 
 /// `observed_ys`: per column, y of every observed cell (any order).
-pub fn gaps(observed_ys: &HashMap<Column, Vec<i32>>, ev: &Evidence, bounds: &Bounds) -> Vec<Gap> {
-    let mut by_col: HashMap<Column, ColumnEvidence> = HashMap::new();
+pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, ev: &Evidence, bounds: &Bounds) -> Vec<Gap> {
+    let mut by_col: FxHashMap<Column, ColumnEvidence> = FxHashMap::default();
     for &(x, y, z) in &ev.solid {
         by_col.entry((x, z)).or_default().solid.push(y);
     }

@@ -38,7 +38,8 @@ pub struct Section {
     /// Section index; blocks span y*16 .. y*16+15.
     pub y: i32,
     pub palette: Vec<BlockState>,
-    /// 4096 palette indices, `(y*16 + z)*16 + x`.
+    /// 4096 palette indices, `(y*16 + z)*16 + x`, or **empty = every cell is `palette[0]`** (uniform
+    /// sections — all air above ground, all stone deep down — cost nothing). Read through `index`.
     pub blocks: Vec<u16>,
     pub biome_palette: Vec<String>,
     /// 64 indices over 4×4×4 cells, `(y*4 + z)*4 + x`.
@@ -51,18 +52,29 @@ impl Section {
         Self {
             y,
             palette: vec![BlockState::new("minecraft:air".into(), Vec::new())],
-            blocks: vec![0; 4096],
+            blocks: Vec::new(),
             biome_palette: vec![biome.to_owned()],
             biomes: vec![0; 64],
         }
     }
 
+    /// Palette index of cell `i` (`(y*16 + z)*16 + x`).
+    pub fn index(&self, i: usize) -> u16 {
+        if self.blocks.is_empty() { 0 } else { self.blocks[i] }
+    }
+
     pub fn block(&self, x: usize, y: usize, z: usize) -> &BlockState {
-        &self.palette[self.blocks[(y * 16 + z) * 16 + x] as usize]
+        &self.palette[self.index((y * 16 + z) * 16 + x) as usize]
     }
 
     pub fn set_block(&mut self, x: usize, y: usize, z: usize, state: &BlockState) {
         let idx = palette_index(&mut self.palette, state);
+        if self.blocks.is_empty() {
+            if idx == 0 {
+                return;
+            }
+            self.blocks = vec![0; 4096];
+        }
         self.blocks[(y * 16 + z) * 16 + x] = idx;
     }
 
@@ -77,8 +89,13 @@ impl Section {
         self.biomes[(cy * 4 + cz) * 4 + cx] = idx as u16;
     }
 
-    /// Drop palette entries no longer referenced (after overwrites), remapping indices.
+    /// Drop palette entries no longer referenced (after overwrites), remapping indices; a section left
+    /// with one entry becomes uniform.
     pub fn compact(&mut self) {
+        if self.blocks.is_empty() {
+            self.palette.truncate(1);
+            return;
+        }
         let mut used = vec![false; self.palette.len()];
         for &i in &self.blocks {
             used[i as usize] = true;
@@ -92,6 +109,10 @@ impl Section {
             }
         }
         self.palette = palette;
+        if self.palette.len() == 1 {
+            self.blocks = Vec::new();
+            return;
+        }
         for i in &mut self.blocks {
             *i = remap[*i as usize];
         }

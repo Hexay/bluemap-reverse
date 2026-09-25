@@ -3,9 +3,8 @@
 //! observed tint (redstone power) and closeness to the default state.
 
 use std::collections::BTreeSet;
-use std::sync::Arc;
 
-use crate::face::{FaceKey, close, corner_aligned, normalized};
+use crate::face::{FaceKey, Tex, close, corner_aligned, normalized};
 use crate::library::Library;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -45,7 +44,7 @@ pub fn candidates(lib: &Library, sig: &[FaceKey]) -> Option<Candidates> {
     if let Some(ids) = lib.exact_normalized(&normalized(sig)) {
         return Some(Candidates { ids: ids.to_vec(), how: How::Offset });
     }
-    let textures: BTreeSet<&Arc<str>> = sig.iter().map(|k| &k.texture).collect();
+    let textures: BTreeSet<Tex> = sig.iter().map(|k| k.texture).collect();
     if sig.len() <= MAX_FUZZY_QUADS {
         let aligned = corner_aligned(sig);
         let ids: Vec<usize> = lib

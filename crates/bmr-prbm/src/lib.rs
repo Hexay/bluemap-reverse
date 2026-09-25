@@ -7,5 +7,5 @@ pub mod textures;
 pub mod tile;
 
 pub use parse::parse;
-pub use textures::{Texture, parse_textures};
+pub use textures::{Texture, parse_texture_names, parse_textures};
 pub use tile::{Face, Group, Tile};

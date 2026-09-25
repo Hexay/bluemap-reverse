@@ -8,6 +8,7 @@ use anyhow::{Context, Result, bail, ensure};
 use flate2::Compression;
 use flate2::read::{GzDecoder, ZlibDecoder};
 use flate2::write::ZlibEncoder;
+use rayon::prelude::*;
 
 const SECTOR: usize = 4096;
 
@@ -18,17 +19,18 @@ pub fn read_region(path: &Path) -> Result<Vec<((u8, u8), Vec<u8>)>> {
         return Ok(Vec::new());
     }
     ensure!(data.len() >= 2 * SECTOR, "{}: truncated header", path.display());
-    let mut out = Vec::new();
-    for slot in 0..1024 {
-        let loc = u32::from_be_bytes(data[slot * 4..slot * 4 + 4].try_into().unwrap());
-        if loc == 0 {
-            continue;
-        }
-        let offset = (loc >> 8) as usize * SECTOR;
-        let nbt = read_chunk(&data, offset).with_context(|| format!("{} slot {slot}", path.display()))?;
-        out.push((((slot % 32) as u8, (slot / 32) as u8), nbt));
-    }
-    Ok(out)
+    // chunks decompress in parallel: one region can be the whole input (debug world)
+    (0..1024usize)
+        .into_par_iter()
+        .filter_map(|slot| {
+            let loc = u32::from_be_bytes(data[slot * 4..slot * 4 + 4].try_into().unwrap());
+            (loc != 0).then_some((slot, (loc >> 8) as usize * SECTOR))
+        })
+        .map(|(slot, offset)| {
+            let nbt = read_chunk(&data, offset).with_context(|| format!("{} slot {slot}", path.display()))?;
+            Ok((((slot % 32) as u8, (slot / 32) as u8), nbt))
+        })
+        .collect()
 }
 
 /// Write a region file from uncompressed chunk NBT keyed by local (x, z); zlib (type 2).

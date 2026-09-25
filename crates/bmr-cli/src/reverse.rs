@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use bmr_fill::Bounds;
 use bmr_invert::Library;
 use bmr_invert::timings::Timings;
-use bmr_world::{ChunkBuilder, ChunkLayout, WorldWriter};
+use bmr_world::{BlockState, ChunkBuilder, ChunkLayout, StateTable, WorldWriter};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
 use crate::{MirrorArgs, WorldArgs};
@@ -71,25 +71,31 @@ pub fn run(a: Args) -> Result<()> {
         println!("  unmatched {n:>6}  {textures}");
     }
 
+    let mut table = StateTable::default();
+    let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
     let regen = t.time("regen_load", || -> Result<_> {
         a.regen
             .as_ref()
-            .map(|p| bmr_fill::RegenWorld::load(&a.world_args.open(p, &Some(registry.clone()))?))
+            .map(|p| bmr_fill::RegenWorld::load(&a.world_args.open(p, &Some(registry.clone()))?, &mut table))
             .transpose()
     })?;
-    let mut builder = ChunkBuilder::new(ChunkLayout {
-        data_version: lib.data_version,
-        sections: (a.min_y.div_euclid(16), a.max_y.div_euclid(16)),
-        biome: "minecraft:plains".into(),
-    });
+    let mut builder = ChunkBuilder::new(
+        ChunkLayout {
+            data_version: lib.data_version,
+            sections: (a.min_y.div_euclid(16), a.max_y.div_euclid(16)),
+            biome: "minecraft:plains".into(),
+        },
+        air,
+    );
     let mut fill_timings = None;
     if a.no_fill {
         for (&c, &e) in &inv.blocks {
-            builder.set_block(c, &lib.entries[e].state);
+            builder.set_block(c, table.intern(&lib.entries[e].state));
         }
     } else {
         let bounds = Bounds { columns: rendered_columns(&map), min_y: a.min_y, max_y: a.max_y, cave_y: a.cave_y };
-        let filled = t.time("fill", || bmr_fill::complete(&inv, &lib, &registry, &bounds, regen.as_ref()));
+        let filled =
+            t.time("fill", || bmr_fill::complete(&inv, &lib, &registry, &bounds, regen.as_ref(), &mut table));
         let fs = &filled.stats;
         println!(
             "fill: {} observed, {} unseen solid, {} unseen liquid, {} leaves adjusted, {} adopted from regen",
@@ -97,15 +103,15 @@ pub fn run(a: Args) -> Result<()> {
         );
         t.time("build_chunks", || {
             for seg in &filled.segments {
-                builder.fill_column(seg.column, seg.ylo, seg.yhi, &seg.state);
+                builder.fill_column(seg.column, seg.ylo, seg.yhi, seg.state);
             }
             for (&c, s) in &filled.blocks {
-                builder.set_block(c, s);
+                builder.set_block(c, table.intern(s));
             }
         });
         fill_timings = Some(filled.stats.timings.clone());
     }
-    let mut chunks = t.time("finish_chunks", || builder.finish());
+    let mut chunks = t.time("finish_chunks", || builder.finish(&table));
     if let Some(r) = &regen {
         for c in &mut chunks {
             if let Some(src) = r.chunk((c.x, c.z)) {
@@ -126,18 +132,22 @@ pub fn run(a: Args) -> Result<()> {
     if let Some(ft) = fill_timings {
         t.extend("fill", ft);
     }
-    t.0.push(("total".into(), total.elapsed()));
+    t.record("total", total.elapsed());
     report(&t, a.timings.as_ref())
 }
 
+/// Table on stdout; JSON `{stage: seconds, "<stage>.mb": resident MB}` for tools/bench.py.
 fn report(t: &Timings, json: Option<&PathBuf>) -> Result<()> {
-    for (name, d) in &t.0 {
-        let indent = if name.contains('.') { "    " } else { "  " };
-        println!("{indent}{name:<22} {:>9.3}s", d.as_secs_f64());
+    for s in &t.0 {
+        let indent = if s.name.contains('.') { "    " } else { "  " };
+        println!("{indent}{:<22} {:>9.3}s {:>7} MB", s.name, s.duration.as_secs_f64(), s.resident >> 20);
     }
     if let Some(path) = json {
-        let map: serde_json::Map<String, serde_json::Value> =
-            t.0.iter().map(|(n, d)| (n.clone(), d.as_secs_f64().into())).collect();
+        let mut map = serde_json::Map::new();
+        for s in &t.0 {
+            map.insert(s.name.clone(), s.duration.as_secs_f64().into());
+            map.insert(format!("{}.mb", s.name), ((s.resident >> 20) as f64).into());
+        }
         std::fs::write(path, serde_json::to_vec_pretty(&map)?)?;
     }
     Ok(())

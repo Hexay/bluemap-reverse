@@ -5,6 +5,7 @@ pub mod face;
 pub mod library;
 pub mod matcher;
 pub mod reverse;
+pub mod timings;
 
 pub use library::Library;
 pub use reverse::{Inverted, Stats, rendered_cells, reverse};

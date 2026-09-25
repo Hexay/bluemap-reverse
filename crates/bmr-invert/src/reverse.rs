@@ -12,6 +12,7 @@ use crate::evidence::{Evidence, Observed, collect};
 use crate::face::{Cell, CellFaces, FaceKey, Liquid, faces_by_cell, signature, step, texture_names, world_faces};
 use crate::library::Library;
 use crate::matcher::{Candidates, How, candidates, resolve};
+use crate::timings::Timings;
 
 pub struct Inverted {
     /// Matched non-liquid blocks → library entry (waterlogged already resolved).
@@ -33,15 +34,18 @@ pub struct Stats {
     pub unmatched: usize,
     /// Unmatched cells by their texture set, most frequent first.
     pub unmatched_textures: Vec<(String, usize)>,
+    pub timings: Timings,
 }
 
 type Matched = Option<(usize, How)>;
 
 pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
-    let (mut solid_faces, liquid_faces) = split_liquid(gather(map)?);
-    let mut matched = match_all(lib, &solid_faces);
+    let mut t = Timings::default();
+    let cells = t.time("gather", || gather(map))?;
+    let (mut solid_faces, liquid_faces) = t.time("split_liquid", || split_liquid(cells));
+    let mut matched = t.time("match", || match_all(lib, &solid_faces));
     let mut stats = Stats::default();
-    stats.overhang_cells = credit_overhang(lib, &mut solid_faces, &mut matched);
+    stats.overhang_cells = t.time("overhang", || credit_overhang(lib, &mut solid_faces, &mut matched));
 
     let liquids: HashMap<Cell, Liquid> = liquid_faces
         .iter()
@@ -70,7 +74,7 @@ pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
     stats.unmatched_textures = u;
 
     let obs = Observed { blocks: &blocks, solid_faces: &solid_faces, liquid_faces: &liquid_faces, liquids: &liquids };
-    let evidence = collect(lib, &obs);
+    let evidence = t.time("evidence", || collect(lib, &obs));
     for (cell, entry) in blocks.iter_mut() {
         let wet = liquid_faces.contains_key(cell) || evidence.liquid.contains_key(cell);
         if let Some(w) = wet.then(|| lib.waterlogged_variant(*entry)).flatten() {
@@ -78,6 +82,7 @@ pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
             stats.waterlogged += 1;
         }
     }
+    stats.timings = t;
     Ok(Inverted { blocks, liquids, evidence, stats })
 }
 

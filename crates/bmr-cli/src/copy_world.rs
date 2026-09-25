@@ -27,7 +27,7 @@ pub fn run(a: Args) -> Result<()> {
     for r in source.regions()? {
         chunks.extend(source.read_region(r)?.into_values().filter(|c| c.is_full()));
     }
-    let writer = WorldWriter::create(&a.out, &a.template, &a.world_args.dimension, registry)?;
+    let writer = WorldWriter::create(&a.out, &bmr_world::read_template(&a.template)?, &a.world_args.dimension, registry)?;
     let n = chunks.len();
     let regions = writer.write_chunks(chunks)?;
     println!("{n} chunks in {regions} regions → {}", a.out.display());

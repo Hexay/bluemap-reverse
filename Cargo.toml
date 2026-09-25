@@ -40,11 +40,14 @@ rustc-hash = "2"
 ureq = { version = "3", default-features = false, features = ["native-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# pack files (bmr-pack): compact serde binary; bincode 3.0.0 is an empty tombstone release
+postcard = { version = "1.1", default-features = false, features = ["use-std"] }
 # deflate via flate2 only: the default features pull C builds (bzip2, zstd) and crypto we don't need
 zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
 bmr-fetch = { path = "crates/bmr-fetch" }
 bmr-fill = { path = "crates/bmr-fill" }
 bmr-invert = { path = "crates/bmr-invert" }
+bmr-pack = { path = "crates/bmr-pack" }
 bmr-prbm = { path = "crates/bmr-prbm" }
 bmr-score = { path = "crates/bmr-score" }
 bmr-world = { path = "crates/bmr-world" }

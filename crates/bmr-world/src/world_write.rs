@@ -21,14 +21,49 @@ pub struct WorldWriter {
     registry: Arc<BlockRegistry>,
 }
 
+/// Template world files as (path relative to the world root with `/` separators, bytes).
+pub type TemplateFiles = Vec<(String, Vec<u8>)>;
+
+/// Everything of a template world except chunk data and the session lock.
+pub fn read_template(dir: &Path) -> Result<TemplateFiles> {
+    if !dir.join("level.dat").exists() {
+        bail!("template {} has no level.dat (py -3 tools/make_world.py template-void)", dir.display());
+    }
+    let mut out = Vec::new();
+    collect(dir, "", &mut out)?;
+    Ok(out)
+}
+
+fn collect(dir: &Path, prefix: &str, out: &mut TemplateFiles) -> Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name == "session.lock" || CHUNK_DIRS.contains(&name.as_str()) {
+            continue;
+        }
+        let rel = if prefix.is_empty() { name } else { format!("{prefix}/{name}") };
+        if entry.file_type()?.is_dir() {
+            collect(&entry.path(), &rel, out)?;
+        } else {
+            out.push((rel, fs::read(entry.path())?));
+        }
+    }
+    Ok(())
+}
+
 impl WorldWriter {
-    /// Creates `out` from `template` (26.1+ layout). Refuses to overwrite an existing world.
-    pub fn create(out: &Path, template: &Path, dimension: &str, registry: Arc<BlockRegistry>) -> Result<Self> {
+    /// Creates `out` from template files (26.1+ layout). Refuses to overwrite an existing world.
+    pub fn create(out: &Path, template: &[(String, Vec<u8>)], dimension: &str, registry: Arc<BlockRegistry>) -> Result<Self> {
         if out.join("level.dat").exists() {
             bail!("{} already contains a world", out.display());
         }
-        ensure_template(template)?;
-        copy_tree(template, out)?;
+        for (rel, bytes) in template {
+            let path = out.join(rel);
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::write(&path, bytes).with_context(|| path.display().to_string())?;
+        }
         let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
         let region_dir = out.join("dimensions").join(ns).join(name).join("region");
         fs::create_dir_all(&region_dir)?;
@@ -57,28 +92,3 @@ impl WorldWriter {
     }
 }
 
-fn ensure_template(template: &Path) -> Result<()> {
-    if !template.join("level.dat").exists() {
-        bail!("template {} has no level.dat (py -3 tools/make_world.py template-void)", template.display());
-    }
-    Ok(())
-}
-
-fn copy_tree(from: &Path, to: &Path) -> Result<()> {
-    fs::create_dir_all(to)?;
-    for entry in fs::read_dir(from)? {
-        let entry = entry?;
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name == "session.lock" || CHUNK_DIRS.contains(&name.as_ref()) {
-            continue;
-        }
-        let dst = to.join(&*name);
-        if entry.file_type()?.is_dir() {
-            copy_tree(&entry.path(), &dst)?;
-        } else {
-            fs::copy(entry.path(), &dst).with_context(|| dst.display().to_string())?;
-        }
-    }
-    Ok(())
-}

@@ -3,7 +3,10 @@ mod copy_world;
 mod explain;
 mod fetch;
 mod obj;
+mod pack;
 mod probe;
+mod pull;
+mod reconstruct;
 mod reverse;
 mod schem;
 mod score;
@@ -24,6 +27,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
+    /// One command: mirror a BlueMap site and reconstruct it into a world zip (only maps you own or may reverse).
+    Pull(pull::Args),
+    /// Build or inspect packs (library + registry + template for one BlueMap/Minecraft version).
+    #[command(subcommand)]
+    Pack(pack::Cmd),
     /// Mirror a BlueMap site (only maps you own or may reverse).
     Fetch(fetch::Args),
     /// Export a mirrored map's hires tiles as OBJ + MTL + textures.
@@ -89,6 +97,8 @@ impl WorldArgs {
 
 fn main() -> Result<()> {
     match Cli::parse().cmd {
+        Cmd::Pull(a) => pull::run(a),
+        Cmd::Pack(c) => pack::run(c),
         Cmd::Fetch(a) => fetch::run(a),
         Cmd::Obj(a) => obj::run(a),
         Cmd::CheckHeights(a) => check_heights::run(a),

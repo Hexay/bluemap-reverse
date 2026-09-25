@@ -34,6 +34,7 @@ py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / Blu
 
 - `docs/plan.md` — goal, architecture, phases, scoring, open questions. **Start here.**
 - `docs/chat-log.md` — the conversation that started the project.
+- `docs/performance.md` — benchmarking/profiling tools, method, and the performance design decisions.
 - `research/01-bluemap-web-format.md` — what a BlueMap site exposes: URL layout, PRBM format, tiles, textures.json, lowres PNGs, what's culled.
 - `research/02-model-inversion.md` — how BlueMap turns block states into meshes and how to invert it.
 - `research/03-rust-and-tooling.md` — crates, BlueMap CLI usage, test-world generation, version pins.

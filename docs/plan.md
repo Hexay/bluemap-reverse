@@ -29,6 +29,22 @@ model renderer to Rust, precompute each block state's face signature, match, the
 What is truly gone: fully enclosed blocks, dark faces below `remove-caves-below-y` (overworld default 55),
 block-entity NBT (sign text, inventories, banner patterns), entities. Those get filled from priors or the seed.
 
+## Inversion by learned signatures (replaces "port the renderer first")
+
+Instead of porting BlueMap's model renderer before inverting (old phase 5), the library is **learned from
+BlueMap itself**: render the vanilla debug world (every state once, isolated), read true states from the
+world file and the faces from the tiles → `state → face signature`. Matching can't drift from BlueMap's
+real output. The model port is only needed later for round-trip verification (phase 10).
+
+- Face key = quad (not triangle: rotated variants move the diagonal), texture, tinted?, cell-local vertices
+  at 1/64. UVs ignored (random rotations). Owner cell = just behind the face along its normal.
+- Match: exact signature → offset-normalised (random plant offsets, ±1 jitter) → partial (only boundary
+  faces may be missing = culled by a neighbour). Ties: nearest tint (redstone power), then closest to default.
+- Overhang: faces outside their block's cell are stored per entry and removed from neighbours after matching.
+- Fill (`bmr-fill`): a missing cullable face ⇒ neighbour is a full opaque block; a faceless opaque block ⇒ all
+  neighbours opaque → flood gives the exact shape of buried volumes. Material is a prior (terrain layering,
+  same-height majority, height default). Game rules: leaves distance.
+
 ## Architecture (Cargo workspace)
 
 ```

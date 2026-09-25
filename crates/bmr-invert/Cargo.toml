@@ -1,20 +1,12 @@
 [package]
-name = "bmr-cli"
+name = "bmr-invert"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
 
-[[bin]]
-name = "bmr"
-path = "src/main.rs"
-
 [dependencies]
 anyhow.workspace = true
-clap.workspace = true
+rayon.workspace = true
 bmr-fetch.workspace = true
-bmr-fill.workspace = true
-bmr-invert.workspace = true
 bmr-prbm.workspace = true
-bmr-score.workspace = true
 bmr-world.workspace = true
-serde_json.workspace = true

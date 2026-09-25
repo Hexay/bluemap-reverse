@@ -94,6 +94,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bmr-fetch",
+ "bmr-fill",
+ "bmr-invert",
  "bmr-prbm",
  "bmr-score",
  "bmr-world",
@@ -112,6 +114,25 @@ dependencies = [
  "serde",
  "serde_json",
  "ureq",
+]
+
+[[package]]
+name = "bmr-fill"
+version = "0.1.0"
+dependencies = [
+ "bmr-invert",
+ "bmr-world",
+]
+
+[[package]]
+name = "bmr-invert"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bmr-fetch",
+ "bmr-prbm",
+ "bmr-world",
+ "rayon",
 ]
 
 [[package]]

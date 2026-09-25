@@ -1,20 +1,20 @@
 """Compare a bmr fetch mirror against BlueMap's on-disk webroot for a fixture (byte-exact after gunzip).
 
-Usage: py -3 tools/verify_mirror.py <fixture> [mirror_dir=work/cache/127.0.0.1_8100]
+Usage: py -3 tools/verify_mirror.py <fixture> [mirror_dir=work/cache/<fixture>]
 Exit 1 if any rendered file is missing from the mirror or differs.
 """
 import gzip
 import sys
 from pathlib import Path
 
-from paths import BLUEMAP, WEB_HOST, WEB_PORT, WORK
+from paths import BLUEMAP, WORK
 
 CHECKED = ("settings.json", "textures.json", "tiles/")
 
 
 def main() -> None:
     fixture = sys.argv[1]
-    mirror = Path(sys.argv[2]) if len(sys.argv) > 2 else WORK / "cache" / f"{WEB_HOST}_{WEB_PORT}"
+    mirror = Path(sys.argv[2]) if len(sys.argv) > 2 else WORK / "cache" / fixture
     src = BLUEMAP / fixture / "web" / "maps" / fixture
     dst = mirror / "maps" / fixture
     missing, differ, ok = [], [], 0

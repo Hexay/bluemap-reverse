@@ -8,8 +8,9 @@ use std::sync::Arc;
 use anyhow::{Context, Result, bail};
 use rayon::prelude::*;
 
-use crate::chunk::Chunk;
+use crate::chunk::{Chunk, PaletteStyle};
 use crate::nbt_write::encode_chunk;
+use crate::world::region_dir;
 use crate::region::write_region;
 use crate::registry::BlockRegistry;
 
@@ -19,6 +20,7 @@ const CHUNK_DIRS: [&str; 3] = ["region", "entities", "poi"];
 pub struct WorldWriter {
     region_dir: PathBuf,
     registry: Arc<BlockRegistry>,
+    style: PaletteStyle,
 }
 
 /// Template world files as (path relative to the world root with `/` separators, bytes).
@@ -52,8 +54,15 @@ fn collect(dir: &Path, prefix: &str, out: &mut TemplateFiles) -> Result<()> {
 }
 
 impl WorldWriter {
-    /// Creates `out` from template files (26.1+ layout). Refuses to overwrite an existing world.
-    pub fn create(out: &Path, template: &[(String, Vec<u8>)], dimension: &str, registry: Arc<BlockRegistry>) -> Result<Self> {
+    /// Creates `out` from template files; folder layout follows the template (it has `dimensions/` from
+    /// 26.1 on), palettes are written in `style` (the target version's). Refuses to overwrite a world.
+    pub fn create(
+        out: &Path,
+        template: &[(String, Vec<u8>)],
+        dimension: &str,
+        registry: Arc<BlockRegistry>,
+        style: PaletteStyle,
+    ) -> Result<Self> {
         if out.join("level.dat").exists() {
             bail!("{} already contains a world", out.display());
         }
@@ -64,10 +73,10 @@ impl WorldWriter {
             }
             fs::write(&path, bytes).with_context(|| path.display().to_string())?;
         }
-        let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
-        let region_dir = out.join("dimensions").join(ns).join(name).join("region");
+        let modern = template.iter().any(|(rel, _)| rel.starts_with("dimensions/"));
+        let region_dir = region_dir(out, dimension, modern);
         fs::create_dir_all(&region_dir)?;
-        Ok(Self { region_dir, registry })
+        Ok(Self { region_dir, registry, style })
     }
 
     /// Writes every chunk, grouped into region files (one file per region, written once).
@@ -82,7 +91,7 @@ impl WorldWriter {
             let encoded = chunks
                 .par_iter()
                 .map(|c| {
-                    let nbt = encode_chunk(c, &self.registry).with_context(|| format!("chunk {},{}", c.x, c.z))?;
+                    let nbt = encode_chunk(c, &self.registry, self.style).with_context(|| format!("chunk {},{}", c.x, c.z))?;
                     Ok(((c.x.rem_euclid(32) as u8, c.z.rem_euclid(32) as u8), nbt))
                 })
                 .collect::<Result<Vec<_>>>()?;

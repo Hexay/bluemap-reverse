@@ -123,6 +123,15 @@ impl Section {
     }
 }
 
+/// How block-state palettes are encoded on disk; the writer must match the target version.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PaletteStyle {
+    /// `{Name, Properties}` for every entry (1.18 … 26.2).
+    Legacy,
+    /// 26.3: default states as bare names, others `{id, properties}`.
+    Compact,
+}
+
 pub struct Chunk {
     pub x: i32,
     pub z: i32,
@@ -131,6 +140,8 @@ pub struct Chunk {
     pub status: String,
     /// Sorted by `y`; sections without block data are omitted.
     pub sections: Vec<Section>,
+    /// Encoding seen when read from disk (`None` for built chunks or all-air palettes).
+    pub palette_style: Option<PaletteStyle>,
 }
 
 fn palette_index(palette: &mut Vec<BlockState>, state: &BlockState) -> u16 {
@@ -152,6 +163,7 @@ impl Chunk {
             data_version,
             status: "minecraft:full".into(),
             sections: (min_section..=max_section).map(|y| Section::empty(y, biome)).collect(),
+            palette_style: None,
         }
     }
 

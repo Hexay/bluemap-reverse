@@ -1,5 +1,6 @@
-//! On-disk pack layout: `MAGIC` + gzip(postcard(`PackFile`)). Texture ids in face keys are process-local,
-//! so keys store an index into the pack's own texture-name table.
+//! On-disk pack layout: `MAGIC` + u32 LE header length + postcard(`Header`) + gzip(postcard(`Body`)).
+//! The header is uncompressed so choosing among many packs reads only headers. Texture ids in face keys
+//! are process-local, so keys store an index into the body's own texture-name table.
 
 use bmr_invert::face::{FaceKey, Liquid, Tex};
 use bmr_invert::library::Entry;
@@ -8,22 +9,28 @@ use serde::{Deserialize, Serialize};
 
 pub const MAGIC: &[u8; 8] = b"BMRPACK\0";
 /// Bump on any change to the structs below.
-pub const FORMAT: u32 = 1;
+pub const FORMAT: u32 = 2;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
     pub mc_version: String,
     pub data_version: i32,
     pub bluemap_version: String,
+    /// Palettes are written in 26.3's compact form (else legacy `{Name, Properties}`).
+    pub compact_palette: bool,
     pub created_unix: i64,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PackFile {
+pub struct Header {
     pub format: u32,
     pub meta: Meta,
     /// Every texture of the library map (index = material index there): the compatibility baseline.
     pub site_textures: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Body {
     /// Texture names referenced by `entries` keys.
     pub key_textures: Vec<String>,
     pub entries: Vec<EntryDto>,

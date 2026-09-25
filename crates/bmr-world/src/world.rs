@@ -8,7 +8,7 @@ use anyhow::{Context, Result, bail};
 use rayon::prelude::*;
 use rustc_hash::FxHashMap;
 
-use crate::chunk::Chunk;
+use crate::chunk::{Chunk, PaletteStyle};
 use crate::nbt::decode_chunk;
 use crate::region::read_region_where;
 use crate::registry::BlockRegistry;
@@ -21,18 +21,25 @@ pub struct World {
     registry: Option<Arc<BlockRegistry>>,
 }
 
+/// Region folder of `dimension` (e.g. `minecraft:overworld`) under a world root: 26.1+ moved dimensions to
+/// `dimensions/<ns>/<name>/region`; before that the overworld used `region/`, nether `DIM-1/`, end `DIM1/`.
+pub fn region_dir(root: &Path, dimension: &str, modern: bool) -> PathBuf {
+    let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
+    if modern {
+        return root.join("dimensions").join(ns).join(name).join("region");
+    }
+    match (ns, name) {
+        ("minecraft", "overworld") => root.join("region"),
+        ("minecraft", "the_nether") => root.join("DIM-1").join("region"),
+        ("minecraft", "the_end") => root.join("DIM1").join("region"),
+        _ => root.join("dimensions").join(ns).join(name).join("region"),
+    }
+}
+
 impl World {
-    /// `dimension` like `minecraft:overworld`. Tries `dimensions/<ns>/<name>/region` (26.1+) then legacy.
+    /// Tries the 26.1+ layout, then the legacy one (see `region_dir`).
     pub fn open(root: &Path, dimension: &str, registry: Option<Arc<BlockRegistry>>) -> Result<Self> {
-        let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
-        let modern = root.join("dimensions").join(ns).join(name).join("region");
-        let legacy = match (ns, name) {
-            ("minecraft", "overworld") => root.join("region"),
-            ("minecraft", "the_nether") => root.join("DIM-1").join("region"),
-            ("minecraft", "the_end") => root.join("DIM1").join("region"),
-            _ => root.join("dimensions").join(ns).join(name).join("region"),
-        };
-        for dir in [modern, legacy] {
+        for dir in [region_dir(root, dimension, true), region_dir(root, dimension, false)] {
             if dir.is_dir() {
                 return Ok(Self { region_dir: dir, registry });
             }
@@ -43,6 +50,16 @@ impl World {
     /// World without any regions yet (reads as all air).
     pub fn empty(region_dir: PathBuf) -> Self {
         Self { region_dir, registry: None }
+    }
+
+    /// Palette encoding of this world's chunks (from the first chunk with a named palette entry).
+    pub fn palette_style(&self) -> Result<Option<PaletteStyle>> {
+        for r in self.regions()? {
+            if let Some(s) = self.read_region(r)?.values().find_map(|c| c.palette_style) {
+                return Ok(Some(s));
+            }
+        }
+        Ok(None)
     }
 
     /// Region coordinates of every `r.<x>.<z>.mca` present.

@@ -96,20 +96,19 @@ pub fn find_packs() -> Vec<PathBuf> {
     out
 }
 
-/// The pack to use: explicit, else the one named for the site's BlueMap version, else the only one.
-pub fn choose_pack(explicit: Option<&Path>, site_version: Option<&str>) -> Result<PathBuf> {
+/// The pack to use: explicit, else the installed pack whose texture fingerprint fits the site best.
+/// Also returns the ranking as printable lines (best first).
+pub fn select_pack(explicit: Option<&Path>, site_version: Option<&str>, site_textures: &[String]) -> Result<(PathBuf, Vec<String>)> {
     if let Some(p) = explicit {
-        return Ok(p.to_path_buf());
+        return Ok((p.to_path_buf(), Vec::new()));
     }
     let packs = find_packs();
-    if let Some(v) = site_version {
-        if let Some(p) = packs.iter().find(|p| p.to_string_lossy().contains(&format!("bluemap{v}."))) {
-            return Ok(p.clone());
-        }
+    if packs.is_empty() {
+        bail!("no .pack file found in ./packs or next to bmr; pass --pack <file>");
     }
-    match packs.as_slice() {
-        [only] => Ok(only.clone()),
-        [] => bail!("no .pack file found in ./packs or next to bmr; pass --pack <file>"),
-        many => bail!("several packs, none named for BlueMap {:?}; pass --pack (have: {many:?})", site_version),
-    }
+    let (ranked, warnings) = bmr_pack::rank(&packs, site_version, site_textures);
+    let mut lines: Vec<String> = ranked.iter().map(|r| r.describe()).collect();
+    lines.extend(warnings.into_iter().map(|w| format!("skipped: {w}")));
+    let best = ranked.first().context("no readable pack")?;
+    Ok((best.path.clone(), lines))
 }

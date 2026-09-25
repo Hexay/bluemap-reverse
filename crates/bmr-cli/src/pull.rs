@@ -9,7 +9,7 @@ use bmr_invert::timings::Timings;
 use bmr_pack::{Pack, Verdict};
 
 use crate::fetch::site_slug;
-use crate::pack::choose_pack;
+use crate::pack::select_pack;
 use crate::reconstruct::{Inputs, reconstruct, report};
 use crate::reverse::OptionArgs;
 
@@ -79,10 +79,13 @@ pub fn run(a: Args) -> Result<()> {
     let map = bmr_fetch::LocalMap::open(&cache, Some(&map_id))?;
     println!("      map `{}` ({}), {} hires tiles", map_id, map.settings.name, map.tiles(0).len());
 
-    println!("[2/4] checking pack compatibility");
-    let pack_path = choose_pack(a.pack.as_deref(), map.bluemap_version.as_deref())?;
-    let pack = t.time("pack_load", || Pack::load(&pack_path))?;
+    println!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", map.bluemap_version.as_deref().unwrap_or("?"));
     let site_textures = bmr_prbm::parse_texture_names(&map.textures_json()?)?;
+    let (pack_path, ranking) = select_pack(a.pack.as_deref(), map.bluemap_version.as_deref(), &site_textures)?;
+    for (i, line) in ranking.iter().enumerate() {
+        println!("      {} {line}", if i == 0 { "→" } else { " " });
+    }
+    let pack = t.time("pack_load", || Pack::load(&pack_path))?;
     let compat = bmr_pack::check(&pack, map.bluemap_version.as_deref(), &site_textures);
     println!("      pack {} (Minecraft {}, BlueMap {})", pack_path.display(), pack.meta.mc_version, pack.meta.bluemap_version);
     for line in compat.explain() {
@@ -113,6 +116,7 @@ pub fn run(a: Args) -> Result<()> {
         lib: &pack.library,
         registry: &pack.registry,
         template: &pack.template,
+        style: pack.palette_style(),
         dimension: &dimension,
         regen: regen.as_ref(),
         out: &world_dir,

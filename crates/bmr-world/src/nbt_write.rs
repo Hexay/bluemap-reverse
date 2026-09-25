@@ -8,7 +8,7 @@ use fastnbt::LongArray;
 use serde::Serialize;
 
 use crate::block_entities::block_entity_type;
-use crate::chunk::{BlockState, Chunk};
+use crate::chunk::{BlockState, Chunk, PaletteStyle};
 use crate::registry::BlockRegistry;
 
 #[derive(Serialize)]
@@ -65,12 +65,25 @@ enum EntryOut {
         id: String,
         properties: BTreeMap<String, String>,
     },
+    Legacy {
+        #[serde(rename = "Name")]
+        name: String,
+        #[serde(rename = "Properties", skip_serializing_if = "BTreeMap::is_empty")]
+        properties: BTreeMap<String, String>,
+    },
 }
 
-pub fn encode_chunk(chunk: &Chunk, registry: &BlockRegistry) -> Result<Vec<u8>> {
+pub fn encode_chunk(chunk: &Chunk, registry: &BlockRegistry, style: PaletteStyle) -> Result<Vec<u8>> {
     let mut sections = Vec::with_capacity(chunk.sections.len());
     for s in &chunk.sections {
-        let palette = encode_palette(&s.palette, registry)?;
+        let palette = match style {
+            PaletteStyle::Compact => encode_palette(&s.palette, registry)?,
+            PaletteStyle::Legacy => s
+                .palette
+                .iter()
+                .map(|b| EntryOut::Legacy { name: b.name.clone(), properties: b.properties.iter().cloned().collect() })
+                .collect(),
+        };
         sections.push(SectionOut {
             y: s.y as i8,
             block_states: PalettedOut { palette, data: pack(&s.blocks, s.palette.len(), 4) },

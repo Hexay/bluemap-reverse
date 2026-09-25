@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use anyhow::{Result, bail, ensure};
 use serde::Deserialize;
 
-use crate::chunk::{BlockState, Chunk, Section};
+use crate::chunk::{BlockState, Chunk, PaletteStyle, Section};
 use crate::registry::BlockRegistry;
 
 #[derive(Deserialize)]
@@ -37,8 +37,8 @@ struct Paletted<T> {
     data: Option<fastnbt::LongArray>,
 }
 
-/// Palette entry encodings seen in the wild:
-/// - legacy (≤ 26.2?): `{Name, Properties?}` with every property
+/// Palette entry encodings seen in the wild (see `PaletteStyle`):
+/// - legacy (1.18 … 26.2): `{Name, Properties?}` with every property
 /// - 26.3: `{id, properties}` with every property, or a bare name meaning the **default state**; mixed
 ///   lists wrap bare names as `{"": name}`, all-bare lists are plain string lists.
 #[derive(Deserialize)]
@@ -48,23 +48,32 @@ enum StateNbt {
     Compound {
         #[serde(rename = "")]
         bare: Option<String>,
-        #[serde(rename = "id", alias = "Name")]
         id: Option<String>,
+        #[serde(rename = "Name")]
+        legacy_name: Option<String>,
         #[serde(rename = "properties", alias = "Properties", default)]
         properties: BTreeMap<String, String>,
     },
 }
 
-fn resolve(entry: StateNbt, registry: Option<&BlockRegistry>) -> Result<BlockState> {
+fn resolve(entry: StateNbt, registry: Option<&BlockRegistry>, style: &mut Option<PaletteStyle>) -> Result<BlockState> {
     let (name, props) = match entry {
         StateNbt::Bare(name) | StateNbt::Compound { bare: Some(name), .. } => {
+            *style = Some(PaletteStyle::Compact);
             let Some(reg) = registry else {
                 bail!("palette uses the 26.3 default-state shorthand ({name}); a block registry is required");
             };
             let default = reg.get(&name).map(|b| b.default.clone()).unwrap_or_default();
             (name, default)
         }
-        StateNbt::Compound { id: Some(name), properties, .. } => (name, properties.into_iter().collect()),
+        StateNbt::Compound { id: Some(name), properties, .. } => {
+            *style = Some(PaletteStyle::Compact);
+            (name, properties.into_iter().collect())
+        }
+        StateNbt::Compound { legacy_name: Some(name), properties, .. } => {
+            style.get_or_insert(PaletteStyle::Legacy);
+            (name, properties.into_iter().collect())
+        }
         StateNbt::Compound { .. } => bail!("palette entry without a name"),
     };
     Ok(BlockState::new(name, props))
@@ -73,10 +82,11 @@ fn resolve(entry: StateNbt, registry: Option<&BlockRegistry>) -> Result<BlockSta
 pub fn decode_chunk(nbt: &[u8], registry: Option<&BlockRegistry>) -> Result<Chunk> {
     let c: ChunkNbt = fastnbt::from_bytes(nbt)?;
     let mut sections = Vec::with_capacity(c.sections.len());
+    let mut style = None;
     for s in c.sections {
         let Some(bs) = s.block_states else { continue };
         let palette: Vec<BlockState> =
-            bs.palette.into_iter().map(|p| resolve(p, registry)).collect::<Result<_>>()?;
+            bs.palette.into_iter().map(|p| resolve(p, registry, &mut style)).collect::<Result<_>>()?;
         let blocks = if palette.len() <= 1 { Vec::new() } else { unpack(bs.data.as_deref(), palette.len(), 4096, 4)? };
         let (biome_palette, biomes) = match s.biomes {
             Some(b) => {
@@ -88,7 +98,7 @@ pub fn decode_chunk(nbt: &[u8], registry: Option<&BlockRegistry>) -> Result<Chun
         sections.push(Section { y: s.y as i32, palette, blocks, biome_palette, biomes });
     }
     sections.sort_by_key(|s| s.y);
-    Ok(Chunk { x: c.x, z: c.z, data_version: c.data_version, status: c.status, sections })
+    Ok(Chunk { x: c.x, z: c.z, data_version: c.data_version, status: c.status, sections, palette_style: style })
 }
 
 /// Paletted container: `bits = max(min_bits, ceil(log2(len)))`, entries never span longs (1.16+).

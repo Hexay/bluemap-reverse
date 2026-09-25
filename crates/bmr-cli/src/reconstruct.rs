@@ -10,7 +10,9 @@ use bmr_fill::Bounds;
 use bmr_invert::Library;
 use bmr_invert::face::Tex;
 use bmr_invert::timings::Timings;
-use bmr_world::{BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, StateId, StateTable, World, WorldWriter};
+use bmr_world::{
+    BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateId, StateTable, World, WorldWriter,
+};
 
 use crate::window::{self, Window};
 
@@ -33,6 +35,8 @@ pub struct Inputs<'a> {
     pub lib: &'a Library,
     pub registry: &'a Arc<BlockRegistry>,
     pub template: &'a [(String, Vec<u8>)],
+    /// Palette encoding of the target Minecraft version.
+    pub style: PaletteStyle,
     pub dimension: &'a str,
     pub regen: Option<&'a World>,
     pub out: &'a Path,
@@ -53,7 +57,7 @@ pub struct Totals {
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let textures = bmr_invert::map_textures(inp.map)?;
     let windows = if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
-    let writer = WorldWriter::create(inp.out, inp.template, inp.dimension, inp.registry.clone())?;
+    let writer = WorldWriter::create(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
     let mut table = StateTable::default();
     let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
 

@@ -1,11 +1,13 @@
 //! Anvil `.mca` container: 1024 chunk slots, 4 KiB sectors, per-chunk compression byte.
 //! https://minecraft.wiki/w/Region_file_format
 
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::Path;
 
 use anyhow::{Context, Result, bail, ensure};
+use flate2::Compression;
 use flate2::read::{GzDecoder, ZlibDecoder};
+use flate2::write::ZlibEncoder;
 
 const SECTOR: usize = 4096;
 
@@ -27,6 +29,32 @@ pub fn read_region(path: &Path) -> Result<Vec<((u8, u8), Vec<u8>)>> {
         out.push((((slot % 32) as u8, (slot / 32) as u8), nbt));
     }
     Ok(out)
+}
+
+/// Write a region file from uncompressed chunk NBT keyed by local (x, z); zlib (type 2).
+pub fn write_region(path: &Path, chunks: &[((u8, u8), Vec<u8>)]) -> Result<()> {
+    let mut header = vec![0u8; 2 * SECTOR];
+    let mut body = Vec::new();
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs() as u32;
+    for ((lx, lz), nbt) in chunks {
+        let mut enc = ZlibEncoder::new(Vec::new(), Compression::default());
+        enc.write_all(nbt)?;
+        let compressed = enc.finish()?;
+        let len = compressed.len() + 1;
+        let sectors = (len + 4).div_ceil(SECTOR);
+        // 1 MiB+ chunks need the external .mcc mechanism
+        ensure!(sectors < 256, "chunk {lx},{lz} too large ({len} bytes)");
+        let offset_sectors = 2 + body.len() / SECTOR;
+        let slot = *lz as usize * 32 + *lx as usize;
+        header[slot * 4..slot * 4 + 4].copy_from_slice(&(((offset_sectors as u32) << 8) | sectors as u32).to_be_bytes());
+        header[SECTOR + slot * 4..SECTOR + slot * 4 + 4].copy_from_slice(&now.to_be_bytes());
+        body.extend((len as u32).to_be_bytes());
+        body.push(2);
+        body.extend(compressed);
+        body.resize(body.len().next_multiple_of(SECTOR), 0);
+    }
+    header.extend(body);
+    std::fs::write(path, header).with_context(|| path.display().to_string())
 }
 
 fn read_chunk(data: &[u8], offset: usize) -> Result<Vec<u8>> {

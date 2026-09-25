@@ -118,6 +118,14 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
 - Score only BlueMap-rendered columns (`--mirror`): the rendered area is smaller than the set of full chunks.
 - Superflat is too easy: terrain-only regen (`superflat-bare`) already scores 99.27% occupied. Seeded fixture needed.
 
+## Settled in phase 4 (2026-09-25)
+
+- Writer output (26.3 palette shape, no heightmaps/light) loads in a 26.3 server without regeneration:
+  `tools/check_writer.py` = copy → resave in server → score (100% except grass→dirt random ticks).
+- Output worlds are seeded from `fixtures/template-void` (void: any regenerated chunk scores as missing).
+- Server does not recreate missing block entities → writer emits minimal `{id,x,y,z}` per BE block
+  (`bmr-world/src/block_entities.rs`; test checks all registry BE types are mapped). 26.3 beds have no BE.
+
 ## Open questions — settle with quick experiments in phase 0/1
 
 - Debug world level-type string on a 26.3 server.

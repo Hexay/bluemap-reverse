@@ -3,7 +3,7 @@
 //! to bedrock. Estimate the floor from the nearest floored liquid columns; it can be no shallower than
 //! where darkness starts.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use crate::columns::{Column, Gap, ring};
 
@@ -13,8 +13,8 @@ const DARK_DEPTH: i32 = 15;
 const SEARCH_RADIUS: i32 = 32;
 
 /// Liquid gap → y of the estimated top floor block (liquid fills above it, solid from it down).
-pub fn estimate_floors(liquid_gaps: &[&Gap]) -> HashMap<Column, i32> {
-    let floors: HashMap<Column, i32> =
+pub fn estimate_floors(liquid_gaps: &[&Gap]) -> FxHashMap<Column, i32> {
+    let floors: FxHashMap<Column, i32> =
         liquid_gaps.iter().filter(|g| g.floored).map(|g| (g.column, g.ylo - 1)).collect();
     liquid_gaps
         .iter()

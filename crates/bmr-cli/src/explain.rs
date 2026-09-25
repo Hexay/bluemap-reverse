@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
-use bmr_invert::face::{FaceKey, faces_by_cell, signature, texture_names, world_faces};
+use bmr_invert::face::{FaceKey, faces_by_cell, signature, texture_ids, world_faces};
 use bmr_invert::matcher::candidates;
 use bmr_invert::Library;
 
@@ -35,7 +35,7 @@ pub fn run(a: Args) -> Result<()> {
     let lib = Library::build(&lib_map, &a.world_args.open(&a.library_world, &Some(registry.clone()))?, &registry)?;
 
     let map = a.mirror.open()?;
-    let names = texture_names(&bmr_prbm::parse_textures(&map.textures_json()?)?);
+    let names = texture_ids(&bmr_prbm::parse_texture_names(&map.textures_json()?)?);
     let t = map.settings.hires_grid().tile_of(x, z);
     let tile = bmr_prbm::parse(&map.tile_bytes(0, t)?)?;
     let cells = faces_by_cell(&world_faces(&tile, map.hires_origin(t), &names));
@@ -89,7 +89,8 @@ fn diff(a: &[FaceKey], b: &[FaceKey]) -> Vec<FaceKey> {
 
 fn print_keys(keys: &[FaceKey]) {
     for k in keys {
-        let tex = k.texture.trim_start_matches("minecraft:block/");
+        let name = k.texture.name();
+        let tex = name.trim_start_matches("minecraft:block/");
         let b = if k.on_boundary() { "B" } else { " " };
         println!("  {b} {tex:<28} tint={} {:?}", k.tinted as u8, k.verts);
     }

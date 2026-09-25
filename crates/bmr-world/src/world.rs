@@ -1,11 +1,12 @@
 //! World root + dimension → region directory, for both the 26.1+ layout and the legacy one.
 
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
+use rayon::prelude::*;
+use rustc_hash::FxHashMap;
 
 use crate::chunk::Chunk;
 use crate::nbt::decode_chunk;
@@ -62,17 +63,19 @@ impl World {
     }
 
     /// Every chunk in region (rx, rz); empty if the file is absent.
-    pub fn read_region(&self, (rx, rz): (i32, i32)) -> Result<HashMap<ChunkPos, Chunk>> {
+    pub fn read_region(&self, (rx, rz): (i32, i32)) -> Result<FxHashMap<ChunkPos, Chunk>> {
         let path = self.region_dir.join(format!("r.{rx}.{rz}.mca"));
         if !path.exists() {
-            return Ok(HashMap::new());
+            return Ok(FxHashMap::default());
         }
-        let mut out = HashMap::new();
-        for ((lx, lz), nbt) in read_region(&path)? {
-            let pos = (rx * 32 + lx as i32, rz * 32 + lz as i32);
-            let chunk = decode_chunk(&nbt, self.registry.as_deref()).with_context(|| format!("chunk {pos:?} in {}", path.display()))?;
-            out.insert(pos, chunk);
-        }
-        Ok(out)
+        read_region(&path)?
+            .into_par_iter()
+            .map(|((lx, lz), nbt)| {
+                let pos = (rx * 32 + lx as i32, rz * 32 + lz as i32);
+                let chunk = decode_chunk(&nbt, self.registry.as_deref())
+                    .with_context(|| format!("chunk {pos:?} in {}", path.display()))?;
+                Ok((pos, chunk))
+            })
+            .collect()
     }
 }

@@ -1,15 +1,17 @@
 //! Face-signature library learned from BlueMap's render of the vanilla debug world
 //! (every state once, isolated, at y=70 on odd x/z). See docs/plan.md "Inversion by learned signatures".
 
-use std::collections::{BTreeSet, HashMap};
-use std::sync::Arc;
+use std::collections::BTreeSet;
+
+use rayon::prelude::*;
+use rustc_hash::FxHashMap;
 use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
 use bmr_world::{BlockRegistry, BlockState, World};
 
-use crate::face::{Cell, CellFaces, FaceKey, Liquid, WorldFace, normalized, signature, texture_names, world_faces};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, WorldFace, normalized, signature, texture_ids, world_faces};
 use crate::timings::Timings;
 
 const DEBUG_Y: i32 = 70;
@@ -43,28 +45,30 @@ pub struct Library {
     pub entries: Vec<Entry>,
     pub data_version: i32,
     pub stats: BuildStats,
-    exact: HashMap<Vec<FaceKey>, Vec<usize>>,
-    exact_norm: HashMap<Vec<FaceKey>, Vec<usize>>,
-    by_texture: HashMap<Arc<str>, Vec<usize>>,
-    by_state: HashMap<BlockState, usize>,
+    exact: FxHashMap<Vec<FaceKey>, Vec<usize>>,
+    exact_norm: FxHashMap<Vec<FaceKey>, Vec<usize>>,
+    by_texture: FxHashMap<Tex, Vec<usize>>,
+    by_state: FxHashMap<BlockState, usize>,
 }
 
 impl Library {
     pub fn build(map: &LocalMap, world: &World, registry: &BlockRegistry) -> Result<Self> {
         let mut t = Timings::default();
         let faces = t.time("tiles", || -> Result<Vec<WorldFace>> {
-            let textures = bmr_prbm::parse_textures(&map.textures_json()?)?;
-            let names = texture_names(&textures);
-            let mut faces = Vec::new();
-            for tile in map.tiles(0) {
-                let parsed = bmr_prbm::parse(&map.tile_bytes(0, tile)?)?;
-                faces.extend(world_faces(&parsed, map.hires_origin(tile), &names));
-            }
-            Ok(faces)
+            let names = texture_ids(&bmr_prbm::parse_texture_names(&map.textures_json()?)?);
+            let per_tile = map
+                .tiles(0)
+                .par_iter()
+                .map(|&tile| -> Result<Vec<WorldFace>> {
+                    let parsed = bmr_prbm::parse(&map.tile_bytes(0, tile)?)?;
+                    Ok(world_faces(&parsed, map.hires_origin(tile), &names))
+                })
+                .collect::<Result<Vec<_>>>()?;
+            Ok(per_tile.into_iter().flatten().collect())
         })?;
         let (mut by_anchor, mut overhang) = t.time("attribute", || {
-            let mut by_anchor: HashMap<Cell, CellFaces> = HashMap::new();
-            let mut overhang: HashMap<Cell, Vec<(Cell, FaceKey)>> = HashMap::new();
+            let mut by_anchor: FxHashMap<Cell, CellFaces> = FxHashMap::default();
+            let mut overhang: FxHashMap<Cell, Vec<(Cell, FaceKey)>> = FxHashMap::default();
             for f in &faces {
                 let (a, o) = (anchor(f), f.owner());
                 if o == a {
@@ -80,33 +84,37 @@ impl Library {
             by_anchor.entry(*a).or_default();
         }
 
-        let chunks = t.time("world", || -> Result<HashMap<_, _>> {
-            let mut chunks = HashMap::new();
+        // one region at a time, keeping only the anchor states: the decoded debug world is ~0.5 GB
+        let (states, data_version) = t.time("world", || -> Result<(FxHashMap<Cell, BlockState>, i32)> {
+            let mut states = FxHashMap::default();
+            let mut data_version = None;
             for r in world.regions()? {
-                chunks.extend(world.read_region(r)?);
+                let chunks = world.read_region(r)?;
+                data_version = data_version.or_else(|| chunks.values().next().map(|c| c.data_version));
+                for &(x, y, z) in by_anchor.keys() {
+                    let Some(chunk) = chunks.get(&(x.div_euclid(16), z.div_euclid(16))) else { continue };
+                    if let Some(s) = chunk.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize) {
+                        states.insert((x, y, z), s.clone());
+                    }
+                }
             }
-            Ok(chunks)
+            Ok((states, data_version.context("debug world has no chunks")?))
         })?;
-        let data_version = chunks.values().next().context("debug world has no chunks")?.data_version;
         let index_start = Instant::now();
 
         let mut lib = Self {
             entries: Vec::new(),
             data_version,
             stats: BuildStats::default(),
-            exact: HashMap::new(),
-            exact_norm: HashMap::new(),
-            by_texture: HashMap::new(),
-            by_state: HashMap::new(),
+            exact: FxHashMap::default(),
+            exact_norm: FxHashMap::default(),
+            by_texture: FxHashMap::default(),
+            by_state: FxHashMap::default(),
         };
         let mut anchors: Vec<_> = by_anchor.into_iter().collect();
         anchors.sort_by_key(|(c, _)| *c);
         for ((x, y, z), cell) in anchors {
-            let chunk = chunks.get(&(x.div_euclid(16), z.div_euclid(16)));
-            let Some(state) = chunk.and_then(|c| c.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
-            else {
-                continue;
-            };
+            let Some(state) = states.get(&(x, y, z)) else { continue };
             if state.is_air() {
                 continue;
             }
@@ -126,7 +134,7 @@ impl Library {
             lib.add(Entry { state: state.clone(), sig, liquid, overhang, tint, default_distance, full_cube });
         }
         lib.stats.states = lib.entries.len();
-        t.0.push(("index".into(), index_start.elapsed()));
+        t.record("index", index_start.elapsed());
         lib.stats.timings = t;
         Ok(lib)
     }
@@ -138,9 +146,9 @@ impl Library {
         let id = self.entries.len();
         self.exact.entry(e.sig.clone()).or_default().push(id);
         self.exact_norm.entry(normalized(&e.sig)).or_default().push(id);
-        let textures: BTreeSet<&Arc<str>> = e.sig.iter().map(|k| &k.texture).collect();
+        let textures: BTreeSet<Tex> = e.sig.iter().map(|k| k.texture).collect();
         for t in textures {
-            self.by_texture.entry(t.clone()).or_default().push(id);
+            self.by_texture.entry(t).or_default().push(id);
         }
         self.by_state.insert(e.state.clone(), id);
         self.entries.push(e);
@@ -168,10 +176,10 @@ impl Library {
     }
 
     /// Entries whose signature uses every texture in `textures` (ids ascending).
-    pub fn with_textures<'a>(&self, textures: impl IntoIterator<Item = &'a Arc<str>>) -> Vec<usize> {
+    pub fn with_textures(&self, textures: impl IntoIterator<Item = Tex>) -> Vec<usize> {
         let mut lists: Vec<&Vec<usize>> = Vec::new();
         for t in textures {
-            match self.by_texture.get(t) {
+            match self.by_texture.get(&t) {
                 Some(l) => lists.push(l),
                 None => return Vec::new(),
             }

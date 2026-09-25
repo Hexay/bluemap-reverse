@@ -4,7 +4,7 @@
 //! 2. Gaps under builds: copy the nearest column resolved in pass 1 at the same heights (grass under a
 //!    wool floor), else by height (deepslate at y ≤ 0, stone above).
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use bmr_world::{BlockRegistry, BlockState};
 
@@ -15,7 +15,7 @@ const COPY_RADIUS: i32 = 16;
 
 /// Inclusive y range of one state within a column.
 #[derive(Clone)]
-pub struct Segment {
+pub struct Run {
     pub column: Column,
     pub ylo: i32,
     pub yhi: i32,
@@ -36,13 +36,13 @@ pub fn solid_segments(
     min_y: i32,
     registry: &BlockRegistry,
     full_cube_at: &dyn Fn((i32, i32, i32)) -> Option<BlockState>,
-) -> Vec<Segment> {
+) -> Vec<Run> {
     let named = |name: &str| {
         let props = registry.get(name).map(|b| b.default.clone()).unwrap_or_default();
         BlockState::new(name.to_owned(), props)
     };
     let mut out = Vec::new();
-    let mut resolved: HashMap<Column, Vec<(i32, i32, BlockState)>> = HashMap::new();
+    let mut resolved: FxHashMap<Column, Vec<(i32, i32, BlockState)>> = FxHashMap::default();
     let mut deferred = Vec::new();
     for g in gaps {
         match g.above.and_then(|s| surface_kind(&s.name)) {
@@ -50,7 +50,7 @@ pub fn solid_segments(
                 for (ylo, yhi, name) in layer_profile(kind, g, min_y) {
                     let state = named(&name);
                     resolved.entry(g.column).or_default().push((ylo, yhi, state.clone()));
-                    out.push(Segment { column: g.column, ylo, yhi, state });
+                    out.push(Run { column: g.column, ylo, yhi, state });
                 }
             }
             None => deferred.push(g),
@@ -148,16 +148,16 @@ pub fn default_block(y: i32, min_y: i32) -> &'static str {
 /// Pass 2: per y, the nearest column's pass-1 result or observed full cube at that y, else by height.
 fn copy_nearest(
     g: &SolidGap,
-    resolved: &HashMap<Column, Vec<(i32, i32, BlockState)>>,
+    resolved: &FxHashMap<Column, Vec<(i32, i32, BlockState)>>,
     min_y: i32,
     named: &impl Fn(&str) -> BlockState,
     full_cube_at: &dyn Fn((i32, i32, i32)) -> Option<BlockState>,
-) -> Vec<Segment> {
+) -> Vec<Run> {
     let (cx, cz) = g.column;
-    let mut out: Vec<Segment> = Vec::new();
+    let mut out: Vec<Run> = Vec::new();
     let mut push = |y: i32, state: BlockState| match out.last_mut() {
         Some(s) if s.state == state && s.ylo == y + 1 => s.ylo = y,
-        _ => out.push(Segment { column: g.column, ylo: y, yhi: y, state }),
+        _ => out.push(Run { column: g.column, ylo: y, yhi: y, state }),
     };
     'cell: for y in (g.ylo..=g.yhi).rev() {
         for r in 1..=COPY_RADIUS {

@@ -3,27 +3,27 @@
 //! - a liquid face is missing → neighbour is the same liquid or a full block (`liquid`)
 //! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`)
 
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::face::{Cell, CellFaces, DIRS, FaceKey, Liquid, step};
 use crate::library::Library;
 
 #[derive(Default)]
 pub struct Evidence {
-    pub solid: HashSet<Cell>,
-    pub liquid: HashMap<Cell, Liquid>,
-    pub open: HashSet<Cell>,
+    pub solid: FxHashSet<Cell>,
+    pub liquid: FxHashMap<Cell, Liquid>,
+    pub open: FxHashSet<Cell>,
 }
 
 pub struct Observed<'a> {
     /// Matched non-liquid blocks → library entry.
-    pub blocks: &'a HashMap<Cell, usize>,
+    pub blocks: &'a FxHashMap<Cell, usize>,
     /// Non-liquid faces per cell.
-    pub solid_faces: &'a HashMap<Cell, CellFaces>,
+    pub solid_faces: &'a FxHashMap<Cell, CellFaces>,
     /// Liquid faces per cell (pure liquid cells and waterlogged blocks).
-    pub liquid_faces: &'a HashMap<Cell, Vec<FaceKey>>,
+    pub liquid_faces: &'a FxHashMap<Cell, Vec<FaceKey>>,
     /// Cells showing nothing but liquid.
-    pub liquids: &'a HashMap<Cell, Liquid>,
+    pub liquids: &'a FxHashMap<Cell, Liquid>,
 }
 
 impl Observed<'_> {

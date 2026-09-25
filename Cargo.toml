@@ -33,6 +33,8 @@ clap = { version = "4", features = ["derive"] }
 flate2 = "1"
 png = "0.18"
 rayon = "1"
+# FxHash for integer-keyed maps in hot paths (profile: SipHash was ~5% self time)
+rustc-hash = "2"
 # ureq over reqwest: reqwest (tokio/hyper) took minutes per build here, and rustls pulls aws-lc-sys (CMake C build).
 # No "gzip" feature: see bmr-fetch/src/http.rs. native-tls = SChannel on Windows.
 ureq = { version = "3", default-features = false, features = ["native-tls"] }

@@ -2,10 +2,10 @@
 //! rotated/mirrored model variants by position hash, which changes UVs but not geometry or texture.
 //! Keys are per quad, not per triangle: a rotated variant moves the quad's diagonal.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use bmr_prbm::{Face, Tile};
+use rustc_hash::FxHashMap;
+
+pub use crate::texture::Tex;
 
 /// Cell-local coordinates are in 1/Q block units.
 pub const Q: f32 = 64.0;
@@ -34,9 +34,9 @@ impl Liquid {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FaceKey {
-    pub texture: Arc<str>,
+    pub texture: Tex,
     pub tinted: bool,
     /// Sorted, cell-local, quantized to 1/Q.
     pub verts: [[i16; 3]; 4],
@@ -65,11 +65,7 @@ impl FaceKey {
     }
 
     pub fn liquid(&self) -> Option<Liquid> {
-        match self.texture.as_ref() {
-            "minecraft:block/water_still" | "minecraft:block/water_flow" => Some(Liquid::Water),
-            "minecraft:block/lava_still" | "minecraft:block/lava_flow" => Some(Liquid::Lava),
-            _ => None,
-        }
+        self.texture.liquid()
     }
 
     /// Direction a liquid face faces. Liquid surfaces sit below the cell top (14/16 for a lone source)
@@ -96,7 +92,7 @@ impl FaceKey {
     }
 
     fn translated(&self, dx: i16, dz: i16) -> Self {
-        let mut k = self.clone();
+        let mut k = *self;
         for v in &mut k.verts {
             v[0] -= dx;
             v[2] -= dz;
@@ -110,7 +106,7 @@ impl FaceKey {
 pub struct WorldFace {
     pub verts: [[f32; 3]; 4],
     pub normal: [f32; 3],
-    pub texture: Arc<str>,
+    pub texture: Tex,
     /// Tint multiplier; `[255; 3]` = untinted.
     pub color: [u8; 3],
 }
@@ -132,18 +128,19 @@ impl WorldFace {
         let base = [bx as f32, by as f32, bz as f32];
         let mut verts = self.verts.map(|v| std::array::from_fn(|a| ((v[a] - base[a]) * Q).round() as i16));
         verts.sort();
-        FaceKey { texture: self.texture.clone(), tinted: self.color != [255, 255, 255], verts }
+        FaceKey { texture: self.texture, tinted: self.color != [255, 255, 255], verts }
     }
 }
 
-/// Texture names by PRBM material index, interned once per map.
-pub fn texture_names(textures: &[bmr_prbm::Texture]) -> Vec<Arc<str>> {
-    textures.iter().map(|t| Arc::from(t.resource_path.as_str())).collect()
+/// Interned texture per PRBM material index of one map.
+pub fn texture_ids(resource_paths: &[String]) -> Vec<Tex> {
+    resource_paths.iter().map(|p| Tex::intern(p)).collect()
 }
 
 /// A tile's quads in world space. BlueMap emits each quad as consecutive triangles (c0,c1,c2),(c0,c2,c3);
 /// a triangle that does not pair up becomes a degenerate quad.
-pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], names: &[Arc<str>]) -> Vec<WorldFace> {
+pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], textures: &[Tex]) -> Vec<WorldFace> {
+    let unknown = Tex::intern("?");
     let tris: Vec<Face> = tile.faces().collect();
     let mut out = Vec::with_capacity(tris.len() / 2);
     let mut i = 0;
@@ -156,7 +153,7 @@ pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], names: &[Arc<str>]) -> Vec<W
         out.push(WorldFace {
             verts,
             normal: a.normal.map(|c| c as f32 / 127.0),
-            texture: names.get(a.material as usize).cloned().unwrap_or_else(|| Arc::from("?")),
+            texture: textures.get(a.material as usize).copied().unwrap_or(unknown),
             color: a.color,
         });
     }
@@ -197,8 +194,8 @@ impl CellFaces {
 }
 
 /// Group faces by owning cell, keyed relative to that cell.
-pub fn faces_by_cell(faces: &[WorldFace]) -> HashMap<Cell, CellFaces> {
-    let mut out: HashMap<Cell, CellFaces> = HashMap::new();
+pub fn faces_by_cell(faces: &[WorldFace]) -> FxHashMap<Cell, CellFaces> {
+    let mut out: FxHashMap<Cell, CellFaces> = FxHashMap::default();
     for f in faces {
         let cell = f.owner();
         out.entry(cell).or_default().push(f, f.key_at(cell));

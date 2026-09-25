@@ -24,6 +24,17 @@ pub fn parse_textures(json: &[u8]) -> Result<Vec<Texture>> {
     serde_json::from_slice(json).context("textures.json")
 }
 
+/// Resource paths only (index = material index): skips allocating the embedded PNGs.
+pub fn parse_texture_names(json: &[u8]) -> Result<Vec<String>> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct NameOnly {
+        resource_path: String,
+    }
+    let v: Vec<NameOnly> = serde_json::from_slice(json).context("textures.json")?;
+    Ok(v.into_iter().map(|t| t.resource_path).collect())
+}
+
 impl Texture {
     pub fn png(&self) -> Result<Vec<u8>> {
         let Some(b64) = self.texture.strip_prefix("data:image/png;base64,") else {

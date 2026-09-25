@@ -7,6 +7,7 @@ mod nbt_write;
 mod region;
 mod registry;
 mod sparse;
+mod states;
 mod world;
 mod world_write;
 
@@ -14,5 +15,6 @@ pub use block_entities::block_entity_type;
 pub use chunk::{BlockState, Chunk, Section, is_air_name};
 pub use registry::{BlockInfo, BlockRegistry};
 pub use sparse::{ChunkBuilder, ChunkLayout};
+pub use states::{StateId, StateTable};
 pub use world::{ChunkPos, World};
 pub use world_write::WorldWriter;

@@ -97,8 +97,8 @@ fn block_entities(chunk: &Chunk) -> Vec<BlockEntityOut> {
         if types.iter().all(Option::is_none) {
             continue;
         }
-        for (i, &idx) in s.blocks.iter().enumerate() {
-            if let Some(t) = types[idx as usize] {
+        for i in 0..4096 {
+            if let Some(t) = types[s.index(i) as usize] {
                 out.push(BlockEntityOut {
                     id: format!("minecraft:{t}"),
                     x: chunk.x * 16 + (i % 16) as i32,

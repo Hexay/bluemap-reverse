@@ -2,10 +2,8 @@
 
 use std::collections::{HashMap, VecDeque};
 
-use bmr_invert::face::Cell;
+use bmr_invert::face::{Cell, DIRS};
 use bmr_world::BlockState;
-
-use crate::flood::NEIGHBOURS;
 
 /// Leaves `distance` = steps to the nearest log through leaves (1..=7, vanilla #logs ≈ logs, woods,
 /// stems, hyphae). Unreachable leaves (distance 7) must be persistent, or they would have decayed.
@@ -24,7 +22,7 @@ pub fn leaves_distance(blocks: &mut HashMap<Cell, BlockState>) -> usize {
         if d >= 7 {
             continue;
         }
-        for (dx, dy, dz) in NEIGHBOURS {
+        for (dx, dy, dz) in DIRS {
             let n = (x + dx, y + dy, z + dz);
             if blocks.get(&n).is_some_and(|s| is_leaves(s)) && !dist.contains_key(&n) {
                 dist.insert(n, d + 1);

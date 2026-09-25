@@ -1,0 +1,5 @@
+{"time": "2026-09-25T19:22:16", "commit": "757f6d3", "fixture": "superflat", "args": [], "occupied": 99.541, "visible": 99.589, "solid_iou": 100.0, "surface": 99.902}
+{"time": "2026-09-25T19:23:01", "commit": "757f6d3", "fixture": "superflat", "args": [], "occupied": 99.921, "visible": 99.872, "solid_iou": 100.0, "surface": 99.902}
+{"time": "2026-09-25T19:24:07", "commit": "757f6d3", "fixture": "vanilla", "args": ["--show-unmatched", "15"], "occupied": 65.663, "visible": 78.665, "solid_iou": 94.14, "surface": 99.941}
+{"time": "2026-09-25T19:29:11", "commit": "757f6d3", "fixture": "superflat", "args": [], "occupied": 99.921, "rendered": 99.855, "exposed": 99.872, "solid_iou": 100.0, "surface": 99.902}
+{"time": "2026-09-25T19:30:07", "commit": "757f6d3", "fixture": "vanilla", "args": [], "occupied": 73.624, "rendered": 98.607, "exposed": 86.486, "solid_iou": 94.14, "surface": 99.941}

@@ -12,6 +12,28 @@ pub const Q: f32 = 64.0;
 
 pub type Cell = (i32, i32, i32);
 
+pub const DIRS: [Cell; 6] = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)];
+
+pub fn step((x, y, z): Cell, (dx, dy, dz): Cell) -> Cell {
+    (x + dx, y + dy, z + dz)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Liquid {
+    Water,
+    Lava,
+}
+
+impl Liquid {
+    /// Source-block state name.
+    pub fn block(self) -> &'static str {
+        match self {
+            Liquid::Water => "minecraft:water",
+            Liquid::Lava => "minecraft:lava",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FaceKey {
     pub texture: Arc<str>,
@@ -40,6 +62,25 @@ impl FaceKey {
                 _ => (0, 0, s),
             })
         })
+    }
+
+    pub fn liquid(&self) -> Option<Liquid> {
+        match self.texture.as_ref() {
+            "minecraft:block/water_still" | "minecraft:block/water_flow" => Some(Liquid::Water),
+            "minecraft:block/lava_still" | "minecraft:block/lava_flow" => Some(Liquid::Lava),
+            _ => None,
+        }
+    }
+
+    /// Direction a liquid face faces. Liquid surfaces sit below the cell top (14/16 for a lone source)
+    /// so they are classified by plane, not by `boundary_dir`: horizontal at y=0 is the bottom, any
+    /// other horizontal face is the surface; vertical faces always lie on a cell side.
+    pub fn liquid_dir(&self) -> Option<Cell> {
+        let same = |a: usize| self.verts.iter().all(|v| v[a] == self.verts[0][a]);
+        if same(1) {
+            return Some(if self.verts[0][1] == 0 { (0, -1, 0) } else { (0, 1, 0) });
+        }
+        self.boundary_dir()
     }
 
     /// Covers a whole outer plane of the cell.
@@ -132,7 +173,8 @@ pub struct CellFaces {
 
 impl CellFaces {
     pub fn push(&mut self, f: &WorldFace, key: FaceKey) {
-        if key.tinted {
+        // water tint is biome noise, never evidence about the block
+        if key.tinted && key.liquid().is_none() {
             for a in 0..3 {
                 self.tint_sum[a] += f.color[a] as u32;
             }

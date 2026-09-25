@@ -1,7 +1,7 @@
 //! Voxel-by-voxel comparison of an original world against a reconstruction, one region per task.
 //! All air variants compare equal (BlueMap cannot tell them apart).
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 use bmr_world::{BlockState, Chunk, ChunkPos, World};
@@ -12,11 +12,19 @@ use crate::report::Report;
 /// World (x, z) → whether the column is scored (e.g. inside the rendered area).
 pub type ColumnFilter<'a> = &'a (dyn Fn(i32, i32) -> bool + Sync);
 
-pub fn score(original: &World, reconstructed: &World, filter: ColumnFilter, top_confusions: usize) -> Result<Report> {
+pub type Cell = (i32, i32, i32);
+
+pub struct Scope<'a> {
+    pub columns: ColumnFilter<'a>,
+    /// Cells BlueMap drew faces for; enables the `rendered` metric.
+    pub rendered: Option<&'a HashSet<Cell>>,
+}
+
+pub fn score(original: &World, reconstructed: &World, scope: &Scope, top_confusions: usize) -> Result<Report> {
     let regions = original.regions()?;
     let parts = regions
         .par_iter()
-        .map(|&r| score_region(original, reconstructed, r, filter))
+        .map(|&r| score_region(original, reconstructed, r, scope))
         .collect::<Result<Vec<_>>>()?;
     let mut report = Report::default();
     for p in parts {
@@ -28,7 +36,8 @@ pub fn score(original: &World, reconstructed: &World, filter: ColumnFilter, top_
 
 type Chunks = HashMap<ChunkPos, Chunk>;
 
-fn score_region(original: &World, reconstructed: &World, region: (i32, i32), filter: ColumnFilter) -> Result<Report> {
+fn score_region(original: &World, reconstructed: &World, region: (i32, i32), scope: &Scope) -> Result<Report> {
+    let filter = scope.columns;
     let orig = original.read_region(region)?;
     let recon = reconstructed.read_region(region)?;
     let mut rep = Report::default();
@@ -45,7 +54,7 @@ fn score_region(original: &World, reconstructed: &World, region: (i32, i32), fil
                 if filter(pos.0 * 16 + lx as i32, pos.1 * 16 + lz as i32) {
                     scored = true;
                     rep.columns += 1;
-                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range);
+                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range, scope.rendered);
                 }
             }
         }
@@ -67,6 +76,7 @@ fn score_column(
     lx: usize,
     lz: usize,
     (y0, y1): (i32, i32),
+    rendered: Option<&HashSet<Cell>>,
 ) {
     let mut orig_top = None;
     let mut recon_top = None;
@@ -94,10 +104,19 @@ fn score_column(
         }
         if o.is_some() {
             rep.solid.original += 1;
+            let cell = (pos.0 * 16 + lx as i32, y, pos.1 * 16 + lz as i32);
+            if rendered.is_some_and(|r| r.contains(&cell)) {
+                rep.rendered.total += 1;
+                rep.rendered.exact += exact as u64;
+                rep.rendered.name += name as u64;
+                if !exact {
+                    *rep.rendered_confusion_counts.entry((label(o), label(r))).or_default() += 1;
+                }
+            }
             if exposed(orig, pos, chunk, lx, y, lz, y0, y1) {
-                rep.visible.total += 1;
-                rep.visible.exact += exact as u64;
-                rep.visible.name += name as u64;
+                rep.exposed.total += 1;
+                rep.exposed.exact += exact as u64;
+                rep.exposed.name += name as u64;
             }
         }
         if r.is_some() {

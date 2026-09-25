@@ -1,5 +1,6 @@
-//! Mirror → chunks. Cells are gathered across all tiles first, so geometry that overhangs into a
-//! neighbouring cell (sign boards, fire, …) can be credited to its block and removed from the neighbour.
+//! Mirror → matched cells + evidence. Cells are gathered across all tiles first, so geometry that
+//! overhangs into a neighbouring cell (sign boards, fire, …) can be credited to its block.
+//! Liquid faces are split off before matching: their shape depends on neighbours (see evidence.rs).
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -7,17 +8,17 @@ use anyhow::Result;
 use bmr_fetch::LocalMap;
 use rayon::prelude::*;
 
-use crate::face::{Cell, CellFaces, FaceKey, faces_by_cell, signature, texture_names, world_faces};
+use crate::evidence::{Evidence, Observed, collect};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, faces_by_cell, signature, step, texture_names, world_faces};
 use crate::library::Library;
 use crate::matcher::{Candidates, How, candidates, resolve};
 
-/// Result of inverting the visible geometry.
 pub struct Inverted {
-    /// Cell → library entry.
+    /// Matched non-liquid blocks → library entry (waterlogged already resolved).
     pub blocks: HashMap<Cell, usize>,
-    /// Unmatched-by-geometry cells that must hold a full opaque block: a neighbour's cullable face
-    /// towards them is missing.
-    pub occluders: HashSet<Cell>,
+    /// Cells showing nothing but liquid.
+    pub liquids: HashMap<Cell, Liquid>,
+    pub evidence: Evidence,
     pub stats: Stats,
 }
 
@@ -25,6 +26,8 @@ pub struct Inverted {
 pub struct Stats {
     pub cells: usize,
     pub by_how: BTreeMap<String, usize>,
+    pub liquid_cells: usize,
+    pub waterlogged: usize,
     /// Cells whose faces were all explained as a neighbour's overhang.
     pub overhang_cells: usize,
     pub unmatched: usize,
@@ -35,15 +38,74 @@ pub struct Stats {
 type Matched = Option<(usize, How)>;
 
 pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
-    let mut cells = gather(map)?;
-    let mut matched = match_all(lib, &cells);
+    let (mut solid_faces, liquid_faces) = split_liquid(gather(map)?);
+    let mut matched = match_all(lib, &solid_faces);
+    let mut stats = Stats::default();
+    stats.overhang_cells = credit_overhang(lib, &mut solid_faces, &mut matched);
 
-    // credit overhanging faces to their block, then re-match the neighbours that lost faces
+    let liquids: HashMap<Cell, Liquid> = liquid_faces
+        .iter()
+        .filter(|(c, _)| !solid_faces.contains_key(c))
+        .filter_map(|(&c, keys)| keys[0].liquid().map(|l| (c, l)))
+        .collect();
+    stats.liquid_cells = liquids.len();
+
+    let mut unmatched: HashMap<String, usize> = HashMap::new();
+    let mut blocks = HashMap::new();
+    for (cell, m) in matched {
+        stats.cells += 1;
+        match m {
+            Some((entry, how)) => {
+                *stats.by_how.entry(how_name(how).into()).or_default() += 1;
+                blocks.insert(cell, entry);
+            }
+            None => {
+                stats.unmatched += 1;
+                *unmatched.entry(texture_set(&solid_faces[&cell].keys)).or_default() += 1;
+            }
+        }
+    }
+    let mut u: Vec<_> = unmatched.into_iter().collect();
+    u.sort_by(|a, b| b.1.cmp(&a.1));
+    stats.unmatched_textures = u;
+
+    let obs = Observed { blocks: &blocks, solid_faces: &solid_faces, liquid_faces: &liquid_faces, liquids: &liquids };
+    let evidence = collect(lib, &obs);
+    for (cell, entry) in blocks.iter_mut() {
+        let wet = liquid_faces.contains_key(cell) || evidence.liquid.contains_key(cell);
+        if let Some(w) = wet.then(|| lib.waterlogged_variant(*entry)).flatten() {
+            *entry = w;
+            stats.waterlogged += 1;
+        }
+    }
+    Ok(Inverted { blocks, liquids, evidence, stats })
+}
+
+fn split_liquid(cells: HashMap<Cell, CellFaces>) -> (HashMap<Cell, CellFaces>, HashMap<Cell, Vec<FaceKey>>) {
+    let mut solid = HashMap::new();
+    let mut liquid = HashMap::new();
+    for (cell, obs) in cells {
+        let (wet, dry): (Vec<FaceKey>, Vec<FaceKey>) = obs.keys.iter().cloned().partition(|k| k.liquid().is_some());
+        if !wet.is_empty() {
+            liquid.insert(cell, wet);
+        }
+        if !dry.is_empty() {
+            let mut o = obs;
+            o.keys = dry;
+            solid.insert(cell, o);
+        }
+    }
+    (solid, liquid)
+}
+
+/// Remove faces a matched block overhangs into its neighbours, re-match those neighbours.
+/// Returns the number of cells that turned out to hold nothing but overhang.
+fn credit_overhang(lib: &Library, cells: &mut HashMap<Cell, CellFaces>, matched: &mut HashMap<Cell, Matched>) -> usize {
     let mut touched = HashSet::new();
-    for (&cell, m) in &matched {
+    for (&cell, m) in matched.iter() {
         let Some((entry, _)) = m else { continue };
         for (off, key) in &lib.entries[*entry].overhang {
-            let n = (cell.0 + off.0, cell.1 + off.1, cell.2 + off.2);
+            let n = step(cell, *off);
             if let Some(obs) = cells.get_mut(&n) {
                 if let Some(i) = obs.keys.iter().position(|k| k == key) {
                     obs.keys.swap_remove(i);
@@ -52,58 +114,24 @@ pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
             }
         }
     }
-    let mut stats = Stats::default();
+    let mut emptied = 0;
     for n in touched {
-        let obs = &cells[&n];
-        if obs.keys.is_empty() {
+        if cells[&n].keys.is_empty() {
             matched.remove(&n);
             cells.remove(&n);
-            stats.overhang_cells += 1;
+            emptied += 1;
         } else {
+            let obs = &cells[&n];
             let sig = signature(obs.keys.clone());
             matched.insert(n, candidates(lib, &sig).map(|c| (resolve(lib, &c.ids, obs.tint()), c.how)));
         }
     }
-
-    let mut unmatched: HashMap<String, usize> = HashMap::new();
-    let mut blocks = HashMap::new();
-    for (cell, m) in matched {
-        stats.cells += 1;
-        let Some((entry, how)) = m else {
-            stats.unmatched += 1;
-            *unmatched.entry(texture_set(&cells[&cell].keys)).or_default() += 1;
-            continue;
-        };
-        *stats.by_how.entry(how_name(how).into()).or_default() += 1;
-        blocks.insert(cell, entry);
-    }
-    let mut u: Vec<_> = unmatched.into_iter().collect();
-    u.sort_by(|a, b| b.1.cmp(&a.1));
-    stats.unmatched_textures = u;
-    let occluders = occluders(lib, &blocks, &cells);
-    Ok(Inverted { blocks, occluders, stats })
+    emptied
 }
 
-/// Neighbours across each boundary face the matched state should show but the map does not.
-fn occluders(lib: &Library, blocks: &HashMap<Cell, usize>, cells: &HashMap<Cell, CellFaces>) -> HashSet<Cell> {
-    let mut out = HashSet::new();
-    for (&(x, y, z), &entry) in blocks {
-        let observed = cells.get(&(x, y, z)).map_or(&[][..], |c| &c.keys[..]);
-        let mut remaining: Vec<&FaceKey> = observed.iter().collect();
-        for key in &lib.entries[entry].sig {
-            if let Some(i) = remaining.iter().position(|k| *k == key) {
-                remaining.swap_remove(i);
-                continue;
-            }
-            if let Some((dx, dy, dz)) = key.boundary_dir() {
-                let n = (x + dx, y + dy, z + dz);
-                if !blocks.contains_key(&n) {
-                    out.insert(n);
-                }
-            }
-        }
-    }
-    out
+/// Every cell BlueMap drew at least one face for (the "visible" set for scoring).
+pub fn rendered_cells(map: &LocalMap) -> Result<HashSet<Cell>> {
+    Ok(gather(map)?.into_keys().collect())
 }
 
 fn gather(map: &LocalMap) -> Result<HashMap<Cell, CellFaces>> {

@@ -8,10 +8,11 @@ use rustc_hash::{FxHashMap, FxHashSet};
 
 use anyhow::Result;
 use bmr_fetch::LocalMap;
+use bmr_fetch::grid::Tile;
 use rayon::prelude::*;
 
 use crate::evidence::{Evidence, Observed, collect};
-use crate::face::{Cell, CellFaces, FaceKey, Liquid, faces_by_cell, signature, step, texture_ids, world_faces};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, faces_by_cell, signature, step, texture_ids, world_faces};
 use crate::library::Library;
 use crate::matcher::{Candidates, How, candidates, resolve};
 use crate::timings::Timings;
@@ -41,9 +42,16 @@ pub struct Stats {
 
 type Matched = Option<(usize, How)>;
 
-pub fn reverse(map: &LocalMap, lib: &Library) -> Result<Inverted> {
+/// Interned texture per material index of a map (`textures.json`); parse once, reuse per window.
+pub fn map_textures(map: &LocalMap) -> Result<Vec<Tex>> {
+    Ok(texture_ids(&bmr_prbm::parse_texture_names(&map.textures_json()?)?))
+}
+
+/// Invert the given hires tiles (a window plus halo, or the whole map). Cells near the edge of the
+/// tile set lack neighbours, so only use results at least one cell inside it.
+pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) -> Result<Inverted> {
     let mut t = Timings::default();
-    let cells = t.time("gather", || gather(map))?;
+    let cells = t.time("gather", || gather(map, tiles, textures))?;
     let (mut solid_faces, liquid_faces) = t.time("split_liquid", || split_liquid(cells));
     let mut matched = t.time("match", || match_all(lib, &solid_faces));
     let mut stats = Stats::default();
@@ -142,20 +150,19 @@ fn credit_overhang(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matche
 
 /// Every cell BlueMap drew at least one face for (the "visible" set for scoring).
 pub fn rendered_cells(map: &LocalMap) -> Result<FxHashSet<Cell>> {
-    Ok(gather(map)?.into_keys().collect())
+    Ok(gather(map, &map.tiles(0), &map_textures(map)?)?.into_keys().collect())
 }
 
-fn gather(map: &LocalMap) -> Result<FxHashMap<Cell, CellFaces>> {
-    let names = texture_ids(&bmr_prbm::parse_texture_names(&map.textures_json()?)?);
-    let per_tile = map
-        .tiles(0)
+fn gather(map: &LocalMap, tiles: &[Tile], names: &[Tex]) -> Result<FxHashMap<Cell, CellFaces>> {
+    let per_tile = tiles
         .par_iter()
         .map(|&t| -> Result<_> {
             let tile = bmr_prbm::parse(&map.tile_bytes(0, t)?)?;
-            Ok(faces_by_cell(&world_faces(&tile, map.hires_origin(t), &names)))
+            Ok(faces_by_cell(&world_faces(&tile, map.hires_origin(t), names)))
         })
         .collect::<Result<Vec<_>>>()?;
-    let mut cells: FxHashMap<Cell, CellFaces> = FxHashMap::default();
+    let total: usize = per_tile.iter().map(|t| t.len()).sum();
+    let mut cells: FxHashMap<Cell, CellFaces> = FxHashMap::with_capacity_and_hasher(total, Default::default());
     for tile_cells in per_tile {
         for (cell, obs) in tile_cells {
             cells.entry(cell).or_default().merge(obs);

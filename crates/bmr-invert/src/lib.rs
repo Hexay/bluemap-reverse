@@ -9,4 +9,4 @@ pub mod texture;
 pub mod timings;
 
 pub use library::Library;
-pub use reverse::{Inverted, Stats, rendered_cells, reverse};
+pub use reverse::{Inverted, Stats, map_textures, rendered_cells, reverse};

@@ -19,7 +19,7 @@ use bmr_world::{BlockRegistry, BlockState, StateId, StateTable};
 use rayon::prelude::*;
 
 pub use columns::{Bounds, Column};
-use columns::{Fill, Gap, gaps};
+use columns::{Fill, Gap, evidence_by_column, gaps};
 use material::{SolidGap, default_block, solid_segments};
 pub use regen::RegenWorld;
 
@@ -70,12 +70,13 @@ pub fn complete(
     blocks.extend(inv.liquids.iter().map(|(&c, l)| (c, liquid_states[l].clone())));
 
     let mut t = Timings::default();
-    let all_gaps = t.time("gaps", || {
+    let (all_gaps, evidence) = t.time("gaps", || {
         let mut observed_ys: FxHashMap<Column, Vec<i32>> = FxHashMap::default();
         for &(x, y, z) in blocks.keys() {
             observed_ys.entry((x, z)).or_default().push(y);
         }
-        gaps(&observed_ys, &inv.evidence, bounds)
+        let evidence = evidence_by_column(&inv.evidence);
+        (gaps(&observed_ys, &evidence, bounds), evidence)
     });
     let mut stats = Stats { observed: blocks.len(), ..Stats::default() };
     for g in &all_gaps {
@@ -104,14 +105,23 @@ pub fn complete(
             let liquid = move |l: Liquid| if l == Liquid::Water { water } else { lava };
             let cx = regen::Context {
                 regen,
-                evidence: &inv.evidence,
+                evidence: &evidence,
                 full: &full,
                 air: &air,
                 prior: &prior,
                 liquid: &liquid,
                 cave_y: bounds.cave_y,
             };
-            all_gaps.par_iter().flat_map_iter(|g| regen::fill_gap(g, &cx)).collect()
+            all_gaps
+                .par_iter()
+                .fold(Vec::new, |mut acc, g| {
+                    regen::fill_gap_into(g, &cx, &mut acc);
+                    acc
+                })
+                .reduce(Vec::new, |mut a, mut b| {
+                    a.append(&mut b);
+                    a
+                })
         }
         None => prior_segments(inv, lib, registry, bounds, &blocks, &all_gaps, &liquid_states, table),
     };

@@ -43,8 +43,9 @@ impl WorldWriter {
         }
         let count = regions.len();
         regions.into_par_iter().try_for_each(|((rx, rz), chunks)| -> Result<()> {
+            // per chunk, not per region: a windowed run hands over one region at a time
             let encoded = chunks
-                .iter()
+                .par_iter()
                 .map(|c| {
                     let nbt = encode_chunk(c, &self.registry).with_context(|| format!("chunk {},{}", c.x, c.z))?;
                     Ok(((c.x.rem_euclid(32) as u8, c.z.rem_euclid(32) as u8), nbt))

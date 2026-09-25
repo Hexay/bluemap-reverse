@@ -30,6 +30,19 @@ impl Timings {
     pub fn extend(&mut self, prefix: &str, other: Timings) {
         self.0.extend(other.0.into_iter().map(|s| Stage { name: format!("{prefix}.{}", s.name), ..s }));
     }
+
+    /// Add `other`'s stages into same-named ones (durations summed, resident = max); new names appended.
+    pub fn accumulate(&mut self, other: Timings) {
+        for s in other.0 {
+            match self.0.iter_mut().find(|m| m.name == s.name) {
+                Some(m) => {
+                    m.duration += s.duration;
+                    m.resident = m.resident.max(s.resident);
+                }
+                None => self.0.push(s),
+            }
+        }
+    }
 }
 
 #[cfg(windows)]

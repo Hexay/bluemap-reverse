@@ -1,7 +1,7 @@
-"""Render a fixture with BlueMap, serve it, mirror it with `bmr fetch` into work/cache/<fixture>, stop serving.
-The mirror is taken over HTTP on purpose: it is exactly what a public site would give us.
+"""Render a fixture with BlueMap, serve it, mirror it with `bmr fetch` into <toolchain>/cache/<fixture>,
+stop serving. The mirror is taken over HTTP on purpose: it is exactly what a public site would give us.
 
-Usage: py -3 tools/mirror_fixture.py <fixture> [--force-render]
+Usage: py -3 tools/mirror_fixture.py <fixture> [--force-render] [--mc 1.21.11 [--bluemap 5.27]]
 """
 import argparse
 import shutil
@@ -10,11 +10,16 @@ import sys
 import time
 import urllib.request
 
-from paths import ROOT, WEB_HOST, WEB_PORT, WORK
+from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT, Toolchain
 from render_serve import bluemap, configure
 
-BMR = ROOT / "target" / "debug" / "bmr.exe"
 URL = f"http://{WEB_HOST}:{WEB_PORT}/"
+
+
+def bmr_exe():
+    """Release build if present (fast), else debug."""
+    release = ROOT / "target" / "release" / "bmr.exe"
+    return release if release.exists() else ROOT / "target" / "debug" / "bmr.exe"
 
 
 def wait_until_serving(timeout: float = 120) -> None:
@@ -28,27 +33,33 @@ def wait_until_serving(timeout: float = 120) -> None:
     sys.exit(f"BlueMap webserver did not come up on {URL}")
 
 
+def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False) -> int:
+    """Render + serve + fetch; returns bmr's exit code. Output: tc.cache / fixture."""
+    base = configure(fixture, tc)
+    render = ["-r", "-f"] if force_render else ["-r"]
+    if bluemap(base, *render, tc=tc).wait():
+        sys.exit("render failed")
+    out = tc.cache / fixture
+    shutil.rmtree(out, ignore_errors=True)
+    server = bluemap(base, "-w", tc=tc)
+    try:
+        wait_until_serving()
+        return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8"], cwd=ROOT)
+    finally:
+        server.terminate()
+        server.wait(30)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("fixture")
     ap.add_argument("--force-render", action="store_true")
+    ap.add_argument("--mc", default=DEFAULT.mc)
+    ap.add_argument("--bluemap", default=DEFAULT.bluemap)
     args = ap.parse_args()
+    from setup import resolve  # lazy: network lookup only for non-default toolchains
 
-    base = configure(args.fixture)
-    render = ["-r", "-f"] if args.force_render else ["-r"]
-    if bluemap(base, *render).wait():
-        sys.exit("render failed")
-
-    out = WORK / "cache" / args.fixture
-    shutil.rmtree(out, ignore_errors=True)
-    server = bluemap(base, "-w")
-    try:
-        wait_until_serving()
-        code = subprocess.call([BMR, "fetch", URL, "--out", out, "--concurrency", "8"], cwd=ROOT)
-    finally:
-        server.terminate()
-        server.wait(30)
-    sys.exit(code)
+    sys.exit(mirror(args.fixture, resolve(args.mc, args.bluemap), args.force_render))
 
 
 if __name__ == "__main__":

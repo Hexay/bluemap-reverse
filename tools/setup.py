@@ -1,17 +1,20 @@
-"""Download the pinned JDK, Minecraft server jar and BlueMap CLI into work/downloads. Idempotent."""
+"""Download a toolchain's JDK, Minecraft server jar and BlueMap CLI into work/downloads and generate the
+vanilla data reports. Idempotent. Without arguments: the default (26.3) toolchain.
+
+Usage: py -3 tools/setup.py [--mc 1.21.11 [--bluemap 5.27]]
+"""
+import argparse
 import hashlib
 import json
 import shutil
+import struct
 import subprocess
 import sys
 import urllib.request
 import zipfile
 from pathlib import Path
 
-from paths import (
-    BLUEMAP_JAR, BLUEMAP_URL, DOWNLOADS, JAVA, JDK_DIR, JDK_URL,
-    MC_MANIFEST_URL, MC_VERSION, REPORTS, SERVER_JAR,
-)
+from paths import DEFAULT, DOWNLOADS, MC_MANIFEST_URL, Toolchain, jdk_dir, jdk_url, toolchain
 
 
 def open_url(url: str):
@@ -46,51 +49,83 @@ def file_sha1(path: Path) -> str:
     return h.hexdigest()
 
 
-def install_jdk() -> None:
-    if JAVA.exists():
-        print(f"ok      {JDK_DIR.name}")
+def version_json(mc: str) -> dict:
+    manifest = fetch_json(MC_MANIFEST_URL)
+    entry = next((v for v in manifest["versions"] if v["id"] == mc), None)
+    if entry is None:
+        sys.exit(f"unknown Minecraft version {mc}")
+    return fetch_json(entry["url"])
+
+
+def resolve(mc: str, bluemap: str) -> Toolchain:
+    """Toolchain for `mc` + `bluemap`: the server's Java from Mojang's metadata, BlueMap's from its jar."""
+    if mc == DEFAULT.mc and bluemap == DEFAULT.bluemap:
+        return DEFAULT
+    DOWNLOADS.mkdir(parents=True, exist_ok=True)
+    probe = toolchain(mc, bluemap, 0, 0)
+    download(probe.bluemap_url, probe.bluemap_jar)
+    return toolchain(mc, bluemap, version_json(mc)["javaVersion"]["majorVersion"], jar_java_major(probe.bluemap_jar))
+
+
+def jar_java_major(jar: Path, main_class: str = "de/bluecolored/bluemap/cli/BlueMapCLI.class") -> int:
+    """Java release a jar was compiled for: class-file major version − 44."""
+    with zipfile.ZipFile(jar) as z:
+        header = z.read(main_class)[:8]
+    return struct.unpack(">H", header[6:8])[0] - 44
+
+
+def install_jdk(major: int) -> None:
+    target = jdk_dir(major)
+    if (target / "bin" / "java.exe").exists():
+        print(f"ok      {target.name}")
         return
-    archive = DOWNLOADS / "jdk.zip"
-    download(JDK_URL, archive)
+    archive = DOWNLOADS / f"jdk{major}.zip"
+    download(jdk_url(major), archive)
     staging = DOWNLOADS / "jdk-staging"
     shutil.rmtree(staging, ignore_errors=True)
     with zipfile.ZipFile(archive) as z:
         z.extractall(staging)
     # the zip holds a single versioned top-level folder, e.g. jdk-25.0.4.1+1/
     (top,) = staging.iterdir()
-    top.rename(JDK_DIR)
+    top.rename(target)
     staging.rmdir()
     archive.unlink()
 
 
-def download_server_jar() -> None:
-    manifest = fetch_json(MC_MANIFEST_URL)
-    entry = next(v for v in manifest["versions"] if v["id"] == MC_VERSION)
-    server = fetch_json(entry["url"])["downloads"]["server"]
-    download(server["url"], SERVER_JAR, server["sha1"])
+def download_server_jar(tc: Toolchain) -> None:
+    server = version_json(tc.mc)["downloads"]["server"]
+    download(server["url"], tc.server_jar, server["sha1"])
 
 
-def generate_reports() -> None:
-    blocks = REPORTS / "reports" / "blocks.json"
-    if blocks.exists():
-        print(f"ok      {blocks.relative_to(REPORTS.parent)}")
+def generate_reports(tc: Toolchain) -> None:
+    if tc.blocks_json.exists():
+        print(f"ok      {tc.blocks_json.relative_to(tc.reports.parent)}")
         return
     print("gen     vanilla data reports")
-    REPORTS.parent.mkdir(parents=True, exist_ok=True)
+    tc.reports.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        [str(JAVA), "-DbundlerMainClass=net.minecraft.data.Main", "-jar", str(SERVER_JAR),
-         "--reports", "--output", str(REPORTS)],
-        cwd=REPORTS.parent, check=True, stdout=subprocess.DEVNULL,
+        [str(tc.java), "-DbundlerMainClass=net.minecraft.data.Main", "-jar", str(tc.server_jar),
+         "--reports", "--output", str(tc.reports)],
+        cwd=tc.reports.parent, check=True, stdout=subprocess.DEVNULL,
     )
 
 
-def main() -> None:
+def setup(tc: Toolchain) -> None:
     DOWNLOADS.mkdir(parents=True, exist_ok=True)
-    install_jdk()
-    download_server_jar()
-    download(BLUEMAP_URL, BLUEMAP_JAR)
-    generate_reports()
-    print(f"java    {JAVA}")
+    install_jdk(tc.java_major)
+    install_jdk(tc.bluemap_java_major)
+    download_server_jar(tc)
+    download(tc.bluemap_url, tc.bluemap_jar)
+    generate_reports(tc)
+    print(f"java    {tc.java}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mc", default=DEFAULT.mc)
+    ap.add_argument("--bluemap", default=DEFAULT.bluemap)
+    args = ap.parse_args()
+    setup(resolve(args.mc, args.bluemap))
 
 
 if __name__ == "__main__":

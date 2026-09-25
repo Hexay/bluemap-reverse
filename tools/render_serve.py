@@ -1,7 +1,7 @@
 """Render a fixture world with BlueMap CLI and/or serve it on WEB_HOST:WEB_PORT.
 
-Usage: py -3 tools/render_serve.py <fixture> [--no-render] [--no-serve] [--force-render]
-Layout: work/bluemap/<fixture>/{config,data,web}; map id = fixture name.
+Usage: py -3 tools/render_serve.py <fixture> [--no-render] [--no-serve] [--force-render] [--mc 1.21.11]
+Layout: <toolchain>/bluemap/<fixture>/{config,data,web}; map id = fixture name.
 Map settings are BlueMap defaults (what public maps run) unless fixture.json has a "bluemap" object.
 """
 import argparse
@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from paths import BLUEMAP, BLUEMAP_JAR, FIXTURES, JAVA, MC_VERSION, WEB_HOST, WEB_PORT, WORLDS
+from paths import DEFAULT, FIXTURES, WEB_HOST, WEB_PORT, Toolchain
 
 
 def set_conf(path: Path, key: str, value: str) -> None:
@@ -25,20 +25,20 @@ def conf_value(v) -> str:
     return json.dumps(v) if isinstance(v, str) else str(v).lower() if isinstance(v, bool) else str(v)
 
 
-def bluemap(cwd: Path, *args: str) -> subprocess.Popen:
-    cmd = [str(JAVA), "-jar", str(BLUEMAP_JAR), "-c", "config", "-v", MC_VERSION, *args]
+def bluemap(cwd: Path, *args: str, tc: Toolchain = DEFAULT) -> subprocess.Popen:
+    cmd = [str(tc.bluemap_java), "-jar", str(tc.bluemap_jar), "-c", "config", "-v", tc.mc, *args]
     return subprocess.Popen(cmd, cwd=cwd)
 
 
-def configure(fixture: str) -> Path:
-    world = WORLDS / fixture / "world"
+def configure(fixture: str, tc: Toolchain = DEFAULT) -> Path:
+    world = tc.worlds / fixture / "world"
     if not world.exists():
         sys.exit(f"no world at {world}; run make_world.py {fixture} first")
-    base = BLUEMAP / fixture
+    base = tc.bluemap_root / fixture
     cfg = base / "config"
     if not (cfg / "core.conf").exists():
         base.mkdir(parents=True, exist_ok=True)
-        bluemap(base).wait()
+        bluemap(base, tc=tc).wait()
     set_conf(cfg / "core.conf", "accept-download", "true")
     set_conf(cfg / "core.conf", "metrics", "false")
     set_conf(cfg / "webserver.conf", "ip", json.dumps(WEB_HOST))
@@ -66,9 +66,13 @@ def main() -> None:
     ap.add_argument("--no-render", action="store_true")
     ap.add_argument("--no-serve", action="store_true")
     ap.add_argument("--force-render", action="store_true")
+    ap.add_argument("--mc", default=DEFAULT.mc)
+    ap.add_argument("--bluemap", default=DEFAULT.bluemap)
     args = ap.parse_args()
+    from setup import resolve  # lazy: network lookup only for non-default toolchains
 
-    base = configure(args.fixture)
+    tc = resolve(args.mc, args.bluemap)
+    base = configure(args.fixture, tc)
     flags = []
     if not args.no_render:
         flags.append("-r")
@@ -79,7 +83,7 @@ def main() -> None:
         print(f"serving http://{WEB_HOST}:{WEB_PORT}/ (Ctrl+C to stop)", flush=True)
     if not flags:
         return
-    proc = bluemap(base, *flags)
+    proc = bluemap(base, *flags, tc=tc)
     try:
         sys.exit(proc.wait())
     except KeyboardInterrupt:

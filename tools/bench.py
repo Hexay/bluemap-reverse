@@ -103,7 +103,7 @@ def main() -> None:
     }
     print(f"{args.label}: wall {line['wall_s']['median']}s  cpu {line['cpu_s']['median']}s  peak {line['peak_mb']['median']:.0f} MB (median of {args.n})")
     for s, v in stages.items():
-        print(f"  {s:<26} {v['median']:>8.3f}s  [{v['min']:.3f} … {v['max']:.3f}]")
+        print(f"  {s:<26} {v['median']:>8.3f}s  [{v['min']:.3f} .. {v['max']:.3f}]")
     (ROOT / "results").mkdir(exist_ok=True)
     with open(ROOT / "results" / "bench.jsonl", "a") as f:
         f.write(json.dumps(line) + "\n")

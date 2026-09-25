@@ -53,6 +53,16 @@ real output. The model port is only needed later for round-trip verification (ph
 - Irreducible: edits BlueMap cannot see (dark tunnels, buried changes), worldgen order non-determinism
   (ore/stone blobs, seagrass across chunk borders).
 
+## Versions (packs)
+
+- One pack per Minecraft + BlueMap version (`tools/build_pack.py`); `bmr pull` ranks installed packs by
+  how much of the site's `textures.json` they know (Minecraft-version fingerprint; 26.3 vs 1.21.11 site:
+  100% vs 89.5%), then overlap, then BlueMap version.
+- Version-sensitive output, learned per pack: palette encoding (legacy `{Name,Properties}` ≤ 26.2 vs 26.3
+  compact) from the debug world; folder layout (`dimensions/` from 26.1) from the template.
+- Server and BlueMap need different Javas (1.21 server: 21; BlueMap 5.27: 25) — BlueMap's is read from its
+  jar's class-file version. Supported: Minecraft 1.18+ (older chunk formats unread).
+
 ## Architecture (Cargo workspace)
 
 ```

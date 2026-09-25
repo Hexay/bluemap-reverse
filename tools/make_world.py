@@ -1,7 +1,7 @@
 """Generate a fixture world: fresh server run, force-load the fixture area, apply its commands, save, stop.
 
-Usage: py -3 tools/make_world.py <fixture> [--force]
-Output: work/worlds/<fixture>/world
+Usage: py -3 tools/make_world.py <fixture> [--force] [--mc 1.21.11 [--bluemap 5.27]]
+Output: <toolchain worlds>/<fixture>/world (default toolchain: work/worlds/<fixture>/world)
 """
 import argparse
 import json
@@ -10,7 +10,7 @@ import sys
 import time
 
 from console import Server, ServerTimeout
-from paths import FIXTURES, WORLDS
+from paths import DEFAULT, FIXTURES, Toolchain
 
 BASE_PROPERTIES = {
     "level-name": "world",
@@ -68,12 +68,12 @@ def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, timeou
             time.sleep(1)
 
 
-def make_world(name: str, force: bool) -> None:
+def make_world(name: str, force: bool, tc: Toolchain = DEFAULT) -> None:
     spec, commands = load_fixture(name)
-    generate(WORLDS / name, spec, commands, force)
+    generate(tc.worlds / name, spec, commands, force, tc)
 
 
-def generate(server_dir, spec: dict, commands: list[str], force: bool) -> None:
+def generate(server_dir, spec: dict, commands: list[str], force: bool, tc: Toolchain = DEFAULT) -> None:
     """Fresh server in `server_dir`: properties + area from `spec`, then `commands`, save, stop."""
     if server_dir.exists():
         if not force:
@@ -82,7 +82,7 @@ def generate(server_dir, spec: dict, commands: list[str], force: bool) -> None:
         shutil.rmtree(server_dir)
     write_server_files(server_dir, spec.get("properties", {}))
 
-    server = Server(server_dir)
+    server = Server(server_dir, tc=tc)
     try:
         server.wait_for(r"Done \(", timeout=600, echo=True)
         area = spec["area"]
@@ -106,8 +106,15 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("fixture")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--mc", default=DEFAULT.mc)
+    ap.add_argument("--bluemap", default=DEFAULT.bluemap)
     args = ap.parse_args()
-    make_world(args.fixture, args.force)
+    from setup import resolve, setup  # lazy: only needed when a toolchain may need downloading
+
+    tc = resolve(args.mc, args.bluemap)
+    if tc != DEFAULT:
+        setup(tc)
+    make_world(args.fixture, args.force, tc)
 
 
 if __name__ == "__main__":

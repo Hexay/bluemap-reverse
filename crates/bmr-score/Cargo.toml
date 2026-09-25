@@ -1,0 +1,11 @@
+[package]
+name = "bmr-score"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+rayon.workspace = true
+serde.workspace = true
+bmr-world.workspace = true

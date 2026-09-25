@@ -13,3 +13,6 @@ anyhow.workspace = true
 clap.workspace = true
 bmr-fetch.workspace = true
 bmr-prbm.workspace = true
+bmr-score.workspace = true
+bmr-world.workspace = true
+serde_json.workspace = true

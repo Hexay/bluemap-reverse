@@ -1,0 +1,12 @@
+[package]
+name = "bmr-world"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+fastnbt.workspace = true
+flate2.workspace = true
+serde.workspace = true
+serde_json.workspace = true

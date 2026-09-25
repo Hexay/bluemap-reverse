@@ -1,8 +1,11 @@
 mod check_heights;
 mod fetch;
 mod obj;
+mod probe;
+mod score;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -24,6 +27,10 @@ enum Cmd {
     Obj(obj::Args),
     /// Cross-check hires top faces against the lowres heightmap.
     CheckHeights(check_heights::Args),
+    /// Score a reconstructed world against the original, block by block.
+    Score(score::Args),
+    /// Print block states (and biome) at world positions.
+    Probe(probe::Args),
 }
 
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
@@ -42,10 +49,38 @@ impl MirrorArgs {
     }
 }
 
+/// Dimension + block registry, shared by commands that read Anvil worlds.
+#[derive(clap::Args)]
+struct WorldArgs {
+    #[arg(long, default_value = "minecraft:overworld")]
+    dimension: String,
+    /// Vanilla blocks.json report (tools/setup.py); needed for 26.3+ palettes
+    #[arg(long, default_value = DEFAULT_BLOCKS)]
+    blocks: PathBuf,
+}
+
+const DEFAULT_BLOCKS: &str = "work/data/reports-26.3/reports/blocks.json";
+
+impl WorldArgs {
+    fn registry(&self) -> Result<Option<Arc<bmr_world::BlockRegistry>>> {
+        if !self.blocks.exists() {
+            eprintln!("note: {} not found; 26.3+ worlds will fail to decode", self.blocks.display());
+            return Ok(None);
+        }
+        Ok(Some(Arc::new(bmr_world::BlockRegistry::load(&self.blocks)?)))
+    }
+
+    fn open(&self, root: &std::path::Path, registry: &Option<Arc<bmr_world::BlockRegistry>>) -> Result<bmr_world::World> {
+        bmr_world::World::open(root, &self.dimension, registry.clone())
+    }
+}
+
 fn main() -> Result<()> {
     match Cli::parse().cmd {
         Cmd::Fetch(a) => fetch::run(a),
         Cmd::Obj(a) => obj::run(a),
         Cmd::CheckHeights(a) => check_heights::run(a),
+        Cmd::Score(a) => score::run(a),
+        Cmd::Probe(a) => probe::run(a),
     }
 }

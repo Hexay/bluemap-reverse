@@ -1,4 +1,4 @@
-//! Sparse block map → full chunks for the writer.
+//! Sparse blocks + column segments → full chunks for the writer.
 
 use std::collections::HashMap;
 
@@ -12,23 +12,42 @@ pub struct ChunkLayout {
     pub biome: String,
 }
 
-pub fn chunks_from_blocks<'a>(
-    blocks: impl IntoIterator<Item = ((i32, i32, i32), &'a BlockState)>,
-    layout: &ChunkLayout,
-) -> Vec<Chunk> {
-    let mut chunks: HashMap<ChunkPos, Chunk> = HashMap::new();
-    for ((x, y, z), state) in blocks {
-        let pos = (x.div_euclid(16), z.div_euclid(16));
-        let chunk = chunks
-            .entry(pos)
-            .or_insert_with(|| Chunk::new(pos.0, pos.1, layout.data_version, layout.sections, &layout.biome));
-        chunk.set_block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize, state);
+pub struct ChunkBuilder {
+    layout: ChunkLayout,
+    chunks: HashMap<ChunkPos, Chunk>,
+}
+
+impl ChunkBuilder {
+    pub fn new(layout: ChunkLayout) -> Self {
+        Self { layout, chunks: HashMap::new() }
     }
-    let mut out: Vec<Chunk> = chunks.into_values().collect();
-    for c in &mut out {
-        for s in &mut c.sections {
-            s.compact();
+
+    fn chunk(&mut self, x: i32, z: i32) -> &mut Chunk {
+        let pos = (x.div_euclid(16), z.div_euclid(16));
+        let l = &self.layout;
+        self.chunks.entry(pos).or_insert_with(|| Chunk::new(pos.0, pos.1, l.data_version, l.sections, &l.biome))
+    }
+
+    pub fn set_block(&mut self, (x, y, z): (i32, i32, i32), state: &BlockState) {
+        self.chunk(x, z).set_block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize, state);
+    }
+
+    /// Set `ylo..=yhi` of column (x, z).
+    pub fn fill_column(&mut self, (x, z): (i32, i32), ylo: i32, yhi: i32, state: &BlockState) {
+        let (lx, lz) = (x.rem_euclid(16) as usize, z.rem_euclid(16) as usize);
+        let chunk = self.chunk(x, z);
+        for y in ylo..=yhi {
+            chunk.set_block(lx, y, lz, state);
         }
     }
-    out
+
+    pub fn finish(self) -> Vec<Chunk> {
+        let mut out: Vec<Chunk> = self.chunks.into_values().collect();
+        for c in &mut out {
+            for s in &mut c.sections {
+                s.compact();
+            }
+        }
+        out
+    }
 }

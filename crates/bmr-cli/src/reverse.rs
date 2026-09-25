@@ -1,11 +1,10 @@
-use std::collections::HashSet;
 use std::path::PathBuf;
 use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_fill::Bounds;
 use bmr_invert::Library;
-use bmr_world::{BlockState, ChunkLayout, WorldWriter, chunks_from_blocks};
+use bmr_world::{ChunkBuilder, ChunkLayout, WorldWriter};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
 use crate::{MirrorArgs, WorldArgs};
@@ -50,35 +49,57 @@ pub fn run(a: Args) -> Result<()> {
     let map = a.mirror.open()?;
     let inv = bmr_invert::reverse(&map, &lib)?;
     let s = &inv.stats;
+    let ev = &inv.evidence;
     println!(
-        "cells {}: {:?}, overhang-only {}, unmatched {}, occluder evidence {} in {:.1?}",
-        s.cells, s.by_how, s.overhang_cells, s.unmatched, inv.occluders.len(), t.elapsed()
+        "cells {}: {:?}, liquid {}, waterlogged {}, overhang-only {}, unmatched {} | evidence solid {} liquid {} open {} in {:.1?}",
+        s.cells, s.by_how, s.liquid_cells, s.waterlogged, s.overhang_cells, s.unmatched,
+        ev.solid.len(), ev.liquid.len(), ev.open.len(), t.elapsed()
     );
     for (textures, n) in s.unmatched_textures.iter().take(a.show_unmatched) {
         println!("  unmatched {n:>6}  {textures}");
     }
 
-    let blocks: Vec<((i32, i32, i32), BlockState)> = if a.no_fill {
-        inv.blocks.iter().map(|(&c, &e)| (c, lib.entries[e].state.clone())).collect()
-    } else {
-        let grid = map.settings.hires_grid();
-        let rendered: HashSet<_> = map.tiles(0).into_iter().collect();
-        let column = move |x: i32, z: i32| rendered.contains(&grid.tile_of(x, z));
-        let bounds = Bounds { column: &column, min_y: a.min_y, max_y: a.max_y };
-        let (filled, fs) = bmr_fill::complete(&inv, &lib, &registry, &bounds);
-        println!("fill: {} observed + {} hidden solid, {} leaves adjusted", fs.observed, fs.hidden_solid, fs.leaves_adjusted);
-        filled.into_iter().collect()
-    };
-
-    let layout = ChunkLayout {
+    let t = Instant::now();
+    let mut builder = ChunkBuilder::new(ChunkLayout {
         data_version: lib.data_version,
         sections: (a.min_y.div_euclid(16), a.max_y.div_euclid(16)),
         biome: "minecraft:plains".into(),
-    };
-    let chunks = chunks_from_blocks(blocks.iter().map(|(c, s)| (*c, s)), &layout);
+    });
+    if a.no_fill {
+        for (&c, &e) in &inv.blocks {
+            builder.set_block(c, &lib.entries[e].state);
+        }
+    } else {
+        let bounds = Bounds { columns: rendered_columns(&map), min_y: a.min_y, max_y: a.max_y };
+        let filled = bmr_fill::complete(&inv, &lib, &registry, &bounds);
+        let fs = &filled.stats;
+        println!(
+            "fill: {} observed, {} unseen solid, {} unseen liquid, {} leaves adjusted in {:.1?}",
+            fs.observed, fs.solid_cells, fs.liquid_cells, fs.leaves_adjusted, t.elapsed()
+        );
+        for seg in &filled.segments {
+            builder.fill_column(seg.column, seg.ylo, seg.yhi, &seg.state);
+        }
+        for (&c, s) in &filled.blocks {
+            builder.set_block(c, s);
+        }
+    }
+    let chunks = builder.finish();
     let writer = WorldWriter::create(&a.out, &a.template, &a.world_args.dimension, registry)?;
     let n = chunks.len();
     writer.write_chunks(chunks)?;
     println!("{n} chunks → {}", a.out.display());
     Ok(())
+}
+
+/// Every world column inside a rendered hires tile.
+fn rendered_columns(map: &bmr_fetch::LocalMap) -> Vec<(i32, i32)> {
+    let [w, h] = map.settings.hires.tile_size;
+    map.tiles(0)
+        .into_iter()
+        .flat_map(|t| {
+            let [x0, z0] = map.hires_origin(t);
+            (x0..x0 + w).flat_map(move |x| (z0..z0 + h).map(move |z| (x, z)))
+        })
+        .collect()
 }

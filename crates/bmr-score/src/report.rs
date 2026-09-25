@@ -32,8 +32,9 @@ pub struct Confusion {
     pub count: u64,
 }
 
-/// See docs/plan.md "Scoring". `visible` approximates BlueMap visibility as "non-air with an air
-/// neighbour (void below min y counts as air)" until bmr-model knows real culling.
+/// See docs/plan.md "Scoring". `rendered` = cells BlueMap drew faces for (needs the mirror): the
+/// ceiling for pure inversion. `exposed` = non-air with an air neighbour, which also counts dark cave
+/// walls BlueMap never draws.
 #[derive(Debug, Default, Serialize)]
 pub struct Report {
     pub chunks: u64,
@@ -43,7 +44,8 @@ pub struct Report {
     pub all: Accuracy,
     /// Voxels non-air in either world — the headline number.
     pub occupied: Accuracy,
-    pub visible: Accuracy,
+    pub rendered: Accuracy,
+    pub exposed: Accuracy,
     /// Non-air voxels.
     pub solid: Overlap,
     /// Topmost non-air block per column: same y and same state.
@@ -51,8 +53,12 @@ pub struct Report {
     /// 4×4×4 biome cells with the same biome.
     pub biomes: Hits,
     pub confusions: Vec<Confusion>,
+    /// Confusions among rendered cells only: pure inversion errors.
+    pub rendered_confusions: Vec<Confusion>,
     #[serde(skip)]
     pub(crate) confusion_counts: HashMap<(String, String), u64>,
+    #[serde(skip)]
+    pub(crate) rendered_confusion_counts: HashMap<(String, String), u64>,
 }
 
 impl Report {
@@ -60,7 +66,12 @@ impl Report {
         self.chunks += o.chunks;
         self.partial_chunks_skipped += o.partial_chunks_skipped;
         self.columns += o.columns;
-        for (a, b) in [(&mut self.all, o.all), (&mut self.occupied, o.occupied), (&mut self.visible, o.visible)] {
+        for (a, b) in [
+            (&mut self.all, o.all),
+            (&mut self.occupied, o.occupied),
+            (&mut self.rendered, o.rendered),
+            (&mut self.exposed, o.exposed),
+        ] {
             a.total += b.total;
             a.exact += b.exact;
             a.name += b.name;
@@ -75,21 +86,28 @@ impl Report {
         for (k, v) in o.confusion_counts {
             *self.confusion_counts.entry(k).or_default() += v;
         }
+        for (k, v) in o.rendered_confusion_counts {
+            *self.rendered_confusion_counts.entry(k).or_default() += v;
+        }
     }
 
     pub(crate) fn finish(&mut self, top: usize) {
-        let mut v: Vec<_> = self.confusion_counts.drain().collect();
-        v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
-        self.confusions = v
-            .into_iter()
-            .take(top)
-            .map(|((original, reconstructed), count)| Confusion { original, reconstructed, count })
-            .collect();
+        self.confusions = top_confusions(&mut self.confusion_counts, top);
+        self.rendered_confusions = top_confusions(&mut self.rendered_confusion_counts, top);
     }
 
     pub fn solid_iou(&self) -> f64 {
         ratio(self.solid.both, self.solid.original + self.solid.reconstructed - self.solid.both)
     }
+}
+
+fn top_confusions(counts: &mut HashMap<(String, String), u64>, top: usize) -> Vec<Confusion> {
+    let mut v: Vec<_> = counts.drain().collect();
+    v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    v.into_iter()
+        .take(top)
+        .map(|((original, reconstructed), count)| Confusion { original, reconstructed, count })
+        .collect()
 }
 
 fn ratio(a: u64, b: u64) -> f64 {
@@ -103,15 +121,29 @@ fn pct(a: u64, b: u64) -> String {
 impl fmt::Display for Report {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "chunks {} ({} partial skipped), columns {}", self.chunks, self.partial_chunks_skipped, self.columns)?;
-        for (label, a) in [("occupied  ", self.occupied), ("visible   ", self.visible), ("all voxels", self.all)] {
+        for (label, a) in [
+            ("occupied  ", self.occupied),
+            ("rendered  ", self.rendered),
+            ("exposed   ", self.exposed),
+            ("all voxels", self.all),
+        ] {
+            if a.total == 0 {
+                continue;
+            }
             writeln!(f, "{label}  state {}  name {}  (n={})", pct(a.exact, a.total), pct(a.name, a.total), a.total)?;
         }
         writeln!(f, "solid IoU   {:6.2}%  (orig {}, recon {}, both {})", 100.0 * self.solid_iou(), self.solid.original, self.solid.reconstructed, self.solid.both)?;
         writeln!(f, "surface     {}  (n={})", pct(self.surface.hits, self.surface.total), self.surface.total)?;
         writeln!(f, "biome cells {}  (n={})", pct(self.biomes.hits, self.biomes.total), self.biomes.total)?;
-        if !self.confusions.is_empty() {
-            writeln!(f, "top confusions (original -> reconstructed):")?;
-            for c in &self.confusions {
+        for (title, list) in [
+            ("top confusions (original -> reconstructed)", &self.confusions),
+            ("rendered-cell confusions", &self.rendered_confusions),
+        ] {
+            if list.is_empty() {
+                continue;
+            }
+            writeln!(f, "{title}:")?;
+            for c in list {
                 writeln!(f, "  {:>9}  {} -> {}", c.count, c.original, c.reconstructed)?;
             }
         }

@@ -3,5 +3,5 @@
 mod compare;
 mod report;
 
-pub use compare::{ColumnFilter, score};
+pub use compare::{Cell, ColumnFilter, Scope, score};
 pub use report::{Accuracy, Confusion, Hits, Overlap, Report};

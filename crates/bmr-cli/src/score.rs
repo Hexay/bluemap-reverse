@@ -38,21 +38,19 @@ pub fn run(a: Args) -> Result<()> {
         None => World::empty(PathBuf::from("<no reconstruction>")),
     };
 
-    let rendered: Option<(HashSet<(i32, i32)>, bmr_fetch::grid::Grid)> = match &a.mirror {
-        Some(m) => {
-            let map = bmr_fetch::LocalMap::open(m, a.map.as_deref())?;
-            Some((map.tiles(0).into_iter().collect(), map.settings.hires_grid()))
-        }
-        None => None,
-    };
+    let map = a.mirror.as_ref().map(|m| bmr_fetch::LocalMap::open(m, a.map.as_deref())).transpose()?;
+    let tiles: Option<(HashSet<(i32, i32)>, bmr_fetch::grid::Grid)> =
+        map.as_ref().map(|m| (m.tiles(0).into_iter().collect(), m.settings.hires_grid()));
+    let rendered = map.as_ref().map(bmr_invert::rendered_cells).transpose()?;
     let rect = a.rect.clone();
     let filter = move |x: i32, z: i32| {
         let in_rect = rect.is_empty() || (rect[0] <= x && x <= rect[2] && rect[1] <= z && z <= rect[3]);
-        in_rect && rendered.as_ref().is_none_or(|(tiles, grid)| tiles.contains(&grid.tile_of(x, z)))
+        in_rect && tiles.as_ref().is_none_or(|(tiles, grid)| tiles.contains(&grid.tile_of(x, z)))
     };
 
     let t = Instant::now();
-    let report = bmr_score::score(&original, &reconstructed, &filter, a.top)?;
+    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref() };
+    let report = bmr_score::score(&original, &reconstructed, &scope, a.top)?;
     print!("{report}");
     println!("scored in {:.1?}", t.elapsed());
     if let Some(path) = a.json {

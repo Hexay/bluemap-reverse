@@ -8,14 +8,16 @@ use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
 use bmr_world::{BlockRegistry, BlockState, World};
 
-use crate::face::{CellFaces, Cell, FaceKey, WorldFace, normalized, signature, texture_names, world_faces};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, WorldFace, normalized, signature, texture_names, world_faces};
 
 const DEBUG_Y: i32 = 70;
 
 pub struct Entry {
     pub state: BlockState,
-    /// In-cell faces only.
+    /// In-cell, non-liquid faces (liquid faces depend on neighbours; handled by direction, not by key).
     pub sig: Vec<FaceKey>,
+    /// Renders liquid: water/lava themselves, waterlogged=true, always-waterlogged plants.
+    pub liquid: Option<Liquid>,
     /// Faces owned by a neighbouring cell: (offset to that cell, key relative to it).
     pub overhang: Vec<(Cell, FaceKey)>,
     /// Mean tint of tinted faces as rendered in the debug world (plains biome; redstone by power).
@@ -41,6 +43,7 @@ pub struct Library {
     exact: HashMap<Vec<FaceKey>, Vec<usize>>,
     exact_norm: HashMap<Vec<FaceKey>, Vec<usize>>,
     by_texture: HashMap<Arc<str>, Vec<usize>>,
+    by_state: HashMap<BlockState, usize>,
 }
 
 impl Library {
@@ -80,6 +83,7 @@ impl Library {
             exact: HashMap::new(),
             exact_norm: HashMap::new(),
             by_texture: HashMap::new(),
+            by_state: HashMap::new(),
         };
         let mut anchors: Vec<_> = by_anchor.into_iter().collect();
         anchors.sort_by_key(|(c, _)| *c);
@@ -101,10 +105,11 @@ impl Library {
                 state.properties.iter().filter(|p| !b.default.contains(p)).count() as u32
             });
             let tint = cell.tint();
-            let sig = signature(cell.keys);
+            let liquid = cell.keys.iter().find_map(FaceKey::liquid);
+            let sig = signature(cell.keys.into_iter().filter(|k| k.liquid().is_none()).collect());
             let sides: BTreeSet<Cell> = sig.iter().filter(|k| k.full_side()).filter_map(FaceKey::boundary_dir).collect();
             let full_cube = sides.len() == 6;
-            lib.add(Entry { state: state.clone(), sig, overhang, tint, default_distance, full_cube });
+            lib.add(Entry { state: state.clone(), sig, liquid, overhang, tint, default_distance, full_cube });
         }
         lib.stats.states = lib.entries.len();
         Ok(lib)
@@ -121,7 +126,21 @@ impl Library {
         for t in textures {
             self.by_texture.entry(t.clone()).or_default().push(id);
         }
+        self.by_state.insert(e.state.clone(), id);
         self.entries.push(e);
+    }
+
+    pub fn find(&self, state: &BlockState) -> Option<usize> {
+        self.by_state.get(state).copied()
+    }
+
+    /// The same state with `waterlogged=true`, if the block has that property.
+    pub fn waterlogged_variant(&self, id: usize) -> Option<usize> {
+        let s = &self.entries[id].state;
+        let (i, _) = s.properties.iter().enumerate().find(|(_, (k, v))| k == "waterlogged" && v == "false")?;
+        let mut w = s.clone();
+        w.properties[i].1 = "true".into();
+        self.find(&w)
     }
 
     pub fn exact(&self, sig: &[FaceKey]) -> Option<&[usize]> {

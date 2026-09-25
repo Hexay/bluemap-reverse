@@ -135,7 +135,7 @@ fn by_height_runs(ylo: i32, yhi: i32, min_y: i32, base: Option<String>) -> Vec<(
 
 /// Vanilla majority by height: bedrock floor band (100/80/60% bedrock at min_y+0/1/2), deepslate up to
 /// y=3 (stone↔deepslate blends over y 0..8), stone above.
-fn default_block(y: i32, min_y: i32) -> &'static str {
+pub fn default_block(y: i32, min_y: i32) -> &'static str {
     if y <= min_y + 2 {
         "minecraft:bedrock"
     } else if y <= 3 {

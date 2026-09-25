@@ -55,6 +55,8 @@ pub struct Report {
     pub confusions: Vec<Confusion>,
     /// Confusions among rendered cells only: pure inversion errors.
     pub rendered_confusions: Vec<Confusion>,
+    /// Positions of the confusion requested via `Scope::sample`.
+    pub samples: Vec<(i32, i32, i32)>,
     #[serde(skip)]
     pub(crate) confusion_counts: HashMap<(String, String), u64>,
     #[serde(skip)]
@@ -89,6 +91,9 @@ impl Report {
         for (k, v) in o.rendered_confusion_counts {
             *self.rendered_confusion_counts.entry(k).or_default() += v;
         }
+        self.samples.extend(o.samples);
+        self.samples.sort();
+        self.samples.truncate(20);
     }
 
     pub(crate) fn finish(&mut self, top: usize) {
@@ -146,6 +151,9 @@ impl fmt::Display for Report {
             for c in list {
                 writeln!(f, "  {:>9}  {} -> {}", c.count, c.original, c.reconstructed)?;
             }
+        }
+        if !self.samples.is_empty() {
+            writeln!(f, "samples: {:?}", self.samples)?;
         }
         Ok(())
     }

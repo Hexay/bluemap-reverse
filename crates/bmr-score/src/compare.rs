@@ -18,7 +18,11 @@ pub struct Scope<'a> {
     pub columns: ColumnFilter<'a>,
     /// Cells BlueMap drew faces for; enables the `rendered` metric.
     pub rendered: Option<&'a HashSet<Cell>>,
+    /// (original, reconstructed) labels whose positions to sample into `Report::samples`.
+    pub sample: Option<(&'a str, &'a str)>,
 }
+
+const MAX_SAMPLES: usize = 20;
 
 pub fn score(original: &World, reconstructed: &World, scope: &Scope, top_confusions: usize) -> Result<Report> {
     let regions = original.regions()?;
@@ -54,7 +58,7 @@ fn score_region(original: &World, reconstructed: &World, region: (i32, i32), sco
                 if filter(pos.0 * 16 + lx as i32, pos.1 * 16 + lz as i32) {
                     scored = true;
                     rep.columns += 1;
-                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range, scope.rendered);
+                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range, scope.rendered, scope.sample);
                 }
             }
         }
@@ -77,6 +81,7 @@ fn score_column(
     lz: usize,
     (y0, y1): (i32, i32),
     rendered: Option<&HashSet<Cell>>,
+    sample: Option<(&str, &str)>,
 ) {
     let mut orig_top = None;
     let mut recon_top = None;
@@ -126,7 +131,11 @@ fn score_column(
             rep.solid.both += 1;
         }
         if !exact {
-            *rep.confusion_counts.entry((label(o), label(r))).or_default() += 1;
+            let key = (label(o), label(r));
+            if rep.samples.len() < MAX_SAMPLES && sample.is_some_and(|(a, b)| a == key.0 && b == key.1) {
+                rep.samples.push((pos.0 * 16 + lx as i32, y, pos.1 * 16 + lz as i32));
+            }
+            *rep.confusion_counts.entry(key).or_default() += 1;
         }
     }
     if orig_top.is_some() || recon_top.is_some() {

@@ -16,12 +16,16 @@ pub struct Bounds {
     pub columns: Vec<Column>,
     pub min_y: i32,
     pub max_y: i32,
+    /// BlueMap `remove-caves-below-y` of the map (not published by the site; default 55).
+    pub cave_y: i32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Fill {
     Solid,
     Liquid(Liquid),
+    /// Open/sky evidence, or none: air unless a regeneration says otherwise below the cave cut-off.
+    Air,
 }
 
 pub struct Gap {
@@ -62,9 +66,8 @@ pub fn gaps(observed_ys: &HashMap<Column, Vec<i32>>, ev: &Evidence, bounds: &Bou
         let mut cursor = bounds.max_y;
         for y in ys.into_iter().chain([bounds.min_y - 1]) {
             if y < cursor {
-                if let Some(fill) = classify(ce, y + 1, cursor) {
-                    out.push(Gap { column: col, ylo: y + 1, yhi: cursor, fill, floored: y >= bounds.min_y });
-                }
+                let fill = classify(ce, y + 1, cursor);
+                out.push(Gap { column: col, ylo: y + 1, yhi: cursor, fill, floored: y >= bounds.min_y });
             }
             cursor = cursor.min(y - 1);
         }
@@ -77,14 +80,14 @@ pub fn ring(r: i32) -> impl Iterator<Item = (i32, i32)> {
     (-r..=r).flat_map(move |dx| (-r..=r).map(move |dz| (dx, dz))).filter(move |(dx, dz)| dx.abs().max(dz.abs()) == r)
 }
 
-fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Option<Fill> {
+fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Fill {
     let inside = |y: &i32| (ylo..=yhi).contains(y);
     let solid = ce.solid.iter().filter(|y| inside(y)).count();
     let open = ce.open.iter().filter(|y| inside(y)).count();
     let liquid = ce.liquid.iter().find(|(y, _)| inside(y)).map(|&(_, l)| l);
     match liquid {
-        Some(l) if solid == 0 => Some(Fill::Liquid(l)),
-        _ if solid > 0 && solid >= open => Some(Fill::Solid),
-        _ => None,
+        Some(l) if solid == 0 => Fill::Liquid(l),
+        _ if solid > 0 && solid >= open => Fill::Solid,
+        _ => Fill::Air,
     }
 }

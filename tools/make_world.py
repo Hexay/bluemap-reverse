@@ -70,7 +70,11 @@ def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, timeou
 
 def make_world(name: str, force: bool) -> None:
     spec, commands = load_fixture(name)
-    server_dir = WORLDS / name
+    generate(WORLDS / name, spec, commands, force)
+
+
+def generate(server_dir, spec: dict, commands: list[str], force: bool) -> None:
+    """Fresh server in `server_dir`: properties + area from `spec`, then `commands`, save, stop."""
     if server_dir.exists():
         if not force:
             print(f"exists  {server_dir / 'world'} (use --force to regenerate)")

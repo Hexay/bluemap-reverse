@@ -25,6 +25,9 @@ pub struct Args {
     rect: Vec<i32>,
     #[arg(long, default_value_t = 15)]
     top: usize,
+    /// Print positions of one confusion: "<original>-><reconstructed>" as printed in the report
+    #[arg(long)]
+    sample: Option<String>,
     /// Also write the report as JSON
     #[arg(long)]
     json: Option<PathBuf>,
@@ -49,7 +52,8 @@ pub fn run(a: Args) -> Result<()> {
     };
 
     let t = Instant::now();
-    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref() };
+    let sample = a.sample.as_deref().and_then(|s| s.split_once("->")).map(|(o, r)| (o.trim(), r.trim()));
+    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample };
     let report = bmr_score::score(&original, &reconstructed, &scope, a.top)?;
     print!("{report}");
     println!("scored in {:.1?}", t.elapsed());

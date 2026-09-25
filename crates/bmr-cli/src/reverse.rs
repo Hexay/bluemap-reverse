@@ -26,11 +26,17 @@ pub struct Args {
     /// Only place what the tiles show (skip hidden-volume fill and game rules)
     #[arg(long)]
     no_fill: bool,
+    /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for unseen cells + biomes
+    #[arg(long)]
+    regen: Option<PathBuf>,
     /// Dimension build height (overworld default)
     #[arg(long, default_value_t = -64, allow_hyphen_values = true)]
     min_y: i32,
     #[arg(long, default_value_t = 319)]
     max_y: i32,
+    /// The map's BlueMap `remove-caves-below-y` (not published by the site)
+    #[arg(long, default_value_t = 55, allow_hyphen_values = true)]
+    cave_y: i32,
     #[arg(long, default_value_t = 10)]
     show_unmatched: usize,
     #[command(flatten)]
@@ -60,6 +66,10 @@ pub fn run(a: Args) -> Result<()> {
     }
 
     let t = Instant::now();
+    let regen = match &a.regen {
+        Some(p) => Some(bmr_fill::RegenWorld::load(&a.world_args.open(p, &Some(registry.clone()))?)?),
+        None => None,
+    };
     let mut builder = ChunkBuilder::new(ChunkLayout {
         data_version: lib.data_version,
         sections: (a.min_y.div_euclid(16), a.max_y.div_euclid(16)),
@@ -70,12 +80,12 @@ pub fn run(a: Args) -> Result<()> {
             builder.set_block(c, &lib.entries[e].state);
         }
     } else {
-        let bounds = Bounds { columns: rendered_columns(&map), min_y: a.min_y, max_y: a.max_y };
-        let filled = bmr_fill::complete(&inv, &lib, &registry, &bounds);
+        let bounds = Bounds { columns: rendered_columns(&map), min_y: a.min_y, max_y: a.max_y, cave_y: a.cave_y };
+        let filled = bmr_fill::complete(&inv, &lib, &registry, &bounds, regen.as_ref());
         let fs = &filled.stats;
         println!(
-            "fill: {} observed, {} unseen solid, {} unseen liquid, {} leaves adjusted in {:.1?}",
-            fs.observed, fs.solid_cells, fs.liquid_cells, fs.leaves_adjusted, t.elapsed()
+            "fill: {} observed, {} unseen solid, {} unseen liquid, {} leaves adjusted, {} adopted from regen in {:.1?}",
+            fs.observed, fs.solid_cells, fs.liquid_cells, fs.leaves_adjusted, fs.adopted_from_regen, t.elapsed()
         );
         for seg in &filled.segments {
             builder.fill_column(seg.column, seg.ylo, seg.yhi, &seg.state);
@@ -84,7 +94,14 @@ pub fn run(a: Args) -> Result<()> {
             builder.set_block(c, s);
         }
     }
-    let chunks = builder.finish();
+    let mut chunks = builder.finish();
+    if let Some(r) = &regen {
+        for c in &mut chunks {
+            if let Some(src) = r.chunk((c.x, c.z)) {
+                c.copy_biomes_from(src);
+            }
+        }
+    }
     let writer = WorldWriter::create(&a.out, &a.template, &a.world_args.dimension, registry)?;
     let n = chunks.len();
     writer.write_chunks(chunks)?;

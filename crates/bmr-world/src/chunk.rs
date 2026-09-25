@@ -146,6 +146,16 @@ impl Chunk {
         }
     }
 
+    /// Copy biome data for every section both chunks have.
+    pub fn copy_biomes_from(&mut self, src: &Chunk) {
+        for s in &mut self.sections {
+            if let Some(o) = src.section(s.y) {
+                s.biome_palette.clone_from(&o.biome_palette);
+                s.biomes.clone_from(&o.biomes);
+            }
+        }
+    }
+
     pub fn is_full(&self) -> bool {
         self.status == "minecraft:full" || self.status == "full"
     }

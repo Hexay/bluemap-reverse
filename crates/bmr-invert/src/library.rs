@@ -3,12 +3,14 @@
 
 use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
+use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
 use bmr_world::{BlockRegistry, BlockState, World};
 
 use crate::face::{Cell, CellFaces, FaceKey, Liquid, WorldFace, normalized, signature, texture_names, world_faces};
+use crate::timings::Timings;
 
 const DEBUG_Y: i32 = 70;
 
@@ -34,6 +36,7 @@ pub struct BuildStats {
     /// Faces owned by a cell other than their block's (geometry reaching outside the block).
     pub overhang_faces: usize,
     pub overhang_states: usize,
+    pub timings: Timings,
 }
 
 pub struct Library {
@@ -48,33 +51,44 @@ pub struct Library {
 
 impl Library {
     pub fn build(map: &LocalMap, world: &World, registry: &BlockRegistry) -> Result<Self> {
-        let textures = bmr_prbm::parse_textures(&map.textures_json()?)?;
-        let names = texture_names(&textures);
-        let mut faces: Vec<WorldFace> = Vec::new();
-        for t in map.tiles(0) {
-            let tile = bmr_prbm::parse(&map.tile_bytes(0, t)?)?;
-            faces.extend(world_faces(&tile, map.hires_origin(t), &names));
-        }
-        let mut by_anchor: HashMap<Cell, CellFaces> = HashMap::new();
-        let mut overhang: HashMap<Cell, Vec<(Cell, FaceKey)>> = HashMap::new();
-        for f in &faces {
-            let (a, o) = (anchor(f), f.owner());
-            if o == a {
-                by_anchor.entry(a).or_default().push(f, f.key_at(a));
-            } else {
-                overhang.entry(a).or_default().push(((o.0 - a.0, o.1 - a.1, o.2 - a.2), f.key_at(o)));
+        let mut t = Timings::default();
+        let faces = t.time("tiles", || -> Result<Vec<WorldFace>> {
+            let textures = bmr_prbm::parse_textures(&map.textures_json()?)?;
+            let names = texture_names(&textures);
+            let mut faces = Vec::new();
+            for tile in map.tiles(0) {
+                let parsed = bmr_prbm::parse(&map.tile_bytes(0, tile)?)?;
+                faces.extend(world_faces(&parsed, map.hires_origin(tile), &names));
             }
-        }
+            Ok(faces)
+        })?;
+        let (mut by_anchor, mut overhang) = t.time("attribute", || {
+            let mut by_anchor: HashMap<Cell, CellFaces> = HashMap::new();
+            let mut overhang: HashMap<Cell, Vec<(Cell, FaceKey)>> = HashMap::new();
+            for f in &faces {
+                let (a, o) = (anchor(f), f.owner());
+                if o == a {
+                    by_anchor.entry(a).or_default().push(f, f.key_at(a));
+                } else {
+                    overhang.entry(a).or_default().push(((o.0 - a.0, o.1 - a.1, o.2 - a.2), f.key_at(o)));
+                }
+            }
+            (by_anchor, overhang)
+        });
         // states whose every face overhangs still need an anchor entry
         for a in overhang.keys() {
             by_anchor.entry(*a).or_default();
         }
 
-        let mut chunks = HashMap::new();
-        for r in world.regions()? {
-            chunks.extend(world.read_region(r)?);
-        }
+        let chunks = t.time("world", || -> Result<HashMap<_, _>> {
+            let mut chunks = HashMap::new();
+            for r in world.regions()? {
+                chunks.extend(world.read_region(r)?);
+            }
+            Ok(chunks)
+        })?;
         let data_version = chunks.values().next().context("debug world has no chunks")?.data_version;
+        let index_start = Instant::now();
 
         let mut lib = Self {
             entries: Vec::new(),
@@ -112,6 +126,8 @@ impl Library {
             lib.add(Entry { state: state.clone(), sig, liquid, overhang, tint, default_distance, full_cube });
         }
         lib.stats.states = lib.entries.len();
+        t.0.push(("index".into(), index_start.elapsed()));
+        lib.stats.timings = t;
         Ok(lib)
     }
 

@@ -9,8 +9,10 @@ mod regen;
 mod rules;
 
 use std::collections::HashMap;
+use std::time::Instant;
 
 use bmr_invert::face::{Cell, Liquid};
+use bmr_invert::timings::Timings;
 use bmr_invert::{Inverted, Library};
 use bmr_world::{BlockRegistry, BlockState};
 
@@ -28,6 +30,7 @@ pub struct Stats {
     pub leaves_adjusted: usize,
     /// Observed blocks whose invisible properties were taken from the regeneration.
     pub adopted_from_regen: usize,
+    pub timings: Timings,
 }
 
 pub struct Filled {
@@ -55,11 +58,14 @@ pub fn complete(
         [Liquid::Water, Liquid::Lava].into_iter().map(|l| (l, named(l.block()))).collect();
     blocks.extend(inv.liquids.iter().map(|(&c, l)| (c, liquid_states[l].clone())));
 
-    let mut observed_ys: HashMap<Column, Vec<i32>> = HashMap::new();
-    for &(x, y, z) in blocks.keys() {
-        observed_ys.entry((x, z)).or_default().push(y);
-    }
-    let all_gaps = gaps(&observed_ys, &inv.evidence, bounds);
+    let mut t = Timings::default();
+    let all_gaps = t.time("gaps", || {
+        let mut observed_ys: HashMap<Column, Vec<i32>> = HashMap::new();
+        for &(x, y, z) in blocks.keys() {
+            observed_ys.entry((x, z)).or_default().push(y);
+        }
+        gaps(&observed_ys, &inv.evidence, bounds)
+    });
     let mut stats = Stats { observed: blocks.len(), ..Stats::default() };
     for g in &all_gaps {
         let n = (g.yhi - g.ylo + 1) as usize;
@@ -70,6 +76,7 @@ pub fn complete(
         }
     }
 
+    let seg_start = Instant::now();
     let segments = match regen {
         Some(regen) => {
             let is_full = |s: &BlockState| lib.find(s).is_some_and(|e| lib.entries[e].full_cube);
@@ -87,14 +94,16 @@ pub fn complete(
         }
         None => prior_segments(inv, lib, registry, bounds, &blocks, &all_gaps, &liquid_states),
     };
-    stats.leaves_adjusted = rules::leaves_distance(&mut blocks);
+    t.0.push(("segments".into(), seg_start.elapsed()));
+    stats.leaves_adjusted = t.time("leaves", || rules::leaves_distance(&mut blocks));
     if let Some(regen) = regen {
         let same_render = |a: &BlockState, b: &BlockState| match (lib.find(a), lib.find(b)) {
             (Some(x), Some(y)) => lib.entries[x].sig == lib.entries[y].sig && lib.entries[x].tint == lib.entries[y].tint,
             _ => false,
         };
-        stats.adopted_from_regen = regen::adopt_invisible(&mut blocks, regen, &same_render);
+        stats.adopted_from_regen = t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, &same_render));
     }
+    stats.timings = t;
     Filled { blocks, segments, stats }
 }
 

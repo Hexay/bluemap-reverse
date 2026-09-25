@@ -6,3 +6,8 @@
 {"time": "2026-09-25T19:38:26", "commit": "d41f286", "fixture": "vanilla", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 98.367, "rendered": 98.607, "exposed": 98.117, "solid_iou": 98.48, "surface": 99.941}
 {"time": "2026-09-25T19:44:09", "commit": "d41f286", "fixture": "vanilla", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 99.652, "rendered": 98.607, "exposed": 99.906, "solid_iou": 99.749, "surface": 99.94}
 {"time": "2026-09-25T19:47:54", "commit": "d41f286", "fixture": "vanilla", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 99.926, "rendered": 99.835, "exposed": 99.91, "solid_iou": 99.996, "surface": 99.943}
+{"time": "2026-09-25T19:54:00", "commit": "e8a7f3e", "fixture": "vanilla-edited", "args": [], "occupied": 73.582, "rendered": 98.618, "exposed": 86.449, "solid_iou": 94.125, "surface": 99.941}
+{"time": "2026-09-25T19:54:21", "commit": "e8a7f3e", "fixture": "vanilla-edited", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 99.909, "rendered": 99.859, "exposed": 99.953, "solid_iou": 99.987, "surface": 99.943}
+{"time": "2026-09-25T19:55:32", "commit": "e8a7f3e", "fixture": "vanilla", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 99.926, "rendered": 99.835, "exposed": 99.91, "solid_iou": 99.996, "surface": 99.943}
+{"time": "2026-09-25T19:55:56", "commit": "e8a7f3e", "fixture": "vanilla-edited", "args": ["--regen", "work/worlds/regen-vanilla/world"], "occupied": 99.903, "rendered": 99.859, "exposed": 99.953, "solid_iou": 99.987, "surface": 99.943}
+{"time": "2026-09-25T19:56:04", "commit": "e8a7f3e", "fixture": "superflat", "args": [], "occupied": 99.921, "rendered": 99.855, "exposed": 99.872, "solid_iou": 100.0, "surface": 99.902}

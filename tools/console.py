@@ -9,7 +9,7 @@ from pathlib import Path
 from paths import JAVA, SERVER_JAR
 
 COMMAND_ERRORS = re.compile(
-    r"/ERROR\]|Unknown or incomplete command|Incorrect argument|not loaded|Invalid|Expected|Could not|Unknown block"
+    r"/ERROR\]|Too many blocks|No blocks were filled|Unknown or incomplete command|Incorrect argument|not loaded|Invalid|Expected|Could not|Unknown block"
 )
 
 

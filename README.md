@@ -1,7 +1,9 @@
 # bluemap_reverse
 
 Reconstruct a Minecraft Java world from a BlueMap web map (the 3D browser viewer) — as close to the original as possible.
-Rust (reverser) + Python stdlib (test tooling). Status: end-to-end reversal works; superflat fixture ≈ 99.9% exact state. Next: seeded vanilla terrain.
+Rust (reverser) + Python stdlib (test tooling). Status: end-to-end reversal works. Exact-state accuracy over occupied voxels (`results/history.jsonl`):
+superflat ≈ 99.9%; vanilla terrain ≈ 74% without the seed, ≈ 99.9% with it (`--regen`), also with player edits.
+Next: seed recovery, priors for invisible properties, a real public map.
 
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
@@ -13,7 +15,8 @@ bmr reverse --mirror <dir> <out_world>  # reconstruct (needs work/cache/debug + 
 bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
 ```
 Library prerequisites: `py -3 tools/make_world.py debug && py -3 tools/mirror_fixture.py debug`, plus
-`template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`.
+`template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`, then
+`py -3 tools/reverse_fixture.py <f> [--regen work/worlds/regen-<f>/world]` (regen: `tools/regen_world.py <f> --seed S`).
 Iterate with debug builds (`cargo build`, binary `target/debug/bmr.exe`); deps are optimised in the dev profile.
 
 ## Test loop

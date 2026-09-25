@@ -41,9 +41,17 @@ real output. The model port is only needed later for round-trip verification (ph
 - Match: exact signature → offset-normalised (random plant offsets, ±1 jitter) → partial (only boundary
   faces may be missing = culled by a neighbour). Ties: nearest tint (redstone power), then closest to default.
 - Overhang: faces outside their block's cell are stored per entry and removed from neighbours after matching.
-- Fill (`bmr-fill`): a missing cullable face ⇒ neighbour is a full opaque block; a faceless opaque block ⇒ all
-  neighbours opaque → flood gives the exact shape of buried volumes. Material is a prior (terrain layering,
-  same-height majority, height default). Game rules: leaves distance.
+- Evidence (`bmr-invert/src/evidence.rs`): missing cullable face ⇒ neighbour full opaque (solid); missing liquid
+  face ⇒ same liquid or full block; drawn face ⇒ neighbour not a full block (open). Liquid faces are never
+  matched by key (their shape depends on neighbours); waterlogged comes from evidence.
+- Fill (`bmr-fill`): per-column gaps between observed cells, classified solid/liquid/air from evidence
+  (streaming, scales with columns). Above the cave cut-off (`remove-caves-below-y`, default 55, not published
+  by the site → `--cave-y`) a solid gap is all full blocks; below it dark cells may be anything.
+- With the seed (`tools/regen_world.py` + `--regen`): unseen cells decided per cell, regen vs evidence
+  (`bmr-fill/src/regen.rs`); biomes copied; observed blocks adopt regen states that render identically
+  (kelp age, leaves distance). Without it: material priors + deep-water floor estimate.
+- Irreducible: edits BlueMap cannot see (dark tunnels, buried changes), worldgen order non-determinism
+  (ore/stone blobs, seagrass across chunk borders).
 
 ## Architecture (Cargo workspace)
 

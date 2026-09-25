@@ -4,8 +4,9 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockInfo {
     /// Property name → allowed values, in report order.
     pub properties: Vec<(String, Vec<String>)>,
@@ -50,6 +51,15 @@ impl BlockRegistry {
             })
             .collect();
         Ok(Self { blocks })
+    }
+
+    /// From already-parsed entries (e.g. a bmr pack).
+    pub fn from_blocks(blocks: impl IntoIterator<Item = (String, BlockInfo)>) -> Self {
+        Self { blocks: blocks.into_iter().collect() }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &BlockInfo)> {
+        self.blocks.iter()
     }
 
     pub fn get(&self, name: &str) -> Option<&BlockInfo> {

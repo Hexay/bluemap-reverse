@@ -1,10 +1,28 @@
 # bluemap_reverse
 
 Reconstruct a Minecraft Java world from a BlueMap web map (the 3D browser viewer) — as close to the original as possible.
-Rust (reverser) + Python stdlib (test tooling). Status: end-to-end reversal works. Exact-state accuracy over occupied voxels (`results/history.jsonl`):
+Rust (reverser) + Python stdlib (test tooling). Exact-state accuracy over occupied voxels (`results/history.jsonl`):
 superflat ≈ 99.9%; vanilla terrain ≈ 74% without the seed, ≈ 99.9% with it (`--regen`), also with player edits.
-Next: seed recovery, priors for invisible properties, a real public map.
+Everything BlueMap draws is recovered ~99.99% by block type; the underground is a BlueMap limitation.
 
+## Use it
+
+Needs only `bmr` + a pack (`packs/bmr-mc26.3-bluemap5.27.pack`, 0.5 MB) — no Java, server or BlueMap.
+```
+bmr pull https://map.example.com/ -o world.zip           # mirror + check + reconstruct + zip; extract into saves/
+bmr pull https://map.example.com/ --map world_nether      # sites with several maps: pick one (list is printed)
+bmr pull … --schem build.schem                             # also a WorldEdit schematic of everything
+bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
+```
+- Re-running is cheap: downloads are cached and resumed (`work/cache/<site>`), nothing is fetched twice.
+- Be gentle: defaults are 4 parallel downloads with a 25 ms pause each (`--concurrency`, `--delay-ms`).
+- The pack must fit the site: `pull` compares textures and BlueMap version and explains mismatches (other
+  Minecraft version, mods, resource packs); it refuses clearly unfitting packs unless `--force`.
+- Only reverse maps you own or have permission for.
+
+## Development
+
+`bmr pack build` rebuilds the pack from the local debug world (see below).
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
 bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender

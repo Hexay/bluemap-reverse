@@ -39,7 +39,7 @@ pub fn run(a: Args) -> Result<()> {
     Ok(())
 }
 
-fn site_slug(url: &str) -> String {
+pub fn site_slug(url: &str) -> String {
     let host = url.split("://").nth(1).unwrap_or(url);
     host.trim_end_matches('/')
         .chars()

@@ -21,4 +21,4 @@ pub use schem::{Area, SchemStats, export_schem, read_schem};
 pub use sparse::{ChunkBuilder, ChunkLayout};
 pub use states::{StateId, StateTable};
 pub use world::{ChunkPos, World};
-pub use world_write::WorldWriter;
+pub use world_write::{TemplateFiles, WorldWriter, read_template};

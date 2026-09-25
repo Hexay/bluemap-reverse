@@ -102,15 +102,7 @@ impl Library {
         })?;
         let index_start = Instant::now();
 
-        let mut lib = Self {
-            entries: Vec::new(),
-            data_version,
-            stats: BuildStats::default(),
-            exact: FxHashMap::default(),
-            exact_norm: FxHashMap::default(),
-            by_texture: FxHashMap::default(),
-            by_state: FxHashMap::default(),
-        };
+        let mut lib = Self::empty(data_version);
         let mut anchors: Vec<_> = by_anchor.into_iter().collect();
         anchors.sort_by_key(|(c, _)| *c);
         for ((x, y, z), cell) in anchors {
@@ -137,6 +129,32 @@ impl Library {
         t.record("index", index_start.elapsed());
         lib.stats.timings = t;
         Ok(lib)
+    }
+
+    fn empty(data_version: i32) -> Self {
+        Self {
+            entries: Vec::new(),
+            data_version,
+            stats: BuildStats::default(),
+            exact: FxHashMap::default(),
+            exact_norm: FxHashMap::default(),
+            by_texture: FxHashMap::default(),
+            by_state: FxHashMap::default(),
+        }
+    }
+
+    /// Rebuild a library from stored entries (bmr pack). Signatures are re-sorted: texture ids, and so
+    /// key order, are process-local.
+    pub fn from_entries(entries: Vec<Entry>, data_version: i32) -> Self {
+        let mut lib = Self::empty(data_version);
+        for mut e in entries {
+            e.sig = signature(std::mem::take(&mut e.sig));
+            lib.stats.overhang_faces += e.overhang.len();
+            lib.stats.overhang_states += (!e.overhang.is_empty()) as usize;
+            lib.add(e);
+        }
+        lib.stats.states = lib.entries.len();
+        lib
     }
 
     fn add(&mut self, e: Entry) {

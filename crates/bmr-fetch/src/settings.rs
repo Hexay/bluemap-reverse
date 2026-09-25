@@ -7,6 +7,9 @@ use crate::grid::Grid;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteSettings {
+    /// BlueMap version that generated the webapp (e.g. "5.27").
+    #[serde(default)]
+    pub version: Option<String>,
     pub maps: Vec<String>,
     #[serde(default = "default_maps_root")]
     pub map_data_root: String,

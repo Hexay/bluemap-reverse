@@ -11,6 +11,8 @@ use crate::store::{Manifest, manifest_rel};
 
 pub struct LocalMap {
     pub id: String,
+    /// BlueMap version of the site (root settings.json), when published.
+    pub bluemap_version: Option<String>,
     pub settings: MapSettings,
     pub manifest: Manifest,
     dir: PathBuf,
@@ -29,7 +31,7 @@ impl LocalMap {
         let settings = serde_json::from_slice(&read(&dir.join("settings.json"))?)
             .with_context(|| format!("{id}/settings.json"))?;
         let manifest = Manifest::load(&mirror.join(manifest_rel(&id)))?;
-        Ok(Self { id, settings, manifest, dir })
+        Ok(Self { id, bluemap_version: site.version.clone(), settings, manifest, dir })
     }
 
     /// Tiles that exist at `lod` (0 = hires), per the fetch manifest.

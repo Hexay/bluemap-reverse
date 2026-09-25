@@ -1,12 +1,14 @@
 # bluemap_reverse
 
 Reconstruct a Minecraft Java world from a BlueMap web map (the 3D browser viewer) — as close to the original as possible.
-Rust (reverser) + Python stdlib (test tooling). Status: phases 0–2 done — local test maps, site mirror, PRBM parser.
+Rust (reverser) + Python stdlib (test tooling). Status: phases 0–3 done — local test maps, site mirror, PRBM parser, world reader + scorer.
 
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
 bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender
 bmr check-heights                       # hires top faces vs lowres heightmap (decode sanity check)
+bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered columns; no recon = all-air baseline
+bmr probe <world> x,y,z ...             # print block states + biome
 ```
 Iterate with debug builds (`cargo build`, binary `target/debug/bmr.exe`); deps are optimised in the dev profile.
 

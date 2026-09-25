@@ -16,6 +16,8 @@ JDK_DIR = DOWNLOADS / f"jdk{JAVA_MAJOR}"
 JAVA = JDK_DIR / "bin" / "java.exe"
 SERVER_JAR = DOWNLOADS / f"minecraft-server-{MC_VERSION}.jar"
 BLUEMAP_JAR = DOWNLOADS / f"bluemap-{BLUEMAP_VERSION}-cli.jar"
+# vanilla data reports (blocks.json: every state + defaults); bmr reads work/data/reports-<ver>/reports/blocks.json
+REPORTS = WORK / "data" / f"reports-{MC_VERSION}"
 
 JDK_URL = f"https://api.adoptium.net/v3/binary/latest/{JAVA_MAJOR}/ga/windows/x64/jdk/hotspot/normal/eclipse"
 MC_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"

@@ -2,6 +2,7 @@
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 import urllib.request
 import zipfile
@@ -9,7 +10,7 @@ from pathlib import Path
 
 from paths import (
     BLUEMAP_JAR, BLUEMAP_URL, DOWNLOADS, JAVA, JDK_DIR, JDK_URL,
-    MC_MANIFEST_URL, MC_VERSION, SERVER_JAR,
+    MC_MANIFEST_URL, MC_VERSION, REPORTS, SERVER_JAR,
 )
 
 
@@ -69,11 +70,26 @@ def download_server_jar() -> None:
     download(server["url"], SERVER_JAR, server["sha1"])
 
 
+def generate_reports() -> None:
+    blocks = REPORTS / "reports" / "blocks.json"
+    if blocks.exists():
+        print(f"ok      {blocks.relative_to(REPORTS.parent)}")
+        return
+    print("gen     vanilla data reports")
+    REPORTS.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [str(JAVA), "-DbundlerMainClass=net.minecraft.data.Main", "-jar", str(SERVER_JAR),
+         "--reports", "--output", str(REPORTS)],
+        cwd=REPORTS.parent, check=True, stdout=subprocess.DEVNULL,
+    )
+
+
 def main() -> None:
     DOWNLOADS.mkdir(parents=True, exist_ok=True)
     install_jdk()
     download_server_jar()
     download(BLUEMAP_URL, BLUEMAP_JAR)
+    generate_reports()
     print(f"java    {JAVA}")
 
 

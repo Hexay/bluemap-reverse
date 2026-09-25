@@ -1,0 +1,78 @@
+//! World root + dimension → region directory, for both the 26.1+ layout and the legacy one.
+
+use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use anyhow::{Context, Result, bail};
+
+use crate::chunk::Chunk;
+use crate::nbt::decode_chunk;
+use crate::region::read_region;
+use crate::registry::BlockRegistry;
+
+pub type ChunkPos = (i32, i32);
+
+pub struct World {
+    pub region_dir: PathBuf,
+    /// Needed to expand 26.3 default-state palette shorthand (see nbt.rs).
+    registry: Option<Arc<BlockRegistry>>,
+}
+
+impl World {
+    /// `dimension` like `minecraft:overworld`. Tries `dimensions/<ns>/<name>/region` (26.1+) then legacy.
+    pub fn open(root: &Path, dimension: &str, registry: Option<Arc<BlockRegistry>>) -> Result<Self> {
+        let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
+        let modern = root.join("dimensions").join(ns).join(name).join("region");
+        let legacy = match (ns, name) {
+            ("minecraft", "overworld") => root.join("region"),
+            ("minecraft", "the_nether") => root.join("DIM-1").join("region"),
+            ("minecraft", "the_end") => root.join("DIM1").join("region"),
+            _ => root.join("dimensions").join(ns).join(name).join("region"),
+        };
+        for dir in [modern, legacy] {
+            if dir.is_dir() {
+                return Ok(Self { region_dir: dir, registry });
+            }
+        }
+        bail!("no region dir for {dimension} under {}", root.display())
+    }
+
+    /// World without any regions yet (reads as all air).
+    pub fn empty(region_dir: PathBuf) -> Self {
+        Self { region_dir, registry: None }
+    }
+
+    /// Region coordinates of every `r.<x>.<z>.mca` present.
+    pub fn regions(&self) -> Result<Vec<(i32, i32)>> {
+        let Ok(entries) = fs::read_dir(&self.region_dir) else { return Ok(Vec::new()) };
+        let mut out = Vec::new();
+        for e in entries {
+            let name = e?.file_name();
+            let parts: Vec<&str> = name.to_str().unwrap_or("").split('.').collect();
+            if let ["r", x, z, "mca"] = parts.as_slice() {
+                if let (Ok(x), Ok(z)) = (x.parse(), z.parse()) {
+                    out.push((x, z));
+                }
+            }
+        }
+        out.sort();
+        Ok(out)
+    }
+
+    /// Every chunk in region (rx, rz); empty if the file is absent.
+    pub fn read_region(&self, (rx, rz): (i32, i32)) -> Result<HashMap<ChunkPos, Chunk>> {
+        let path = self.region_dir.join(format!("r.{rx}.{rz}.mca"));
+        if !path.exists() {
+            return Ok(HashMap::new());
+        }
+        let mut out = HashMap::new();
+        for ((lx, lz), nbt) in read_region(&path)? {
+            let pos = (rx * 32 + lx as i32, rz * 32 + lz as i32);
+            let chunk = decode_chunk(&nbt, self.registry.as_deref()).with_context(|| format!("chunk {pos:?} in {}", path.display()))?;
+            out.insert(pos, chunk);
+        }
+        Ok(out)
+    }
+}

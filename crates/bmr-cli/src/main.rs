@@ -1,4 +1,5 @@
 mod check_heights;
+mod copy_world;
 mod fetch;
 mod obj;
 mod probe;
@@ -31,6 +32,8 @@ enum Cmd {
     Score(score::Args),
     /// Print block states (and biome) at world positions.
     Probe(probe::Args),
+    /// Read a world's full chunks and write them back out with our writer (round-trip test).
+    CopyWorld(copy_world::Args),
 }
 
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
@@ -82,5 +85,6 @@ fn main() -> Result<()> {
         Cmd::CheckHeights(a) => check_heights::run(a),
         Cmd::Score(a) => score::run(a),
         Cmd::Probe(a) => probe::run(a),
+        Cmd::CopyWorld(a) => copy_world::run(a),
     }
 }

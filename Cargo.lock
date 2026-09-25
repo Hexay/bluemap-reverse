@@ -142,6 +142,7 @@ dependencies = [
  "anyhow",
  "fastnbt",
  "flate2",
+ "rayon",
  "serde",
  "serde_json",
 ]

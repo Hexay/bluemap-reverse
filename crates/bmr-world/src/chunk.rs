@@ -46,8 +46,55 @@ pub struct Section {
 }
 
 impl Section {
+    /// All air, one biome.
+    pub fn empty(y: i32, biome: &str) -> Self {
+        Self {
+            y,
+            palette: vec![BlockState::new("minecraft:air".into(), Vec::new())],
+            blocks: vec![0; 4096],
+            biome_palette: vec![biome.to_owned()],
+            biomes: vec![0; 64],
+        }
+    }
+
     pub fn block(&self, x: usize, y: usize, z: usize) -> &BlockState {
         &self.palette[self.blocks[(y * 16 + z) * 16 + x] as usize]
+    }
+
+    pub fn set_block(&mut self, x: usize, y: usize, z: usize, state: &BlockState) {
+        let idx = palette_index(&mut self.palette, state);
+        self.blocks[(y * 16 + z) * 16 + x] = idx;
+    }
+
+    pub fn set_biome(&mut self, cx: usize, cy: usize, cz: usize, biome: &str) {
+        let idx = match self.biome_palette.iter().position(|b| b == biome) {
+            Some(i) => i,
+            None => {
+                self.biome_palette.push(biome.to_owned());
+                self.biome_palette.len() - 1
+            }
+        };
+        self.biomes[(cy * 4 + cz) * 4 + cx] = idx as u16;
+    }
+
+    /// Drop palette entries no longer referenced (after overwrites), remapping indices.
+    pub fn compact(&mut self) {
+        let mut used = vec![false; self.palette.len()];
+        for &i in &self.blocks {
+            used[i as usize] = true;
+        }
+        let mut remap = vec![0u16; self.palette.len()];
+        let mut palette = Vec::new();
+        for (i, state) in self.palette.drain(..).enumerate() {
+            if used[i] {
+                remap[i] = palette.len() as u16;
+                palette.push(state);
+            }
+        }
+        self.palette = palette;
+        for i in &mut self.blocks {
+            *i = remap[*i as usize];
+        }
     }
 
     pub fn biome(&self, cx: usize, cy: usize, cz: usize) -> Option<&str> {
@@ -65,7 +112,40 @@ pub struct Chunk {
     pub sections: Vec<Section>,
 }
 
+fn palette_index(palette: &mut Vec<BlockState>, state: &BlockState) -> u16 {
+    match palette.iter().position(|p| p == state) {
+        Some(i) => i as u16,
+        None => {
+            palette.push(state.clone());
+            (palette.len() - 1) as u16
+        }
+    }
+}
+
 impl Chunk {
+    /// Full-status chunk with empty (air) sections `min_section..=max_section`.
+    pub fn new(x: i32, z: i32, data_version: i32, (min_section, max_section): (i32, i32), biome: &str) -> Self {
+        Self {
+            x,
+            z,
+            data_version,
+            status: "minecraft:full".into(),
+            sections: (min_section..=max_section).map(|y| Section::empty(y, biome)).collect(),
+        }
+    }
+
+    /// World y, chunk-local x/z. Returns false if y is outside the chunk's sections.
+    pub fn set_block(&mut self, x: usize, y: i32, z: usize, state: &BlockState) -> bool {
+        let sy = y.div_euclid(16);
+        match self.sections.binary_search_by_key(&sy, |s| s.y) {
+            Ok(i) => {
+                self.sections[i].set_block(x, y.rem_euclid(16) as usize, z, state);
+                true
+            }
+            Err(_) => false,
+        }
+    }
+
     pub fn is_full(&self) -> bool {
         self.status == "minecraft:full" || self.status == "full"
     }

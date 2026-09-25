@@ -13,6 +13,7 @@ opt-level = 2
 
 [workspace.dependencies]
 anyhow = "1"
+base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
 flate2 = "1"
 png = "0.18"
@@ -23,3 +24,4 @@ ureq = { version = "3", default-features = false, features = ["native-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 bmr-fetch = { path = "crates/bmr-fetch" }
+bmr-prbm = { path = "crates/bmr-prbm" }

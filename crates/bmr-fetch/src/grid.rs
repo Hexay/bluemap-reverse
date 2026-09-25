@@ -32,6 +32,12 @@ pub fn neighbours((x, z): Tile) -> [Tile; 4] {
     [(x - 1, z), (x + 1, z), (x, z - 1), (x, z + 1)]
 }
 
+/// Tile file relative to the map dir; lod 0 = hires `.prbm`, else lowres `.png`.
+pub fn tile_file(lod: u32, t: Tile) -> String {
+    let ext = if lod == 0 { "prbm" } else { "png" };
+    format!("tiles/{lod}/{}.{ext}", tile_path(t))
+}
+
 /// `x=-12, z=345` → `x-1/2/z3/4/5` (webapp `pathFromCoords`).
 pub fn tile_path((x, z): Tile) -> String {
     let mut s = String::from("x");

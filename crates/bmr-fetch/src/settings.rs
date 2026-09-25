@@ -24,6 +24,8 @@ pub struct MapSettings {
     pub lowres: LowresSettings,
     #[serde(default)]
     pub start_pos: [f64; 2],
+    #[serde(default)]
+    pub ambient_light: f32,
 }
 
 #[derive(Debug, Deserialize)]

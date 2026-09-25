@@ -9,11 +9,11 @@ use anyhow::{Context, Result};
 use rayon::prelude::*;
 
 use crate::discover::discover;
-use crate::grid::{Grid, Tile, tile_path};
+use crate::grid::{Grid, Tile, tile_file};
 use crate::http::Http;
-use crate::lowres::visible_pixels;
+use crate::lowres::LowresImage;
 use crate::settings::{MapSettings, SiteSettings};
-use crate::store::{Manifest, Store};
+use crate::store::{Manifest, Store, manifest_rel};
 
 pub struct Options {
     pub base_url: String,
@@ -65,7 +65,7 @@ impl<'a> MapMirror<'a> {
         let bytes = http.get(&format!("{root}/settings.json"))?.context("map settings.json missing")?;
         store.write(&format!("{root}/settings.json"), &bytes)?;
         let settings = serde_json::from_slice(&bytes).with_context(|| format!("{root}/settings.json"))?;
-        let manifest_path = store.path(&format!("bmr-manifest/{id}.json"));
+        let manifest_path = store.path(&manifest_rel(id));
         let manifest = Manifest::load(&manifest_path)?;
         Ok(Self { http, store, id: id.into(), root, settings, manifest_path, manifest })
     }
@@ -138,7 +138,7 @@ impl<'a> MapMirror<'a> {
             .map(|&t| {
                 let rel = tile_rel(&self.root, lod, t);
                 let (x0, z0) = grid.tile_min(t);
-                let px = visible_pixels(&self.store.read(&rel)?).with_context(|| rel)?;
+                let px = LowresImage::decode(&self.store.read(&rel)?).with_context(|| rel)?.visible_pixels();
                 Ok(px.into_iter().map(|(x, z)| (x0 + x * scale, z0 + z * scale)).collect())
             })
             .collect::<Result<_>>()?;
@@ -147,8 +147,7 @@ impl<'a> MapMirror<'a> {
 }
 
 fn tile_rel(map_root: &str, lod: u32, t: Tile) -> String {
-    let ext = if lod == 0 { "prbm" } else { "png" };
-    format!("{map_root}/tiles/{lod}/{}.{ext}", tile_path(t))
+    format!("{map_root}/{}", tile_file(lod, t))
 }
 
 /// Tiles of `grid` overlapping any `scale`×`scale` block square whose min corner is in `blocks`.

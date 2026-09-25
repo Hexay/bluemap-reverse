@@ -7,7 +7,8 @@ Everything BlueMap draws is recovered ~99.99% by block type; the underground is 
 
 ## Use it
 
-Needs only `bmr` + a pack (`packs/bmr-mc26.3-bluemap5.27.pack`, 0.5 MB) — no Java, server or BlueMap.
+Needs only `bmr` + packs (`packs/*.pack`, ~0.5 MB each: Minecraft 26.3 and 1.21.11, BlueMap 5.27) — no Java,
+server or BlueMap. `pull` picks the pack whose texture list matches the site (a Minecraft-version fingerprint).
 ```
 bmr pull https://map.example.com/ -o world.zip           # mirror + check + reconstruct + zip; extract into saves/
 bmr pull https://map.example.com/ --map world_nether      # sites with several maps: pick one (list is printed)
@@ -22,7 +23,9 @@ bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out
 
 ## Development
 
-`bmr pack build` rebuilds the pack from the local debug world (see below).
+New Minecraft/BlueMap version (1.18+), unattended, ~2–15 min: `py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27]`
+→ `packs/bmr-mc<mc>-bluemap<bm>.pack`. Prove it end to end: `py -3 tools/check_version.py --mc 1.21.11`
+(fixture world in that version → BlueMap → `bmr pull` → score → load in that version's server).
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
 bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender

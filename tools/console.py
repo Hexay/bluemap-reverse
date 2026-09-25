@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-from paths import JAVA, SERVER_JAR
+from paths import DEFAULT, Toolchain
 
 COMMAND_ERRORS = re.compile(
     r"/ERROR\]|Too many blocks|No blocks were filled|Unknown or incomplete command|Incorrect argument|not loaded|Invalid|Expected|Could not|Unknown block"
@@ -18,11 +18,11 @@ class ServerTimeout(RuntimeError):
 
 
 class Server:
-    def __init__(self, cwd: Path, heap: str = "4G"):
+    def __init__(self, cwd: Path, heap: str = "4G", tc: Toolchain = DEFAULT):
         self.lines: queue.Queue[str] = queue.Queue()
         self.errors: list[str] = []
         self.proc = subprocess.Popen(
-            [str(JAVA), f"-Xmx{heap}", "-jar", str(SERVER_JAR), "--nogui"],
+            [str(tc.java), f"-Xmx{heap}", "-jar", str(tc.server_jar), "--nogui"],
             cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace", bufsize=1,
         )

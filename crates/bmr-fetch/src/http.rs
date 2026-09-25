@@ -7,7 +7,7 @@ use std::time::Duration;
 use anyhow::{Context, Result, bail};
 use flate2::read::GzDecoder;
 use ureq::Agent;
-use ureq::tls::{TlsConfig, TlsProvider};
+use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
 const RETRIES: u32 = 3;
 const MAX_BODY: u64 = 1 << 30;
@@ -24,7 +24,13 @@ impl Http {
             .user_agent(concat!("bluemap_reverse/", env!("CARGO_PKG_VERSION")))
             .timeout_global(Some(Duration::from_secs(60)))
             .http_status_as_error(false)
-            .tls_config(TlsConfig::builder().provider(TlsProvider::NativeTls).build())
+            // OS store: the default (bundled webpki roots) makes SChannel reject cross-signed chains like GTS→GlobalSign.
+            .tls_config(
+                TlsConfig::builder()
+                    .provider(TlsProvider::NativeTls)
+                    .root_certs(RootCerts::PlatformVerifier)
+                    .build(),
+            )
             .build()
             .into();
         Ok(Self { agent, base: format!("{}/", base.trim_end_matches('/')), delay })

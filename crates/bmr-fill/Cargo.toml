@@ -1,0 +1,9 @@
+[package]
+name = "bmr-fill"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+bmr-invert.workspace = true
+bmr-world.workspace = true

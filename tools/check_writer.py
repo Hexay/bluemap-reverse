@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-from paths import ROOT, WEB_HOST, WEB_PORT, WORK, WORLDS
+from paths import ROOT, WORK, WORLDS
 from resave_world import resave
 
 BMR = ROOT / "target" / "debug" / "bmr.exe"
@@ -25,7 +25,7 @@ def main() -> None:
     area = [area[0] - 32, area[1] - 32, area[2] + 32, area[3] + 32]
     if resave(copy, area):
         sys.exit(1)
-    mirror = WORK / "cache" / f"{WEB_HOST}_{WEB_PORT}"
+    mirror = WORK / "cache" / fixture
     subprocess.run([BMR, "score", original, copy, "--mirror", mirror, "--top", "5"], check=True, cwd=ROOT)
 
 

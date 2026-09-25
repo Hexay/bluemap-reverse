@@ -1,7 +1,7 @@
 # bluemap_reverse
 
 Reconstruct a Minecraft Java world from a BlueMap web map (the 3D browser viewer) — as close to the original as possible.
-Rust (reverser) + Python stdlib (test tooling). Status: phases 0–3 done — local test maps, site mirror, PRBM parser, world reader + scorer.
+Rust (reverser) + Python stdlib (test tooling). Status: end-to-end reversal works; superflat fixture ≈ 99.9% exact state. Next: seeded vanilla terrain.
 
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
@@ -9,7 +9,11 @@ bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.o
 bmr check-heights                       # hires top faces vs lowres heightmap (decode sanity check)
 bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered columns; no recon = all-air baseline
 bmr probe <world> x,y,z ...             # print block states + biome
+bmr reverse --mirror <dir> <out_world>  # reconstruct (needs work/cache/debug + work/worlds/debug, see below)
+bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
 ```
+Library prerequisites: `py -3 tools/make_world.py debug && py -3 tools/mirror_fixture.py debug`, plus
+`template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`.
 Iterate with debug builds (`cargo build`, binary `target/debug/bmr.exe`); deps are optimised in the dev profile.
 
 ## Test loop

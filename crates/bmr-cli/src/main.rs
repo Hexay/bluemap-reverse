@@ -1,8 +1,10 @@
 mod check_heights;
 mod copy_world;
+mod explain;
 mod fetch;
 mod obj;
 mod probe;
+mod reverse;
 mod score;
 
 use std::path::PathBuf;
@@ -10,8 +12,6 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-
-const DEFAULT_MIRROR: &str = "work/cache/127.0.0.1_8100";
 
 #[derive(Parser)]
 #[command(name = "bmr", about = "Reconstruct a Minecraft world from a BlueMap web map")]
@@ -34,12 +34,17 @@ enum Cmd {
     Probe(probe::Args),
     /// Read a world's full chunks and write them back out with our writer (round-trip test).
     CopyWorld(copy_world::Args),
+    /// Reconstruct a world from a mirrored map using the debug-world signature library.
+    Reverse(reverse::Args),
+    /// Debug one cell: observed faces, candidates, diff against the true state's signature.
+    Explain(explain::Args),
 }
 
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
 #[derive(clap::Args)]
 struct MirrorArgs {
-    #[arg(long, default_value = DEFAULT_MIRROR)]
+    /// Mirror dir written by `bmr fetch`, e.g. work/cache/<fixture>
+    #[arg(long)]
     mirror: PathBuf,
     /// Map id (optional when the mirror has one map)
     #[arg(long)]
@@ -86,5 +91,7 @@ fn main() -> Result<()> {
         Cmd::Score(a) => score::run(a),
         Cmd::Probe(a) => probe::run(a),
         Cmd::CopyWorld(a) => copy_world::run(a),
+        Cmd::Reverse(a) => reverse::run(a),
+        Cmd::Explain(a) => explain::run(a),
     }
 }

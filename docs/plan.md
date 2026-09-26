@@ -169,12 +169,17 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
   stair corners, connected fences/walls/panes/bars, redstone, doors, double chests, attached blocks, culling,
   waterlogging, a jumble of every block. `setblock` does not compute neighbour-dependent shapes, so the generator
   ports the game's rules (`tools/context_rules.py`).
-- Headline for inversion: `rendered_alike` (`bmr score --pack`), which counts look-alikes as correct. Half the
-  states have a look-alike (`bmr pack lookalikes`): stair corners (east inner_left = north inner_right), door
-  open/facing/hinge pairs, invisible properties (powered, note, leaf distance, age, occupied), waxed copper,
-  sign rotation 0/8. The reconstruction is as good as the tiles allow for these; they are not errors.
-- Still irreducible: partially hidden blocks whose telling face is culled (wood vs log, dropper vs dispenser),
-  fire age, block-entity models (heads) overhanging into a full block's cell.
+- Headline for inversion: `rendered_alike` (`bmr score --pack`), which counts look-alikes as correct
+  (`bmr pack lookalikes` lists them).
+- States with identical faces are separated, in order, by: tint (redstone power); UVs, when the candidates
+  differ in an orientation property (door hinge/open/facing, sign and head rotation, glazed terracotta,
+  trapdoors); own block light, when they differ in `lit` (see `bmr-invert/src/lookalike.rs` for why only
+  then); then game rules after the fill: stair-corner twin from neighbouring stairs, note block instrument
+  from the block below/head above, `powered` from adjacent redstone, leaves distance, waterlogging from
+  unseen surrounding water (`bmr-fill/src/{stairs,note_block,redstone,rules,waterlog}.rs`).
+- Irreducible (identical render, no rule): waxed vs unwaxed copper, infested vs plain stone, double slab vs
+  its full block, note pitch, random ages (fire, kelp, vines), transient states (sculk phase, bed occupied),
+  partially hidden blocks whose telling face is culled (wood vs log, dropper vs dispenser).
 - Overhang between neighbours that are both unmatched (stacked bars trade cap faces) is stripped by
   `overhang::strip_foreign`; interior faces with a cullface (candle on a cake) by the last-resort
   `candidates_cullable`; a gap reaching the build limit is always air.

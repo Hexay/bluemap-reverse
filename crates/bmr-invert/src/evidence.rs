@@ -72,7 +72,12 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
         .liquids
         .iter()
         .map(|(&c, &l)| (c, l))
-        .chain(o.blocks.iter().filter_map(|(&c, &e)| lib.entries[e].liquid.map(|l| (c, l))))
+        // a wet match counts only if its water was seen or it cannot be dry (kelp): otherwise it may just be
+        // the default of a wet/dry tie (coral), which would wet its neighbours in turn
+        .chain(o.blocks.iter().filter_map(|(&c, &e)| {
+            let seen = o.liquid_faces.contains_key(&c) || lib.liquid_variant(e, None).is_none();
+            lib.entries[e].liquid.filter(|_| seen).map(|l| (c, l))
+        }))
         .chain(o.liquid_faces.iter().filter_map(|(&c, k)| k.first().and_then(FaceKey::liquid).map(|l| (c, l))));
     for (cell, kind) in liquid_cells {
         let faces = o.liquid_faces.get(&cell).map_or(&[][..], Vec::as_slice);

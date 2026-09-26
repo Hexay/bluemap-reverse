@@ -4,23 +4,23 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9830319,
+    "exact": 9830320,
     "name": 9830394
   },
   "occupied": {
     "total": 103068,
-    "exact": 102987,
+    "exact": 102988,
     "name": 103062
   },
   "rendered": {
     "total": 51557,
-    "exact": 51482,
+    "exact": 51483,
     "name": 51557
   },
   "rendered_alike": 51557,
   "exposed": {
     "total": 51534,
-    "exact": 51468,
+    "exact": 51469,
     "name": 51534
   },
   "solid": {
@@ -110,11 +110,6 @@
     {
       "original": "minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]",
       "reconstructed": "minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:oak_sign[rotation=0,waterlogged=false]",
-      "reconstructed": "minecraft:oak_sign[rotation=8,waterlogged=false]",
       "count": 1
     }
   ],

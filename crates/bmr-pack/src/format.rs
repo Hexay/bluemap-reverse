@@ -7,14 +7,14 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use bmr_invert::face::{FaceKey, Liquid, Tex};
+use bmr_invert::face::{FaceKey, Liquid, Tex, Uv};
 use bmr_invert::library::{Entry, default_distance, is_full_cube};
 use bmr_world::{BlockInfo, BlockState};
 use serde::{Deserialize, Serialize};
 
 pub const MAGIC: &[u8; 8] = b"BMRPACK\0";
 /// Bump on any change to the structs below.
-pub const FORMAT: u32 = 3;
+pub const FORMAT: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
@@ -40,6 +40,8 @@ pub struct Body {
     pub keys: Vec<KeyDto>,
     /// Unique signatures as indices into `keys`.
     pub sigs: Vec<Vec<u32>>,
+    /// Unique UV lists (parallel to a signature).
+    pub uv_sets: Vec<Vec<Uv>>,
     pub entries: Vec<EntryDto>,
     pub registry: Vec<(String, BlockInfo)>,
     pub template: Vec<(String, Vec<u8>)>,
@@ -52,6 +54,8 @@ pub struct EntryDto {
     /// Mixed-radix index over the block's properties in registry order.
     state: u32,
     sig: u32,
+    uvs: u32,
+    light: u8,
     overhang: Vec<([i32; 3], u32)>,
     /// 0 none, 1 water, 2 lava
     liquid: u8,
@@ -76,6 +80,8 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
                 block,
                 state: ordinal(&e.state, &registry[block as usize].1)?,
                 sig: t.sig(&e.sig),
+                uvs: t.uvs(&e.uvs),
+                light: e.light,
                 overhang: e.overhang.iter().map(|(o, k)| ([o.0, o.1, o.2], t.key(k))).collect(),
                 liquid: match e.liquid {
                     None => 0,
@@ -86,7 +92,7 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
             })
         })
         .collect::<Result<_>>()?;
-    Ok(Body { key_textures: t.textures, keys: t.keys, sigs: t.sigs, entries: dtos, registry, template })
+    Ok(Body { key_textures: t.textures, keys: t.keys, sigs: t.sigs, uv_sets: t.uv_sets, entries: dtos, registry, template })
 }
 
 /// Entries plus the registry and template, moved out of `body`.
@@ -106,6 +112,8 @@ pub fn decode(body: Body) -> (Vec<Entry>, Vec<(String, BlockInfo)>, Vec<(String,
                 full_cube: is_full_cube(&sig),
                 state,
                 sig,
+                uvs: body.uv_sets[d.uvs as usize].clone(),
+                light: d.light,
                 overhang: d.overhang.into_iter().map(|(o, k)| ((o[0], o[1], o[2]), keys[k as usize])).collect(),
                 liquid: match d.liquid {
                     1 => Some(Liquid::Water),
@@ -147,6 +155,8 @@ struct Tables {
     key_index: HashMap<FaceKey, u32>,
     sigs: Vec<Vec<u32>>,
     sig_index: HashMap<Vec<u32>, u32>,
+    uv_sets: Vec<Vec<Uv>>,
+    uv_index: HashMap<Vec<Uv>, u32>,
 }
 
 impl Tables {
@@ -169,6 +179,14 @@ impl Tables {
         let next = self.sigs.len() as u32;
         *self.sig_index.entry(ids).or_insert_with_key(|ids| {
             self.sigs.push(ids.clone());
+            next
+        })
+    }
+
+    fn uvs(&mut self, uvs: &[Uv]) -> u32 {
+        let next = self.uv_sets.len() as u32;
+        *self.uv_index.entry(uvs.to_vec()).or_insert_with_key(|uvs| {
+            self.uv_sets.push(uvs.clone());
             next
         })
     }
@@ -198,7 +216,10 @@ mod tests {
         let key = |t: &str, v: i16| FaceKey { texture: Tex::intern(t), tinted: false, verts: [[0, 0, 0], [v, 0, 0], [v, v, 0], [0, v, 0]] };
         let stairs = BlockState::new("minecraft:oak_stairs".into(), owned(&[("facing", "south"), ("half", "top"), ("waterlogged", "true")]));
         let stone = BlockState::new("minecraft:stone".into(), vec![]);
-        let entry = |state, sig, liquid, overhang, tint, default_distance| Entry { state, sig, liquid, overhang, tint, default_distance, full_cube: false };
+        let entry = |state, sig: Vec<FaceKey>, liquid, overhang, tint, default_distance| {
+            let uvs = (0..sig.len()).map(|i| [[i as i16, 0], [0, 1], [1, 1], [1, 0]]).collect();
+            Entry { state, sig, uvs, light: 3, liquid, overhang, tint, default_distance, full_cube: false }
+        };
         let entries = vec![
             entry(stone.clone(), vec![key("block/stone", 64)], None, vec![], None, 0),
             entry(stairs, vec![key("block/oak_planks", 32), key("block/stone", 64)], Some(Liquid::Water), vec![((0, 1, 0), key("block/oak_planks", 16))], Some([1, 2, 3]), 3),
@@ -207,7 +228,9 @@ mod tests {
         let body = encode(&entries, registry, vec![]).unwrap();
         assert_eq!(body.sigs.len(), 2, "identical signatures are stored once");
         let (back, _, _) = decode(body);
-        let view = |e: &Entry| (e.state.clone(), e.sig.clone(), e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube);
+        let view = |e: &Entry| {
+            (e.state.clone(), e.sig.clone(), e.uvs.clone(), e.light, e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
+        };
         assert_eq!(entries.iter().map(view).collect::<Vec<_>>(), back.iter().map(view).collect::<Vec<_>>());
     }
 }

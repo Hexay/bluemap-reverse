@@ -85,7 +85,7 @@ impl Pack {
     pub fn verify_saved(&self, path: &Path) -> Result<()> {
         let back = Self::load(path)?;
         let view = |e: &bmr_invert::library::Entry| {
-            (e.state.clone(), e.sig.clone(), e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
+            (e.state.clone(), e.sig.clone(), e.uvs.clone(), e.light, e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
         };
         let a: Vec<_> = self.library.entries.iter().map(view).collect();
         let b: Vec<_> = back.library.entries.iter().map(view).collect();
@@ -114,6 +114,7 @@ impl Pack {
             ("  key textures (raw)", len(postcard::to_stdvec(&body.key_textures))?),
             ("  face keys (raw)", len(postcard::to_stdvec(&body.keys))?),
             ("  signatures (raw)", len(postcard::to_stdvec(&body.sigs))?),
+            ("  uv sets (raw)", len(postcard::to_stdvec(&body.uv_sets))?),
             ("  entries (raw)", len(postcard::to_stdvec(&body.entries))?),
             ("  registry (raw)", len(postcard::to_stdvec(&body.registry))?),
             ("  template (raw)", len(postcard::to_stdvec(&body.template))?),

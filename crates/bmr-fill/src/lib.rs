@@ -6,7 +6,11 @@ mod columns;
 mod liquid;
 mod material;
 mod regen;
+mod note_block;
+mod redstone;
 mod rules;
+mod stairs;
+mod waterlog;
 
 use std::time::Instant;
 
@@ -38,6 +42,13 @@ pub struct Stats {
     pub solid_cells: usize,
     pub liquid_cells: usize,
     pub leaves_adjusted: usize,
+    /// Invisible properties set from neighbours by game rules: stair-corner twin, note block instrument,
+    /// `powered` from adjacent redstone.
+    pub stair_corners: usize,
+    pub instruments: usize,
+    pub powered: usize,
+    /// Partial blocks waterlogged because an unseen water cell touches them (see waterlog.rs).
+    pub waterlogged: usize,
     /// Observed blocks whose invisible properties were taken from the regeneration.
     pub adopted_from_regen: usize,
     pub timings: Timings,
@@ -126,10 +137,18 @@ pub fn complete(
         None => prior_segments(inv, lib, registry, bounds, &blocks, &all_gaps, &liquid_states, table),
     };
     t.record("segments", seg_start.elapsed());
+    let water = table.intern(&liquid_states[&Liquid::Water]);
+    stats.waterlogged = t.time("waterlog", || waterlog::from_water_segments(&mut blocks, &segments, water, lib));
     stats.leaves_adjusted = t.time("leaves", || rules::leaves_distance(&mut blocks));
+    stats.stair_corners = t.time("stairs", || stairs::resolve_corners(&mut blocks));
+    stats.instruments = t.time("note_blocks", || note_block::instruments(&mut blocks));
+    stats.powered = t.time("powered", || redstone::powered(&mut blocks));
     if let Some(regen) = regen {
         let same_render = |a: &BlockState, b: &BlockState| match (lib.find(a), lib.find(b)) {
-            (Some(x), Some(y)) => lib.entries[x].sig == lib.entries[y].sig && lib.entries[x].tint == lib.entries[y].tint,
+            (Some(a), Some(b)) => {
+                let (x, y) = (&lib.entries[a], &lib.entries[b]);
+                x.sig == y.sig && x.tint == y.tint && !lib.tell_apart(a, b)
+            }
             _ => false,
         };
         stats.adopted_from_regen =

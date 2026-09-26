@@ -1,5 +1,6 @@
-//! Quads → (block cell, position-independent key). UVs are ignored on purpose: BlueMap picks
-//! rotated/mirrored model variants by position hash, which changes UVs but not geometry or texture.
+//! Quads → (block cell, position-independent key). Keys leave UVs out: BlueMap picks rotated/mirrored
+//! model variants by position hash, which changes UVs but not geometry or texture. UVs are kept beside
+//! the keys (`Uv`) only to choose among states with identical keys (door hinge, texture rotation).
 //! Keys are per quad, not per triangle: a rotated variant moves the quad's diagonal.
 
 use bmr_prbm::{Face, Tile};
@@ -107,13 +108,19 @@ impl FaceKey {
     }
 }
 
+/// Texture coordinates of a key's vertices, in the key's (sorted) vertex order, in 1/UV_Q texture units.
+pub type Uv = [[i16; 2]; 4];
+const UV_Q: f32 = 256.0;
+
 /// A quad in world space.
 pub struct WorldFace {
     pub verts: [[f32; 3]; 4],
+    pub uv: [[f32; 2]; 4],
     pub normal: [f32; 3],
     pub texture: Tex,
     /// Tint multiplier; `[255; 3]` = untinted.
     pub color: [u8; 3],
+    pub blocklight: u8,
 }
 
 impl WorldFace {
@@ -129,11 +136,19 @@ impl WorldFace {
         (p[0], p[1], p[2])
     }
 
-    pub fn key_at(&self, (bx, by, bz): Cell) -> FaceKey {
+    pub fn key_at(&self, cell: Cell) -> FaceKey {
+        self.key_uv_at(cell).0
+    }
+
+    pub fn key_uv_at(&self, (bx, by, bz): Cell) -> (FaceKey, Uv) {
         let base = [bx as f32, by as f32, bz as f32];
-        let mut verts = self.verts.map(|v| std::array::from_fn(|a| ((v[a] - base[a]) * Q).round() as i16));
-        verts.sort();
-        FaceKey { texture: self.texture, tinted: self.color != [255, 255, 255], verts }
+        let mut corners: [([i16; 3], [i16; 2]); 4] = std::array::from_fn(|i| {
+            let v = self.verts[i];
+            (std::array::from_fn(|a| ((v[a] - base[a]) * Q).round() as i16), self.uv[i].map(|c| (c * UV_Q).round() as i16))
+        });
+        corners.sort();
+        let key = FaceKey { texture: self.texture, tinted: self.color != [255, 255, 255], verts: corners.map(|c| c.0) };
+        (key, corners.map(|c| c.1))
     }
 }
 
@@ -152,35 +167,48 @@ pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], textures: &[Tex]) -> Vec<Wor
     while i < tris.len() {
         let a = &tris[i];
         let pair = tris.get(i + 1).filter(|b| b.material == a.material && b.pos[0] == a.pos[0] && b.pos[1] == a.pos[2]);
-        let c3 = pair.map_or(a.pos[2], |b| b.pos[2]);
+        let (c3, uv3) = pair.map_or((a.pos[2], a.uv[2]), |b| (b.pos[2], b.uv[2]));
         i += if pair.is_some() { 2 } else { 1 };
         let verts = [a.pos[0], a.pos[1], a.pos[2], c3].map(|[x, y, z]| [x + ox as f32, y, z + oz as f32]);
         out.push(WorldFace {
             verts,
+            uv: [a.uv[0], a.uv[1], a.uv[2], uv3],
             normal: a.normal.map(|c| c as f32 / 127.0),
             texture: textures.get(a.material as usize).copied().unwrap_or(unknown),
             color: a.color,
+            blocklight: a.blocklight.max(0) as u8,
         });
     }
     out
 }
 
-/// What one cell shows: its face keys and the mean tint of its tinted faces.
+/// What one cell shows: its face keys (matching), their UVs (tie-breaks), the mean tint of its tinted
+/// faces and the dimmest block light on them (a light source lights all its faces; a neighbour's light
+/// reaches only some, so the minimum measures the block's own emission).
 #[derive(Default)]
 pub struct CellFaces {
     pub keys: Vec<FaceKey>,
+    /// Every pushed face with its UVs; not pruned when overhang is credited away from `keys`.
+    pub uvs: Vec<(FaceKey, Uv)>,
+    light: Option<u8>,
     tint_sum: [u32; 3],
     tint_n: u32,
 }
 
 impl CellFaces {
-    pub fn push(&mut self, f: &WorldFace, key: FaceKey) {
+    /// `f` keyed relative to `cell`.
+    pub fn push(&mut self, f: &WorldFace, cell: Cell) {
+        let (key, uv) = f.key_uv_at(cell);
         // water tint is biome noise, never evidence about the block
         if key.tinted && key.liquid().is_none() {
             for a in 0..3 {
                 self.tint_sum[a] += f.color[a] as u32;
             }
             self.tint_n += 1;
+        }
+        if key.liquid().is_none() {
+            self.light = Some(self.light.map_or(f.blocklight, |l| l.min(f.blocklight)));
+            self.uvs.push((key, uv));
         }
         self.keys.push(key);
     }
@@ -189,8 +217,17 @@ impl CellFaces {
         (self.tint_n > 0).then(|| self.tint_sum.map(|s| (s / self.tint_n) as u8))
     }
 
+    pub fn light(&self) -> u8 {
+        self.light.unwrap_or(0)
+    }
+
     pub fn merge(&mut self, other: CellFaces) {
         self.keys.extend(other.keys);
+        self.uvs.extend(other.uvs);
+        self.light = match (self.light, other.light) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
         for a in 0..3 {
             self.tint_sum[a] += other.tint_sum[a];
         }
@@ -203,7 +240,7 @@ pub fn faces_by_cell(faces: &[WorldFace]) -> FxHashMap<Cell, CellFaces> {
     let mut out: FxHashMap<Cell, CellFaces> = FxHashMap::default();
     for f in faces {
         let cell = f.owner();
-        out.entry(cell).or_default().push(f, f.key_at(cell));
+        out.entry(cell).or_default().push(f, cell);
     }
     out
 }
@@ -212,6 +249,12 @@ pub fn faces_by_cell(faces: &[WorldFace]) -> FxHashMap<Cell, CellFaces> {
 pub fn signature(mut faces: Vec<FaceKey>) -> Vec<FaceKey> {
     faces.sort();
     faces
+}
+
+/// Signature plus its UVs, index for index.
+pub fn signature_uv(mut faces: Vec<(FaceKey, Uv)>) -> (Vec<FaceKey>, Vec<Uv>) {
+    faces.sort();
+    faces.into_iter().unzip()
 }
 
 /// Signature with its x/z bounding-box minimum moved to 0 (for tolerant offset matching).

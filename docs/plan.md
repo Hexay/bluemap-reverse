@@ -118,7 +118,7 @@ Track scores per fixture in a results file so every change shows up as better/wo
 | 6 | `bmr-invert` v1: full cubes + common models, voting + cull check | Superflat fixture ≥ 99% visible-state accuracy |
 | 7 | invert v2: liquids/waterlogging, connected blocks, variants/offset verify, redstone power, block-entity static models, double chests | Debug + seeded fixtures scored; confusion list reviewed |
 | 8 | `bmr-fill` v1: priors (stone/deepslate/bedrock/water), biome solve from tints | Solid/air IoU and biome accuracy reported |
-| 9 | `bmr-fill` v2: seed recovery (structures → lower 48 bits, cubiomes → upper 16) + regen + tile-diff merge | Seeded+builds fixture: underground accuracy near regen ceiling |
+| 9 | `bmr-seed` (docs/seed.md): structures → lower 48 bits, shortcuts/cubiomes → upper 16; regen + tile-diff merge | Seeded+builds fixture: underground accuracy near regen ceiling |
 | 10 | Round-trip loop + blocklight/AO inference for hidden light sources and cavities | Round-trip tile diff trending to zero |
 
 Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's golden test passes.

@@ -46,10 +46,12 @@ lzma-rust2 = { version = "0.21", default-features = false, features = ["std", "e
 postcard = { version = "1.1", default-features = false, features = ["use-std"] }
 # deflate via flate2 only: the default features pull C builds (bzip2, zstd) and crypto we don't need
 zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
+bmr-cubiomes = { path = "crates/bmr-cubiomes" }
 bmr-fetch = { path = "crates/bmr-fetch" }
 bmr-fill = { path = "crates/bmr-fill" }
 bmr-invert = { path = "crates/bmr-invert" }
 bmr-pack = { path = "crates/bmr-pack" }
 bmr-prbm = { path = "crates/bmr-prbm" }
 bmr-score = { path = "crates/bmr-score" }
+bmr-seed = { path = "crates/bmr-seed" }
 bmr-world = { path = "crates/bmr-world" }

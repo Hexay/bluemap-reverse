@@ -108,10 +108,19 @@ dependencies = [
  "bmr-pack",
  "bmr-prbm",
  "bmr-score",
+ "bmr-seed",
  "bmr-world",
  "clap",
  "rustc-hash",
+ "serde",
  "serde_json",
+]
+
+[[package]]
+name = "bmr-cubiomes"
+version = "0.1.0"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -187,6 +196,18 @@ dependencies = [
  "rayon",
  "rustc-hash",
  "serde",
+]
+
+[[package]]
+name = "bmr-seed"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bmr-cubiomes",
+ "bmr-world",
+ "rayon",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

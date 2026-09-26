@@ -1,0 +1,294 @@
+{
+  "chunks": 5325,
+  "partial_chunks_skipped": 13245,
+  "columns": 1180672,
+  "all": {
+    "total": 453378048,
+    "exact": 412764836,
+    "name": 412816750
+  },
+  "occupied": {
+    "total": 150665797,
+    "exact": 110052585,
+    "name": 110104499
+  },
+  "rendered": {
+    "total": 3372787,
+    "exact": 3321037,
+    "name": 3372428
+  },
+  "rendered_alike": 3372054,
+  "exposed": {
+    "total": 6248518,
+    "exact": 5215632,
+    "name": 5221238
+  },
+  "solid": {
+    "original": 141961553,
+    "reconstructed": 148845604,
+    "both": 140141360
+  },
+  "surface": {
+    "total": 1180672,
+    "hits": 1177379
+  },
+  "biomes": {
+    "total": 7084032,
+    "hits": 325025
+  },
+  "confusions": [
+    {
+      "original": "minecraft:air",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 7322241
+    },
+    {
+      "original": "minecraft:tuff",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 4858773
+    },
+    {
+      "original": "minecraft:andesite",
+      "reconstructed": "minecraft:stone",
+      "count": 3182047
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:stone",
+      "count": 3060865
+    },
+    {
+      "original": "minecraft:granite",
+      "reconstructed": "minecraft:stone",
+      "count": 2954341
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:stone",
+      "count": 2908205
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:sand",
+      "count": 1437317
+    },
+    {
+      "original": "minecraft:air",
+      "reconstructed": "minecraft:stone",
+      "count": 1367533
+    },
+    {
+      "original": "minecraft:gravel",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 1050516
+    },
+    {
+      "original": "minecraft:deepslate[axis=y]",
+      "reconstructed": "minecraft:air",
+      "count": 974452
+    },
+    {
+      "original": "minecraft:deepslate[axis=y]",
+      "reconstructed": "minecraft:stone",
+      "count": 879451
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 866531
+    },
+    {
+      "original": "minecraft:dirt",
+      "reconstructed": "minecraft:stone",
+      "count": 828718
+    },
+    {
+      "original": "minecraft:bedrock",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 694880
+    },
+    {
+      "original": "minecraft:gravel",
+      "reconstructed": "minecraft:stone",
+      "count": 646576
+    },
+    {
+      "original": "minecraft:deepslate[axis=y]",
+      "reconstructed": "minecraft:bedrock",
+      "count": 623311
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 532482
+    },
+    {
+      "original": "minecraft:andesite",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 402395
+    },
+    {
+      "original": "minecraft:granite",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 389079
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 382618
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:air",
+      "count": 357177
+    },
+    {
+      "original": "minecraft:tuff_bricks",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 233665
+    },
+    {
+      "original": "minecraft:copper_ore",
+      "reconstructed": "minecraft:stone",
+      "count": 222304
+    },
+    {
+      "original": "minecraft:lava[level=0]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 220977
+    },
+    {
+      "original": "minecraft:coal_ore",
+      "reconstructed": "minecraft:stone",
+      "count": 206204
+    }
+  ],
+  "rendered_confusions": [
+    {
+      "original": "minecraft:bubble_column[drag=true]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 267
+    },
+    {
+      "original": "minecraft:water[level=1]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 107
+    },
+    {
+      "original": "minecraft:water[level=8]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 95
+    },
+    {
+      "original": "minecraft:cut_sandstone",
+      "reconstructed": "minecraft:chiseled_sandstone",
+      "count": 47
+    },
+    {
+      "original": "minecraft:water[level=2]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 46
+    },
+    {
+      "original": "minecraft:water[level=3]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 34
+    },
+    {
+      "original": "minecraft:water[level=4]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 24
+    },
+    {
+      "original": "minecraft:water[level=5]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 18
+    },
+    {
+      "original": "minecraft:water[level=6]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 13
+    },
+    {
+      "original": "minecraft:cut_sandstone",
+      "reconstructed": "minecraft:sandstone",
+      "count": 12
+    },
+    {
+      "original": "minecraft:water[level=7]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 12
+    },
+    {
+      "original": "minecraft:birch_slab[type=bottom,waterlogged=true]",
+      "reconstructed": "minecraft:birch_slab[type=bottom,waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:oak_slab[type=bottom,waterlogged=true]",
+      "reconstructed": "minecraft:oak_slab[type=bottom,waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=west,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:sand",
+      "count": 3
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=west,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_planks",
+      "count": 3
+    },
+    {
+      "original": "minecraft:oak_door[facing=east,half=lower,hinge=right,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_slab[type=bottom,waterlogged=true]",
+      "reconstructed": "minecraft:air",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_slab[type=bottom,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_slab[type=bottom,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=east,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_planks",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:birch_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:birch_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "count": 1
+    }
+  ],
+  "samples": []
+}

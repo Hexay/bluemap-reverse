@@ -10,12 +10,13 @@ import shutil
 import struct
 import subprocess
 import sys
+import tarfile
 import urllib.request
 import zipfile
 from pathlib import Path
 
 from console import bundler_args
-from paths import DEFAULT, DOWNLOADS, MC_MANIFEST_URL, Toolchain, jdk_dir, jdk_url, toolchain
+from paths import DEFAULT, DOWNLOADS, EXE, MC_MANIFEST_URL, WINDOWS, Toolchain, jdk_dir, jdk_url, toolchain
 
 
 def open_url(url: str):
@@ -77,16 +78,20 @@ def jar_java_major(jar: Path, main_class: str = "de/bluecolored/bluemap/cli/Blue
 
 def install_jdk(major: int) -> None:
     target = jdk_dir(major)
-    if (target / "bin" / "java.exe").exists():
+    if (target / "bin" / f"java{EXE}").exists():
         print(f"ok      {target.name}")
         return
-    archive = DOWNLOADS / f"jdk{major}.zip"
+    archive = DOWNLOADS / f"jdk{major}.{'zip' if WINDOWS else 'tar.gz'}"
     download(jdk_url(major), archive)
     staging = DOWNLOADS / "jdk-staging"
     shutil.rmtree(staging, ignore_errors=True)
-    with zipfile.ZipFile(archive) as z:
-        z.extractall(staging)
-    # the zip holds a single versioned top-level folder, e.g. jdk-25.0.4.1+1/
+    if WINDOWS:
+        with zipfile.ZipFile(archive) as z:
+            z.extractall(staging)
+    else:
+        with tarfile.open(archive) as t:
+            t.extractall(staging, filter="tar")
+    # the archive holds a single versioned top-level folder, e.g. jdk-25.0.4.1+1/
     (top,) = staging.iterdir()
     top.rename(target)
     staging.rmdir()

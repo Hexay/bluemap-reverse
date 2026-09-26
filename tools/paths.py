@@ -3,8 +3,13 @@
 `Toolchain` = one Minecraft + BlueMap (+ Java) combination. The default (26.3) keeps the original
 work/{worlds,bluemap,cache} layout; other versions live under work/v/<mc>/. Downloads are shared.
 """
+import os
 from dataclasses import dataclass
 from pathlib import Path
+
+# Windows (dev) or Linux (the testbox for RAM-heavy fixtures)
+WINDOWS = os.name == "nt"
+EXE = ".exe" if WINDOWS else ""
 
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "work"
@@ -23,7 +28,7 @@ def jdk_dir(major: int) -> Path:
 
 
 def jdk_url(major: int) -> str:
-    return f"https://api.adoptium.net/v3/binary/latest/{major}/ga/windows/x64/jdk/hotspot/normal/eclipse"
+    return f"https://api.adoptium.net/v3/binary/latest/{major}/ga/{'windows' if WINDOWS else 'linux'}/x64/jdk/hotspot/normal/eclipse"
 
 
 @dataclass(frozen=True)
@@ -39,11 +44,11 @@ class Toolchain:
 
     @property
     def java(self) -> Path:
-        return jdk_dir(self.java_major) / "bin" / "java.exe"
+        return jdk_dir(self.java_major) / "bin" / f"java{EXE}"
 
     @property
     def bluemap_java(self) -> Path:
-        return jdk_dir(self.bluemap_java_major) / "bin" / "java.exe"
+        return jdk_dir(self.bluemap_java_major) / "bin" / f"java{EXE}"
 
     @property
     def jdk_dir(self) -> Path:

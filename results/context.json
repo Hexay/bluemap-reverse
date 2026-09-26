@@ -4,17 +4,17 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9827604,
+    "exact": 9827603,
     "name": 9827679
   },
   "occupied": {
     "total": 111469,
-    "exact": 108673,
+    "exact": 108672,
     "name": 108748
   },
   "rendered": {
     "total": 55502,
-    "exact": 55189,
+    "exact": 55188,
     "name": 55264
   },
   "rendered_alike": 55493,
@@ -208,6 +208,18 @@
       "original": "minecraft:waxed_weathered_copper_bars[east=false,north=false,south=false,waterlogged=false,west=false]",
       "reconstructed": "minecraft:weathered_copper_bars[east=false,north=false,south=false,waterlogged=true,west=false]",
       "count": 1
+    }
+  ],
+  "biome_confusions": [
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:meadow",
+      "count": 192
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:ocean",
+      "count": 96
     }
   ],
   "samples": []

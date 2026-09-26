@@ -118,10 +118,10 @@ pub fn collect(faces: &[WorldFace], out: &mut FxHashMap<(i32, i32), TintSum>) {
     }
 }
 
-/// The biome whose tints are nearest the observed ones over the channels both have; ties go to the
-/// earlier entry of `table` (packs order it commonest first).
-pub fn nearest<'a>(table: &'a [BiomeTint], seen: &[Option<[u8; 3]>; CHANNELS]) -> Option<&'a str> {
-    table
+/// Biomes by distance of their tints to the observed ones (mean squared RGB error over the channels both
+/// have), nearest first; equal distances keep `table` order (packs order it commonest first).
+pub fn ranked<'a>(table: &'a [BiomeTint], seen: &[Option<[u8; 3]>; CHANNELS]) -> Vec<(u32, &'a str)> {
+    let mut out: Vec<(u32, &str)> = table
         .iter()
         .filter_map(|b| {
             let shared: Vec<u32> = (0..CHANNELS)
@@ -130,6 +130,7 @@ pub fn nearest<'a>(table: &'a [BiomeTint], seen: &[Option<[u8; 3]>; CHANNELS]) -
                 .collect();
             (!shared.is_empty()).then(|| (shared.iter().sum::<u32>() / shared.len() as u32, b.biome.as_str()))
         })
-        .min_by_key(|&(d, _)| d)
-        .map(|(_, b)| b)
+        .collect();
+    out.sort_by_key(|&(d, _)| d);
+    out
 }

@@ -5,10 +5,10 @@
 
 use std::collections::VecDeque;
 
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use bmr_invert::face::Cell;
-use bmr_invert::tints::{BiomeTint, TintSum, nearest};
+use bmr_invert::tints::{BiomeTint, TintSum, ranked};
 use bmr_world::BlockState;
 
 use crate::profile::{Kind, Profile};
@@ -54,7 +54,7 @@ impl Biomes {
         let mut me = Self { kind: profile.kind, cells: FxHashMap::default(), columns: FxHashMap::default() };
         match profile.kind {
             Kind::Nether => me.cells = nether_cells(blocks),
-            Kind::Overworld if !table.is_empty() => me.columns = overworld_columns(tints, table),
+            Kind::Overworld if !table.is_empty() => me.columns = overworld_columns(blocks, tints, table),
             _ => {}
         }
         me
@@ -103,15 +103,25 @@ fn nether_cells(blocks: &FxHashMap<Cell, BlockState>) -> FxHashMap<Cell, &'stati
     decided
 }
 
-/// Tinted columns take the nearest biome of `table`; the rest the nearest tinted column's, up to SPREAD away.
-fn overworld_columns(tints: &FxHashMap<(i32, i32), TintSum>, table: &[BiomeTint]) -> FxHashMap<(i32, i32), String> {
+/// Tinted columns take the nearest biome of `table`, ties (beach = plains colours) settled by the surface;
+/// the rest take the nearest tinted column's biome, up to SPREAD away.
+fn overworld_columns(
+    blocks: &FxHashMap<Cell, BlockState>,
+    tints: &FxHashMap<(i32, i32), TintSum>,
+    table: &[BiomeTint],
+) -> FxHashMap<(i32, i32), String> {
+    let sandy = sandy_columns(blocks);
     let mut out: FxHashMap<(i32, i32), String> = FxHashMap::default();
     let mut queue = VecDeque::new();
     for (&col, t) in tints {
-        if let Some(b) = nearest(table, &t.means()) {
-            out.insert(col, b.to_owned());
-            queue.push_back((col, 0));
-        }
+        let ranked = ranked(table, &t.means());
+        let Some(&(best, first)) = ranked.first() else { continue };
+        let tied = ranked.iter().take_while(|(d, _)| *d <= best + TIE).map(|&(_, b)| b);
+        // mostly sand on top: a beach, if one draws these colours (water depth does not tell ocean from
+        // deep ocean or river from beach: measured on the vanilla fixture, all overlap)
+        let b = if sandy.contains(&col) { tied.clone().find(|b| b.ends_with("beach")).unwrap_or(first) } else { first };
+        out.insert(col, b.to_owned());
+        queue.push_back((col, 0));
     }
     while let Some(((x, z), d)) = queue.pop_front() {
         if d == SPREAD {
@@ -126,6 +136,29 @@ fn overworld_columns(tints: &FxHashMap<(i32, i32), TintSum>, table: &[BiomeTint]
         }
     }
     out
+}
+
+/// Tint distance (mean squared RGB error) within which biomes count as drawing the same colours.
+const TIE: u32 = 20;
+
+/// 4×4 columns whose top blocks are mostly sand or sandstone (water not counted).
+fn sandy_columns(blocks: &FxHashMap<Cell, BlockState>) -> FxHashSet<(i32, i32)> {
+    let mut top: FxHashMap<(i32, i32), (i32, &str)> = FxHashMap::default();
+    for (&(x, y, z), s) in blocks {
+        if top.get(&(x, z)).is_none_or(|&(ty, _)| y > ty) {
+            top.insert((x, z), (y, s.name.as_str()));
+        }
+    }
+    let mut count: FxHashMap<(i32, i32), (u32, u32)> = FxHashMap::default();
+    for (&(x, z), &(_, name)) in &top {
+        let (sand, land) = count.entry((x >> 2, z >> 2)).or_default();
+        match name {
+            "minecraft:sand" | "minecraft:sandstone" => *sand += 1,
+            "minecraft:water" => {}
+            _ => *land += 1,
+        }
+    }
+    count.into_iter().filter(|(_, (sand, land))| sand > land).map(|(c, _)| c).collect()
 }
 
 fn neighbours((x, y, z): Cell) -> impl Iterator<Item = Cell> {

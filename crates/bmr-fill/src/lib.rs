@@ -146,6 +146,7 @@ pub fn complete(
     let water = table.intern(&liquid_states[&Liquid::Water]);
     stats.waterlogged = t.time("waterlog", || waterlog::from_water_segments(&mut blocks, &segments, water, lib));
     stats.leaves_adjusted = t.time("leaves", || rules::leaves_distance(&mut blocks));
+    t.time("kelp", || rules::kelp_age(&mut blocks));
     stats.stair_corners = t.time("stairs", || stairs::resolve_corners(&mut blocks));
     stats.instruments = t.time("note_blocks", || note_block::instruments(&mut blocks));
     stats.powered = t.time("powered", || redstone::powered(&mut blocks));

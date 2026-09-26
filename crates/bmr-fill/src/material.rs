@@ -92,14 +92,18 @@ const STONY: &[&str] = &[
 /// (ylo, yhi, block name) runs for a gap below a terrain surface, top-down layering.
 fn layer_profile(kind: &str, g: &SolidGap, profile: &Profile) -> Vec<(i32, i32, String)> {
     let layers: &[(&str, i32)] = match kind {
-        "grass_block" | "podzol" | "mycelium" | "dirt" | "coarse_dirt" | "rooted_dirt" | "dirt_path" | "farmland"
-        | "snow_block" | "powder_snow" | "snow" => &[("dirt", 3)],
+        // depths: medians under exposed surfaces on the vanilla fixture where it has enough samples
+        // (sand 1 over stone, n=57k; gravel 1; exposed dirt 4; clay 1 over dirt 3); grass keeps 3 (n=31 there)
+        "grass_block" | "podzol" | "mycelium" | "rooted_dirt" | "dirt_path" | "farmland" | "snow_block"
+        | "powder_snow" | "snow" => &[("dirt", 3)],
+        "dirt" | "coarse_dirt" => &[("dirt", 4)],
         // most sand is beach/ocean floor over stone; desert sandstone would need the biome
-        "sand" => &[("sand", 3)],
+        "sand" => &[("sand", 1)],
         "sandstone" => &[("sandstone", 6)],
         "red_sand" => &[("red_sand", 3), ("red_sandstone", 3)],
         "red_sandstone" => &[("red_sandstone", 6)],
-        "gravel" => &[("gravel", 2)],
+        "gravel" => &[("gravel", 1)],
+        "clay" => &[("clay", 1), ("dirt", 3)],
         // soul sand valleys: ~4 deep over netherrack (median on the nether fixture; basalt runs deep instead)
         "soul_sand" => &[("soul_sand", 4)],
         "soul_soil" => &[("soul_soil", 4)],

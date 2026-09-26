@@ -190,8 +190,13 @@ fn score_biomes(rep: &mut Report, pos: ChunkPos, chunk: &Chunk, other: Option<&C
                 }
                 for cy in 0..4 {
                     rep.biomes.total += 1;
-                    let hit = recon.is_some_and(|r| r.biome(cx, cy, cz) == s.biome(cx, cy, cz));
-                    rep.biomes.hits += hit as u64;
+                    let (o, r) = (s.biome(cx, cy, cz), recon.and_then(|r| r.biome(cx, cy, cz)));
+                    if o == r {
+                        rep.biomes.hits += 1;
+                    } else {
+                        let key = (o.unwrap_or("-").to_owned(), r.unwrap_or("-").to_owned());
+                        *rep.biome_confusion_counts.entry(key).or_default() += 1;
+                    }
                 }
             }
         }

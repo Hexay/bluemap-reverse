@@ -48,6 +48,17 @@ pub fn leaves_distance(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
     changed
 }
 
+/// Kelp tops draw the same at every age; natural kelp is generated with age 20..=23 (KelpFeature), so one
+/// of those beats the default 0. Returns the number of kelp changed.
+pub fn kelp_age(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
+    let mut changed = 0;
+    for s in blocks.values_mut().filter(|s| s.name == "minecraft:kelp" && prop(s, "age") == Some("0")) {
+        set_prop(s, "age", "21");
+        changed += 1;
+    }
+    changed
+}
+
 fn is_log(name: &str) -> bool {
     ["_log", "_wood", "_stem", "_hyphae"].iter().any(|s| name.ends_with(s))
 }

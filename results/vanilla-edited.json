@@ -4,17 +4,17 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29069096,
+    "exact": 29069814,
     "name": 29072156
   },
   "occupied": {
     "total": 10528628,
-    "exact": 7747228,
+    "exact": 7747946,
     "name": 7750288
   },
   "rendered": {
     "total": 224149,
-    "exact": 221056,
+    "exact": 221774,
     "name": 224101
   },
   "rendered_alike": 224096,
@@ -34,7 +34,7 @@
   },
   "biomes": {
     "total": 497664,
-    "hits": 469440
+    "hits": 476448
   },
   "confusions": [
     {
@@ -203,6 +203,38 @@
       "original": "minecraft:water[level=1]",
       "reconstructed": "minecraft:water[level=0]",
       "count": 1
+    }
+  ],
+  "biome_confusions": [
+    {
+      "original": "minecraft:deep_lukewarm_ocean",
+      "reconstructed": "minecraft:lukewarm_ocean",
+      "count": 8928
+    },
+    {
+      "original": "minecraft:beach",
+      "reconstructed": "minecraft:plains",
+      "count": 6240
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:plains",
+      "count": 4896
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:ocean",
+      "count": 672
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:birch_forest",
+      "count": 288
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:beach",
+      "count": 192
     }
   ],
   "samples": []

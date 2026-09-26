@@ -290,5 +290,22 @@
       "count": 1
     }
   ],
+  "biome_confusions": [
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:ocean",
+      "count": 11904
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:taiga",
+      "count": 9984
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:old_growth_pine_taiga",
+      "count": 768
+    }
+  ],
   "samples": []
 }

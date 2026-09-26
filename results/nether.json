@@ -185,5 +185,37 @@
       "count": 1
     }
   ],
+  "biome_confusions": [
+    {
+      "original": "minecraft:soul_sand_valley",
+      "reconstructed": "minecraft:nether_wastes",
+      "count": 71238
+    },
+    {
+      "original": "minecraft:basalt_deltas",
+      "reconstructed": "minecraft:nether_wastes",
+      "count": 6789
+    },
+    {
+      "original": "minecraft:nether_wastes",
+      "reconstructed": "minecraft:soul_sand_valley",
+      "count": 4494
+    },
+    {
+      "original": "minecraft:nether_wastes",
+      "reconstructed": "minecraft:basalt_deltas",
+      "count": 3640
+    },
+    {
+      "original": "minecraft:soul_sand_valley",
+      "reconstructed": "minecraft:basalt_deltas",
+      "count": 1546
+    },
+    {
+      "original": "minecraft:basalt_deltas",
+      "reconstructed": "minecraft:soul_sand_valley",
+      "count": 1
+    }
+  ],
   "samples": []
 }

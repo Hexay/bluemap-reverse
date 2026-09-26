@@ -57,12 +57,16 @@ pub struct Report {
     pub confusions: Vec<Confusion>,
     /// Confusions among rendered cells only: pure inversion errors.
     pub rendered_confusions: Vec<Confusion>,
+    /// Biome cells: (original, reconstructed) most frequent first.
+    pub biome_confusions: Vec<Confusion>,
     /// Positions of the confusion requested via `Scope::sample`.
     pub samples: Vec<(i32, i32, i32)>,
     #[serde(skip)]
     pub(crate) confusion_counts: HashMap<(String, String), u64>,
     #[serde(skip)]
     pub(crate) rendered_confusion_counts: HashMap<(String, String), u64>,
+    #[serde(skip)]
+    pub(crate) biome_confusion_counts: HashMap<(String, String), u64>,
 }
 
 impl Report {
@@ -94,6 +98,9 @@ impl Report {
         for (k, v) in o.rendered_confusion_counts {
             *self.rendered_confusion_counts.entry(k).or_default() += v;
         }
+        for (k, v) in o.biome_confusion_counts {
+            *self.biome_confusion_counts.entry(k).or_default() += v;
+        }
         self.samples.extend(o.samples);
         self.samples.sort();
         self.samples.truncate(20);
@@ -102,6 +109,7 @@ impl Report {
     pub(crate) fn finish(&mut self, top: usize) {
         self.confusions = top_confusions(&mut self.confusion_counts, top);
         self.rendered_confusions = top_confusions(&mut self.rendered_confusion_counts, top);
+        self.biome_confusions = top_confusions(&mut self.biome_confusion_counts, top);
     }
 
     pub fn solid_iou(&self) -> f64 {
@@ -149,6 +157,7 @@ impl fmt::Display for Report {
         for (title, list) in [
             ("top confusions (original -> reconstructed)", &self.confusions),
             ("rendered-cell confusions", &self.rendered_confusions),
+            ("biome confusions (4x4x4 cells)", &self.biome_confusions),
         ] {
             if list.is_empty() {
                 continue;

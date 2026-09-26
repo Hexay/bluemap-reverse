@@ -48,6 +48,11 @@ impl FaceKey {
         self.boundary_dir().is_some()
     }
 
+    /// Lies in a plane perpendicular to an axis: the only faces a model can give a cullface.
+    pub fn axis_aligned(&self) -> bool {
+        (0..3).any(|axis| self.verts.iter().all(|v| v[axis] == self.verts[0][axis]))
+    }
+
     /// Offset to the neighbour cell across the outer plane this face lies on, if any.
     pub fn boundary_dir(&self) -> Option<Cell> {
         (0..3).find_map(|axis| {

@@ -96,7 +96,8 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
         let mut cursor = bounds.max_y;
         for y in ys.into_iter().chain([bounds.min_y - 1]) {
             if y < cursor {
-                let fill = classify(ce, y + 1, cursor);
+                // open to the sky: anything in it would show its top face
+                let fill = if cursor == bounds.max_y { Fill::Air } else { classify(ce, y + 1, cursor) };
                 out.push(Gap { column: col, ylo: y + 1, yhi: cursor, fill, floored: y >= bounds.min_y });
             }
             cursor = cursor.min(y - 1);

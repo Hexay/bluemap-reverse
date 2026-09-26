@@ -4,6 +4,7 @@ pub mod evidence;
 pub mod face;
 pub mod library;
 pub mod matcher;
+pub mod overhang;
 pub mod reverse;
 pub mod texture;
 pub mod timings;

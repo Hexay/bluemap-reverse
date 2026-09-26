@@ -17,6 +17,7 @@
     "exact": 51482,
     "name": 51557
   },
+  "rendered_alike": 51557,
   "exposed": {
     "total": 51534,
     "exact": 51468,
@@ -117,67 +118,6 @@
       "count": 1
     }
   ],
-  "rendered_confusions": [
-    {
-      "original": "minecraft:oak_leaves[distance=3,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]",
-      "count": 13
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=2,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]",
-      "count": 10
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=4,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]",
-      "count": 10
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=4,persistent=false,waterlogged=false]",
-      "count": 10
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]",
-      "count": 7
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]",
-      "count": 7
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=1,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=1,persistent=false,waterlogged=false]",
-      "count": 5
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]",
-      "count": 5
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]",
-      "count": 3
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]",
-      "count": 3
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=6,persistent=true,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=6,persistent=false,waterlogged=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:oak_sign[rotation=0,waterlogged=false]",
-      "reconstructed": "minecraft:oak_sign[rotation=8,waterlogged=false]",
-      "count": 1
-    }
-  ],
+  "rendered_confusions": [],
   "samples": []
 }

@@ -17,6 +17,8 @@ pub enum Cmd {
     Build(BuildArgs),
     /// Show a pack's versions and size breakdown
     Info { pack: PathBuf },
+    /// Write the groups of states that render identically (indistinguishable from tiles) as JSON
+    Lookalikes { pack: PathBuf, out: PathBuf },
     /// Write index.json for the packs in a folder (publish it next to them)
     Index {
         #[arg(default_value = "packs")]
@@ -53,6 +55,7 @@ pub fn run(cmd: Cmd) -> Result<()> {
     match cmd {
         Cmd::Build(a) => build(a),
         Cmd::Info { pack } => info(&pack),
+        Cmd::Lookalikes { pack, out } => lookalikes(&pack, &out),
         Cmd::Index { dir } => index(&dir),
         Cmd::List(a) => list(&a),
         Cmd::Fetch { mc_version, index } => fetch(&mc_version, &index),
@@ -97,6 +100,19 @@ fn info(path: &Path) -> Result<()> {
     for (part, bytes) in Pack::sizes(path)? {
         println!("  {part:<24} {:>9.1} KB", bytes as f64 / 1e3);
     }
+    Ok(())
+}
+
+fn lookalikes(path: &Path, out: &Path) -> Result<()> {
+    let lib = Pack::load(path)?.library;
+    let groups: Vec<Vec<String>> = lib
+        .lookalikes()
+        .into_iter()
+        .map(|g| g.into_iter().map(|i| lib.entries[i].state.to_string()).collect())
+        .collect();
+    let states: usize = groups.iter().map(Vec::len).sum();
+    std::fs::write(out, serde_json::to_vec(&groups)?)?;
+    println!("{} of {} states in {} look-alike groups → {}", states, lib.entries.len(), groups.len(), out.display());
     Ok(())
 }
 

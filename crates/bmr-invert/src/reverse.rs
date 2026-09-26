@@ -12,9 +12,10 @@ use bmr_fetch::grid::Tile;
 use rayon::prelude::*;
 
 use crate::evidence::{Evidence, Observed, collect};
-use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, faces_by_cell, signature, step, texture_ids, world_faces};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, faces_by_cell, signature, texture_ids, world_faces};
 use crate::library::Library;
-use crate::matcher::{Candidates, How, candidates, resolve};
+use crate::matcher::{Candidates, How, candidates, candidates_cullable, resolve};
+use crate::overhang::{self, Matched};
 use crate::timings::Timings;
 
 pub struct Inverted {
@@ -34,13 +35,13 @@ pub struct Stats {
     pub waterlogged: usize,
     /// Cells whose faces were all explained as a neighbour's overhang.
     pub overhang_cells: usize,
+    /// Unmatched cells that matched after dropping faces a neighbour may have overhung into them.
+    pub foreign_stripped: usize,
     pub unmatched: usize,
     /// Unmatched cells by their texture set, most frequent first.
     pub unmatched_textures: Vec<(String, usize)>,
     pub timings: Timings,
 }
-
-type Matched = Option<(usize, How)>;
 
 /// Interned texture per material index of a map (`textures.json`); parse once, reuse per window.
 pub fn map_textures(map: &LocalMap) -> Result<Vec<Tex>> {
@@ -55,7 +56,12 @@ pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) 
     let (mut solid_faces, liquid_faces) = t.time("split_liquid", || split_liquid(cells));
     let mut matched = t.time("match", || match_all(lib, &solid_faces));
     let mut stats = Stats::default();
-    stats.overhang_cells = t.time("overhang", || credit_overhang(lib, &mut solid_faces, &mut matched));
+    t.time("overhang", || {
+        stats.overhang_cells = overhang::credit(lib, &mut solid_faces, &mut matched);
+        stats.foreign_stripped = overhang::strip_foreign(lib, &mut solid_faces, &mut matched);
+        stats.overhang_cells += overhang::credit(lib, &mut solid_faces, &mut matched);
+    });
+    t.time("match_cullable", || match_cullable(lib, &solid_faces, &mut matched));
 
     let liquids: FxHashMap<Cell, Liquid> = liquid_faces
         .iter()
@@ -86,10 +92,11 @@ pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) 
     let obs = Observed { blocks: &blocks, solid_faces: &solid_faces, liquid_faces: &liquid_faces, liquids: &liquids };
     let evidence = t.time("evidence", || collect(lib, &obs));
     for (cell, entry) in blocks.iter_mut() {
-        let wet = liquid_faces.contains_key(cell) || evidence.liquid.contains_key(cell);
-        if let Some(w) = wet.then(|| lib.waterlogged_variant(*entry)).flatten() {
+        let liquid = liquid_faces.get(cell).and_then(|k| k[0].liquid()).or_else(|| evidence.liquid.get(cell).copied());
+        // both ways: ties between wet and dry (identical solid faces) resolve to the default, e.g. wet coral
+        if let Some(w) = lib.liquid_variant(*entry, liquid) {
             *entry = w;
-            stats.waterlogged += 1;
+            stats.waterlogged += liquid.is_some() as usize;
         }
     }
     stats.timings = t;
@@ -115,37 +122,6 @@ fn split_liquid(cells: FxHashMap<Cell, CellFaces>) -> (FxHashMap<Cell, CellFaces
         }
     }
     (solid, liquid)
-}
-
-/// Remove faces a matched block overhangs into its neighbours, re-match those neighbours.
-/// Returns the number of cells that turned out to hold nothing but overhang.
-fn credit_overhang(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>) -> usize {
-    let mut touched = FxHashSet::default();
-    for (&cell, m) in matched.iter() {
-        let Some((entry, _)) = m else { continue };
-        for (off, key) in &lib.entries[*entry].overhang {
-            let n = step(cell, *off);
-            if let Some(obs) = cells.get_mut(&n) {
-                if let Some(i) = obs.keys.iter().position(|k| k == key) {
-                    obs.keys.swap_remove(i);
-                    touched.insert(n);
-                }
-            }
-        }
-    }
-    let mut emptied = 0;
-    for n in touched {
-        if cells[&n].keys.is_empty() {
-            matched.remove(&n);
-            cells.remove(&n);
-            emptied += 1;
-        } else {
-            let obs = &cells[&n];
-            let sig = signature(obs.keys.clone());
-            matched.insert(n, candidates(lib, &sig).map(|c| (resolve(lib, &c.ids, obs.tint()), c.how)));
-        }
-    }
-    emptied
 }
 
 /// Every cell BlueMap drew at least one face for (the "visible" set for scoring).
@@ -189,6 +165,13 @@ fn match_all(lib: &Library, cells: &FxHashMap<Cell, CellFaces>) -> FxHashMap<Cel
             (*cell, c.as_ref().map(|c| (resolve(lib, &c.ids, *tint), c.how)))
         })
         .collect()
+}
+
+fn match_cullable(lib: &Library, cells: &FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>) {
+    for (cell, m) in matched.iter_mut().filter(|(_, m)| m.is_none()) {
+        let obs = &cells[cell];
+        *m = candidates_cullable(lib, &signature(obs.keys.clone())).map(|c| (resolve(lib, &c.ids, obs.tint()), c.how));
+    }
 }
 
 fn how_name(h: How) -> &'static str {

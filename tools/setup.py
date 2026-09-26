@@ -21,7 +21,7 @@ from paths import DEFAULT, DOWNLOADS, EXE, MC_MANIFEST_URL, WINDOWS, Toolchain, 
 
 def open_url(url: str):
     # Adoptium/GitHub answer 403 to urllib's default User-Agent
-    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "bluemap_reverse-setup"}))
+    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "bluemap-reverse-setup"}))
 
 
 def fetch_json(url: str) -> dict:

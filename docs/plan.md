@@ -1,4 +1,4 @@
-# Plan — bluemap_reverse
+# Plan — bluemap-reverse
 
 Goal: given only a BlueMap web URL, reconstruct the Minecraft Java world **as close to the original as possible**.
 Measured by scoring against worlds we own (render → serve → reverse → diff).

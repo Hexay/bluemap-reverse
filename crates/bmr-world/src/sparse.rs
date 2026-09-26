@@ -52,6 +52,12 @@ impl ChunkBuilder {
         })
     }
 
+    /// Make sure the chunk of column (x, z) is written, even if it stays all air (else the game would
+    /// generate it with the template's generator and biome).
+    pub fn touch(&mut self, (x, z): (i32, i32)) {
+        self.sections(x, z);
+    }
+
     pub fn set_block(&mut self, (x, y, z): (i32, i32, i32), id: StateId) {
         self.fill_column((x, z), y, y, id);
     }

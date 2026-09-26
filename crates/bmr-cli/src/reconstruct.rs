@@ -105,6 +105,10 @@ fn run_window(
     let mut builder = ChunkBuilder::new(layout, air);
     let emits = |(x, _, z): (i32, i32, i32)| win.emits(x, z);
     let mut inner = Timings::default();
+    let mut biomes = None;
+    for &c in win.columns.iter().filter(|&&(x, z)| win.emits(x, z)) {
+        builder.touch(c);
+    }
     if o.no_fill {
         for (&c, &e) in inv.blocks.iter().filter(|(c, _)| emits(**c)) {
             builder.set_block(c, table.intern(&inp.lib.entries[e].state));
@@ -127,14 +131,19 @@ fn run_window(
             }
         });
         inner.extend("fill", filled.stats.timings.clone());
+        biomes = Some(filled.biomes);
     }
     let mut chunks = t.time("finish_chunks", || builder.finish(table));
-    if let Some(r) = &regen {
-        for c in &mut chunks {
-            if let Some(src) = r.chunk((c.x, c.z)) {
-                c.copy_biomes_from(src);
+    match (&regen, &biomes) {
+        (Some(r), _) => {
+            for c in &mut chunks {
+                if let Some(src) = r.chunk((c.x, c.z)) {
+                    c.copy_biomes_from(src);
+                }
             }
         }
+        (None, Some(b)) => t.time("biomes", || chunks.iter_mut().for_each(|c| c.set_biomes(|cell| b.at(cell)))),
+        (None, None) => {}
     }
     t.extend("invert", inv.stats.timings.clone());
     t.accumulate(inner);

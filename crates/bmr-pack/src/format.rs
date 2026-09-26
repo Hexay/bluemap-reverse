@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 pub const MAGIC: &[u8; 8] = b"BMRPACK\0";
 /// Bump on any change to the structs below.
-pub const FORMAT: u32 = 4;
+pub const FORMAT: u32 = 5;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
@@ -45,6 +45,8 @@ pub struct Body {
     pub entries: Vec<EntryDto>,
     pub registry: Vec<(String, BlockInfo)>,
     pub template: Vec<(String, Vec<u8>)>,
+    /// (biome, grass/foliage/water tint as BlueMap draws them), commonest biome first.
+    pub biome_tints: Vec<(String, [Option<[u8; 3]>; 3])>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -92,7 +94,16 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
             })
         })
         .collect::<Result<_>>()?;
-    Ok(Body { key_textures: t.textures, keys: t.keys, sigs: t.sigs, uv_sets: t.uv_sets, entries: dtos, registry, template })
+    Ok(Body {
+        key_textures: t.textures,
+        keys: t.keys,
+        sigs: t.sigs,
+        uv_sets: t.uv_sets,
+        entries: dtos,
+        registry,
+        template,
+        biome_tints: Vec::new(),
+    })
 }
 
 /// Entries plus the registry and template, moved out of `body`.

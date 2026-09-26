@@ -47,6 +47,12 @@ pub struct BuildArgs {
     library_world: PathBuf,
     #[arg(long, default_value = DEFAULT_TEMPLATE)]
     template: PathBuf,
+    /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py) for the biome tint table; skipped
+    /// with a warning when missing
+    #[arg(long, default_value = "work/cache/biomes")]
+    biome_mirror: PathBuf,
+    #[arg(long, default_value = "work/worlds/biomes/world")]
+    biome_world: PathBuf,
     #[command(flatten)]
     world_args: WorldArgs,
 }
@@ -67,16 +73,24 @@ fn build(a: BuildArgs) -> Result<()> {
     let registry = a.world_args.registry()?.context("pack build needs the block registry (tools/setup.py)")?;
     let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
     let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
-    let pack = Pack::build(&lib_map, &lib_world, registry, &a.template, &a.mc_version)?;
+    let biomes = match (bmr_fetch::LocalMap::open(&a.biome_mirror, None), a.world_args.open(&a.biome_world, &Some(registry.clone()))) {
+        (Ok(m), Ok(w)) => Some((m, w)),
+        (m, w) => {
+            eprintln!("warning: no biome tint table ({}); reconstructions keep plains", m.err().or(w.err()).map_or(String::new(), |e| e.to_string()));
+            None
+        }
+    };
+    let pack = Pack::build(&lib_map, &lib_world, registry, &a.template, &a.mc_version, biomes.as_ref().map(|(m, w)| (m, w)))?;
     let out = a.out.unwrap_or_else(|| {
         PathBuf::from("packs").join(format!("bmr-mc{}-bluemap{}.pack", pack.meta.mc_version, pack.meta.bluemap_version))
     });
     let bytes = pack.save(&out)?;
     pack.verify_saved(&out)?;
     println!(
-        "{} states, {} registry blocks, {} template files → {} ({:.2} MB) in {:.1?}",
+        "{} states, {} registry blocks, {} biomes, {} template files → {} ({:.2} MB) in {:.1?}",
         pack.library.entries.len(),
         pack.registry.len(),
+        pack.biome_tints.len(),
         pack.template.len(),
         out.display(),
         bytes as f64 / 1e6,

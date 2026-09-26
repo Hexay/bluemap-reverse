@@ -27,6 +27,12 @@ pub struct Args {
     library_world: PathBuf,
     #[arg(long, default_value = DEFAULT_TEMPLATE)]
     template: PathBuf,
+    /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py): biome tints; overworld biomes stay
+    /// plains without them
+    #[arg(long, default_value = "work/cache/biomes")]
+    biome_mirror: PathBuf,
+    #[arg(long, default_value = "work/worlds/biomes/world")]
+    biome_world: PathBuf,
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for unseen cells + biomes
     #[arg(long)]
     regen: Option<PathBuf>,
@@ -105,6 +111,14 @@ pub fn run(a: Args) -> Result<()> {
     })?;
     t.extend("library", lib.stats.timings.clone());
     println!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
+    let biome_tints = t.time("biome_tints", || -> Result<_> {
+        let map = bmr_fetch::LocalMap::open(&a.biome_mirror, None);
+        let world = bmr_world::World::open(&a.biome_world, "minecraft:overworld", Some(registry.clone()));
+        Ok(match (map, world) {
+            (Ok(m), Ok(w)) => bmr_invert::tints::learn(&m, &w)?,
+            _ => Vec::new(),
+        })
+    })?;
 
     let map = a.mirror.open()?;
     let regen = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
@@ -113,6 +127,7 @@ pub fn run(a: Args) -> Result<()> {
     let inputs = Inputs {
         map: &map,
         lib: &lib,
+        biome_tints: &biome_tints,
         registry: &registry,
         template: &template,
         style,

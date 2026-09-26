@@ -14,6 +14,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result, bail, ensure};
 use bmr_fetch::LocalMap;
 use bmr_invert::Library;
+use bmr_invert::tints::BiomeTint;
 use bmr_world::{BlockRegistry, PaletteStyle, TemplateFiles, World};
 use lzma_rust2::{XzOptions, XzReader, XzWriter};
 
@@ -30,17 +31,22 @@ pub struct Pack {
     pub template: TemplateFiles,
     /// Texture names of the map the library was learned from.
     pub site_textures: Vec<String>,
+    /// Grass/foliage/water tint BlueMap draws per overworld biome, commonest first (empty: biomes unknown).
+    pub biome_tints: Vec<BiomeTint>,
 }
 
 impl Pack {
-    /// From the local debug-world mirror + world, registry and template world (maintainer side).
+    /// From the local debug-world mirror + world, registry and template world (maintainer side), and the
+    /// `biomes` fixture's mirror + world for the biome tint table.
     pub fn build(
         lib_map: &LocalMap,
         lib_world: &World,
         registry: Arc<BlockRegistry>,
         template_dir: &Path,
         mc_version: &str,
+        biomes: Option<(&LocalMap, &World)>,
     ) -> Result<Self> {
+        let biome_tints = biomes.map(|(map, world)| bmr_invert::tints::learn(map, world)).transpose()?.unwrap_or_default();
         let library = Library::build(lib_map, lib_world, &registry)?;
         let bluemap_version = lib_map.bluemap_version.clone().context("library mirror has no BlueMap version")?;
         let style = lib_world.palette_style()?.context("debug world has no palettes to learn the format from")?;
@@ -56,6 +62,7 @@ impl Pack {
             library,
             registry,
             template: bmr_world::read_template(template_dir)?,
+            biome_tints,
         })
     }
 
@@ -68,7 +75,8 @@ impl Pack {
         let header = Header { format: FORMAT, meta: self.meta.clone(), site_textures: self.site_textures.clone() };
         let mut registry: Vec<_> = self.registry.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
         registry.sort_by(|a, b| a.0.cmp(&b.0));
-        let body = encode(&self.library.entries, registry, self.template.clone())?;
+        let mut body = encode(&self.library.entries, registry, self.template.clone())?;
+        body.biome_tints = self.biome_tints.iter().map(|b| (b.biome.clone(), b.tints)).collect();
         let header_bytes = compress(&postcard::to_stdvec(&header)?)?;
         let mut bytes = Vec::from(&MAGIC[..]);
         bytes.extend((header_bytes.len() as u32).to_le_bytes());
@@ -124,13 +132,16 @@ impl Pack {
     pub fn load(path: &Path) -> Result<Self> {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
         let (header, compressed) = split(&bytes, path)?;
-        let (entries, registry, template) = decode(read_body(compressed)?);
+        let mut body = read_body(compressed)?;
+        let biome_tints = std::mem::take(&mut body.biome_tints).into_iter().map(|(biome, tints)| BiomeTint { biome, tints }).collect();
+        let (entries, registry, template) = decode(body);
         Ok(Self {
             library: Library::from_entries(entries, header.meta.data_version),
             meta: header.meta,
             registry: Arc::new(BlockRegistry::from_blocks(registry)),
             template,
             site_textures: header.site_textures,
+            biome_tints,
         })
     }
 }

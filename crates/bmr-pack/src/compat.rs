@@ -70,6 +70,7 @@ mod tests {
             registry: Arc::new(bmr_world::BlockRegistry::from_blocks([])),
             template: Vec::new(),
             site_textures: textures.iter().map(|s| s.to_string()).collect(),
+            biome_tints: Vec::new(),
         }
     }
 

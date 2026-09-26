@@ -2288,36 +2288,36 @@
   "packs": [
     {
       "file": "bmr-mc1.21.11-bluemap5.27.pack",
-      "size": 244004,
-      "sha256": "f2ee617e8427cef2fb80fddf0482108385fd6063ddb291481601cbb71922b33e",
-      "pack_format": 4,
+      "size": 244628,
+      "sha256": "76334aa722f019d35975fd3436de82f28b2c8e429c067f579b38deff96ad1487",
+      "pack_format": 5,
       "mc_version": "1.21.11",
       "bluemap_version": "5.27",
       "textures": "9/v//9/7f/7//34B//+A//8P+P//////v9/v978//////////999vz/g//f7/////////////////////98P+B/w///////9/v8H/A/4/wf8/wP+v//+//9/v/8Dvv///3+/D/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+/P///zPwD8////////////7/f///8P+P8B3/f/////P77///9////////97///3z/83////////////////////////////fP//////////////9/v///////+//////1+//3///f///////v7///f9+D/f/////////2/////5v///+j+///+//7/9/sHAAAAAAAAAAAAAA=="
     },
     {
       "file": "bmr-mc1.21.4-bluemap5.27.pack",
-      "size": 224920,
-      "sha256": "d19dbba21966055b72eced15b548de6001b3865f9ef9a572d66299548f6d4b22",
-      "pack_format": 4,
+      "size": 225544,
+      "sha256": "cb76c1d4553bc8fda51e2cd63c16822aa0662a60d26cea57298899678809622f",
+      "pack_format": 5,
       "mc_version": "1.21.4",
       "bluemap_version": "5.27",
       "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n978///9/3/X//z9znz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v////////+H////////3+fP///zPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+H/D///9/3/f++f91L/7fXz7M6//7///////////7/////x9CAPT/9fNvZveN9ff/6m//N18vd2+37/z+/v3///V69dX/1/f9+/7b+fNLvyRed+D/fr39//////Wfv8W1fv998mh+70J+/Sr29Av4////////////Bw=="
     },
     {
       "file": "bmr-mc1.21.8-bluemap5.27.pack",
-      "size": 228512,
-      "sha256": "ad8c33a40e7739241b16e5132683151eb42a7a56c9f0db145917adcbaa16c56e",
-      "pack_format": 4,
+      "size": 229128,
+      "sha256": "92372d8f844300ceb7fba6964f3b4ffbfffe1f0709eee1418f9c1ca792e4b09a",
+      "pack_format": 5,
       "mc_version": "1.21.8",
       "bluemap_version": "5.27",
       "textures": "9/n//9/5f/7//z4B//+A//8P+P///////9/n978///9/3/X//999nz/g//f5/////////////793+////98P+B/w////+/99/v8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+fP///zPwD8////////////7/Pv3f4P+P8B3/f/HwD+H/D///9////////97///3z/s/////////////////////x9CAP///fNv/v//9f//////N9/v///37/z+//3///1+//3///f///7b+ftb//7f9+D/f/////////2/////5v9//uj+//9+/f7/9Hv/////////////Bw=="
     },
     {
       "file": "bmr-mc26.3-bluemap5.27.pack",
-      "size": 273324,
-      "sha256": "5ba21dae274025252eae692dbee8a378ccdf4782a7a46ed92a3c8e79bc81f497",
-      "pack_format": 4,
+      "size": 273984,
+      "sha256": "c2eef27c4304f243d79d26d4ec835e2f516b133db4594689b44ba52dbd05561a",
+      "pack_format": 5,
       "mc_version": "26.3",
       "bluemap_version": "5.27",
       "textures": "////////////////////////////////v////////////////9/9/////////////////////////////////////////////////////////////////////////////////////////////////9/v/////////////////////////////////////////////////////////////w8A4P///7EPAADw////////////////3/////////////////////////////////////3//////////////////+//////////////////////////////////////////////5/////////////////8HAAAAAAAAAAAAAA=="

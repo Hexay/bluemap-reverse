@@ -118,6 +118,7 @@ pub fn run(a: Args) -> Result<()> {
         let inputs = Inputs {
             map: &m.map,
             lib: &pack.library,
+            biome_tints: &pack.biome_tints,
             registry: &pack.registry,
             template: &pack.template,
             style: pack.palette_style(),

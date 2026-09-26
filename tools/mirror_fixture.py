@@ -12,7 +12,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT, Toolchain
+from paths import DEFAULT, EXE, ROOT, WEB_HOST, WEB_PORT, Toolchain
 from render_serve import bluemap, configure
 
 URL = f"http://{WEB_HOST}:{WEB_PORT}/"
@@ -22,8 +22,8 @@ def bmr_exe():
     """$BMR_EXE if set (a build in another target dir), else the release build if present, else debug."""
     if os.environ.get("BMR_EXE"):
         return Path(os.environ["BMR_EXE"])
-    release = ROOT / "target" / "release" / "bmr.exe"
-    return release if release.exists() else ROOT / "target" / "debug" / "bmr.exe"
+    release = ROOT / "target" / "release" / f"bmr{EXE}"
+    return release if release.exists() else ROOT / "target" / "debug" / f"bmr{EXE}"
 
 
 def wait_until_serving(timeout: float = 120) -> None:

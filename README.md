@@ -71,6 +71,8 @@ bmr reverse … --zip out.zip             # also package the world folder (extra
 bmr schem <world> out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
                                         # Sponge v3 .schem for WorldEdit/FAWE; trims to non-air by default
 py -3 tools/check_schem.py out.schem    # independent spec validator (own NBT parser)
+bmr structures <world> -o obs.json     # structures in a reconstructed world → seed observations
+bmr seed obs.json [--max-misses N]      # world seed from structure start chunks (docs/seed.md)
 ```
 Library prerequisites: `py -3 tools/make_world.py debug && py -3 tools/mirror_fixture.py debug`, plus
 `template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`, then

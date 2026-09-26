@@ -11,6 +11,8 @@ mod reconstruct;
 mod reverse;
 mod schem;
 mod score;
+mod seed;
+mod structures;
 mod window;
 
 use std::path::PathBuf;
@@ -51,6 +53,10 @@ enum Cmd {
     Explain(explain::Args),
     /// Export a world area as a Sponge v3 .schem (WorldEdit / FAWE).
     Schem(schem::Args),
+    /// Crack the world seed from observed structure starts.
+    Seed(seed::Args),
+    /// Find structures in a world and write them as `bmr seed` observations.
+    Structures(structures::Args),
 }
 
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
@@ -109,5 +115,7 @@ fn main() -> Result<()> {
         Cmd::Reverse(a) => reverse::run(a),
         Cmd::Explain(a) => explain::run(a),
         Cmd::Schem(a) => schem::run(a),
+        Cmd::Seed(a) => seed::run(a),
+        Cmd::Structures(a) => structures::run(a),
     }
 }

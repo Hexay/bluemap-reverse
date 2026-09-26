@@ -1,0 +1,3612 @@
+{
+ "mc": "26.3",
+ "seed": "1539995237",
+ "text_seed": "bluemap_reverse",
+ "structures": [
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -255,
+    -125
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -251,
+    111
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -247,
+    -241
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -232,
+    23
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -217,
+    -144
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -217,
+    135
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -205,
+    -174
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -205,
+    26
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -201,
+    94
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -200,
+    -52
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -198,
+    208
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -197,
+    -31
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -183,
+    18
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -182,
+    158
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -181,
+    80
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -181,
+    123
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -171,
+    -83
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -171,
+    -9
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -171,
+    194
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -170,
+    -68
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -168,
+    56
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -146,
+    154
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -144,
+    -166
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -129,
+    -122
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -120,
+    -96
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -98,
+    -137
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -98,
+    76
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -93,
+    54
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -85,
+    -181
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -83,
+    166
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -66,
+    -169
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -64,
+    102
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -61,
+    -99
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -50,
+    -218
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -50,
+    121
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -33,
+    95
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -31,
+    117
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -19,
+    -94
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -17,
+    227
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    -10,
+    -144
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    11,
+    -102
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    13,
+    -237
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    21,
+    -60
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    22,
+    -210
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    22,
+    90
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    23,
+    -121
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    25,
+    192
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    59,
+    165
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    64,
+    81
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    74,
+    -58
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    76,
+    197
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    80,
+    43
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    89,
+    17
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    93,
+    -16
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    94,
+    176
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    101,
+    -246
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    118,
+    -170
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    120,
+    124
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    122,
+    84
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    133,
+    62
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    138,
+    201
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    151,
+    228
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    153,
+    -110
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    155,
+    82
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    167,
+    -206
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    169,
+    -144
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    188,
+    -46
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    189,
+    168
+   ]
+  },
+  {
+   "set": "abandoned_camp",
+   "chunk": [
+    209,
+    -85
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    -503,
+    206
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    -138,
+    405
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    236,
+    402
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    298,
+    338
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    328,
+    -412
+   ]
+  },
+  {
+   "set": "desert_pyramids",
+   "chunk": [
+    424,
+    -81
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -265,
+    45
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -236,
+    51
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -222,
+    115
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -219,
+    129
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -215,
+    66
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -202,
+    177
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    -59,
+    -443
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    358,
+    170
+   ]
+  },
+  {
+   "set": "igloos",
+   "chunk": [
+    433,
+    136
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    -183,
+    -241
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    -121,
+    -19
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    -116,
+    -47
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    -115,
+    0
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    -93,
+    -29
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    6,
+    -20
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    12,
+    -58
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    75,
+    130
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    86,
+    41
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    98,
+    151
+   ]
+  },
+  {
+   "set": "jungle_temples",
+   "chunk": [
+    193,
+    -331
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -268,
+    308
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -245,
+    -84
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -240,
+    -57
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -231,
+    299
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -181,
+    300
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -153,
+    -234
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -142,
+    70
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -117,
+    76
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -74,
+    -46
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -55,
+    -23
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -54,
+    19
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -52,
+    44
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -24,
+    41
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -14,
+    18
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    -11,
+    178
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    7,
+    150
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    9,
+    48
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    45,
+    141
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    70,
+    -123
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    173,
+    9
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    177,
+    44
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    181,
+    76
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    202,
+    49
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    204,
+    -122
+   ]
+  },
+  {
+   "set": "ocean_monuments",
+   "chunk": [
+    249,
+    237
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -240,
+    -118
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -239,
+    -35
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -233,
+    150
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -218,
+    -95
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -199,
+    -38
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -197,
+    -190
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -195,
+    -72
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -193,
+    -180
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -180,
+    90
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -178,
+    -170
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -160,
+    123
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -159,
+    70
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -155,
+    -195
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -155,
+    -177
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -152,
+    91
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -140,
+    -193
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -140,
+    -175
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -138,
+    42
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -138,
+    71
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -135,
+    124
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -130,
+    85
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -129,
+    171
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -119,
+    -217
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -119,
+    -191
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -117,
+    151
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -115,
+    161
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -113,
+    51
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -111,
+    67
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -111,
+    105
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -109,
+    -174
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -109,
+    87
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -98,
+    -12
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -95,
+    -211
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -94,
+    29
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -91,
+    1
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -79,
+    29
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -76,
+    -31
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -76,
+    -11
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -74,
+    4
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -74,
+    85
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -73,
+    -214
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -71,
+    63
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -70,
+    46
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -69,
+    -58
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -69,
+    185
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -60,
+    70
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -59,
+    -53
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -59,
+    -9
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -59,
+    51
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -53,
+    0
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -52,
+    20
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -49,
+    -38
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -39,
+    184
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -38,
+    9
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -37,
+    24
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -37,
+    66
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -37,
+    171
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -36,
+    -30
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -36,
+    49
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -35,
+    -51
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -30,
+    -20
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -17,
+    -50
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -11,
+    -40
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -11,
+    29
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -11,
+    51
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -11,
+    60
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -10,
+    4
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    -9,
+    -9
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    0,
+    22
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    1,
+    9
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    3,
+    83
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    4,
+    48
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    4,
+    145
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    6,
+    62
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    7,
+    187
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    11,
+    162
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    20,
+    29
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    20,
+    71
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    21,
+    123
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    24,
+    160
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    24,
+    180
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    25,
+    7
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    29,
+    -132
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    29,
+    142
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    43,
+    21
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    44,
+    48
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    45,
+    -214
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    46,
+    121
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    46,
+    140
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    48,
+    -231
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    63,
+    -137
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    64,
+    -120
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    64,
+    -90
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    66,
+    -190
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    67,
+    -180
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    67,
+    -155
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    80,
+    -194
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    81,
+    -140
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    83,
+    -240
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    86,
+    -109
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    101,
+    -139
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    105,
+    -116
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    125,
+    -12
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    127,
+    -160
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    131,
+    10
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    141,
+    -120
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    142,
+    246
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    144,
+    51
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    145,
+    -156
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    166,
+    85
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    167,
+    -74
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    168,
+    127
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    169,
+    -38
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    170,
+    2
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    170,
+    26
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    181,
+    -133
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    182,
+    -150
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    182,
+    6
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    183,
+    -97
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    183,
+    -80
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    184,
+    -33
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    184,
+    64
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    188,
+    20
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    190,
+    124
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    191,
+    81
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    204,
+    -192
+   ]
+  },
+  {
+   "set": "ocean_ruins",
+   "chunk": [
+    220,
+    200
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    -247,
+    49
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    -213,
+    5
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    -205,
+    166
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    -180,
+    -124
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    -150,
+    207
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    46,
+    -14
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    110,
+    224
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    119,
+    64
+   ]
+  },
+  {
+   "set": "pillager_outposts",
+   "chunk": [
+    195,
+    -250
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -198,
+    -183
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -198,
+    -29
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -198,
+    9
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -196,
+    55
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -193,
+    -101
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -191,
+    -141
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -190,
+    162
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -186,
+    -62
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -184,
+    94
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -180,
+    121
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -160,
+    163
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -158,
+    -113
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -155,
+    -65
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -153,
+    6
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -151,
+    59
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -149,
+    -193
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -144,
+    130
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -142,
+    -23
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -138,
+    99
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -136,
+    -148
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -119,
+    -33
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -116,
+    -120
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -111,
+    -198
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -106,
+    -57
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -106,
+    7
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -106,
+    86
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -102,
+    120
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -101,
+    165
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -100,
+    -158
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -96,
+    48
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -79,
+    -76
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -74,
+    21
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -73,
+    47
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -72,
+    -193
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -72,
+    -116
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -69,
+    -158
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -67,
+    183
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -64,
+    -25
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -58,
+    143
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -56,
+    92
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -40,
+    -74
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -38,
+    2
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -37,
+    -19
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -31,
+    128
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -28,
+    -114
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -24,
+    59
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -23,
+    -181
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -21,
+    -144
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -20,
+    86
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    -16,
+    172
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    3,
+    172
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    5,
+    96
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    8,
+    138
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    10,
+    15
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    11,
+    45
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    13,
+    -105
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    13,
+    -79
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    19,
+    -148
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    23,
+    -20
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    24,
+    -176
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    41,
+    -195
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    41,
+    -100
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    41,
+    55
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    45,
+    -30
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    46,
+    178
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    51,
+    4
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    53,
+    83
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    55,
+    -136
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    59,
+    133
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    60,
+    -74
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    80,
+    -182
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    80,
+    184
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    83,
+    8
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    85,
+    -62
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    85,
+    120
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    86,
+    -147
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    86,
+    58
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    94,
+    -115
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    95,
+    89
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    104,
+    -19
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    122,
+    47
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    127,
+    -155
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    128,
+    12
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    130,
+    163
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    135,
+    139
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    136,
+    101
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    141,
+    -30
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    142,
+    -58
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    143,
+    -178
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    144,
+    -112
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    160,
+    -183
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    160,
+    -39
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    165,
+    103
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    169,
+    -142
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    174,
+    1
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    174,
+    168
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    175,
+    -96
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    175,
+    -69
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    177,
+    120
+   ]
+  },
+  {
+   "set": "ruined_portals",
+   "chunk": [
+    183,
+    49
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -235,
+    234
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -227,
+    -47
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -210,
+    -81
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -203,
+    -46
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -182,
+    -178
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -181,
+    -58
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -177,
+    -168
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -167,
+    111
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -162,
+    -184
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -156,
+    88
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -140,
+    55
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -136,
+    -183
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -119,
+    51
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -114,
+    33
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -113,
+    79
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -110,
+    -175
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -109,
+    114
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -103,
+    -159
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -101,
+    -216
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -94,
+    -213
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -93,
+    -53
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -91,
+    -35
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -86,
+    -5
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -83,
+    42
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -82,
+    5
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -82,
+    205
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -81,
+    59
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -72,
+    24
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -72,
+    57
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -70,
+    -207
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -67,
+    2
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -60,
+    -63
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -58,
+    -15
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -58,
+    210
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -57,
+    -38
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -47,
+    183
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -44,
+    205
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -43,
+    -62
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -42,
+    -18
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -40,
+    15
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -39,
+    51
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -33,
+    -44
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -29,
+    33
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -22,
+    169
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -19,
+    -35
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -19,
+    -8
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -19,
+    26
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -16,
+    -54
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -12,
+    17
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    -9,
+    53
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    0,
+    148
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    2,
+    57
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    9,
+    18
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    10,
+    83
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    15,
+    182
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    16,
+    27
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    19,
+    127
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    27,
+    145
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    29,
+    127
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    33,
+    -159
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    34,
+    56
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    35,
+    13
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    36,
+    38
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    37,
+    -125
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    37,
+    114
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    38,
+    -210
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    38,
+    170
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    48,
+    -7
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    50,
+    -106
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    58,
+    -96
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    58,
+    130
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    59,
+    -154
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    60,
+    -132
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    66,
+    -179
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    75,
+    -210
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    75,
+    -191
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    104,
+    -136
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    106,
+    278
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    115,
+    -78
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    121,
+    -161
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    126,
+    -90
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    137,
+    6
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    139,
+    -135
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    149,
+    123
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    151,
+    -7
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    151,
+    24
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    152,
+    -139
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    155,
+    -152
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    158,
+    -82
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    158,
+    113
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    163,
+    11
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    172,
+    -154
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    176,
+    -22
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    176,
+    90
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    183,
+    -111
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    185,
+    -94
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    203,
+    -190
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    204,
+    126
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    207,
+    -131
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    209,
+    36
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    211,
+    52
+   ]
+  },
+  {
+   "set": "shipwrecks",
+   "chunk": [
+    231,
+    204
+   ]
+  },
+  {
+   "set": "swamp_huts",
+   "chunk": [
+    -335,
+    -155
+   ]
+  },
+  {
+   "set": "swamp_huts",
+   "chunk": [
+    -279,
+    358
+   ]
+  },
+  {
+   "set": "swamp_huts",
+   "chunk": [
+    -29,
+    264
+   ]
+  },
+  {
+   "set": "swamp_huts",
+   "chunk": [
+    394,
+    -309
+   ]
+  },
+  {
+   "set": "swamp_huts",
+   "chunk": [
+    400,
+    205
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -235,
+    106
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -231,
+    -260
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -224,
+    -220
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -224,
+    4
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -200,
+    3
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -185,
+    220
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -182,
+    -111
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -168,
+    -132
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -157,
+    -79
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -152,
+    13
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -136,
+    -12
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -131,
+    7
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -128,
+    194
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -119,
+    -93
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -101,
+    -86
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -97,
+    -188
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -93,
+    -113
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -82,
+    -67
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -65,
+    -183
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -64,
+    -114
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -63,
+    171
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -21,
+    -154
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    -21,
+    -119
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    15,
+    -95
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    18,
+    -167
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    23,
+    -64
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    24,
+    263
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    38,
+    -193
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    51,
+    -80
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    58,
+    13
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    68,
+    -159
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    74,
+    -52
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    76,
+    4
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    89,
+    76
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    91,
+    -214
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    106,
+    -235
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    108,
+    85
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    115,
+    8
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    115,
+    172
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    116,
+    36
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    119,
+    122
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    150,
+    -19
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    154,
+    74
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    155,
+    159
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    186,
+    -20
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    188,
+    -188
+   ]
+  },
+  {
+   "set": "villages",
+   "chunk": [
+    195,
+    181
+   ]
+  },
+  {
+   "set": "woodland_mansions",
+   "chunk": [
+    -287,
+    -119
+   ]
+  },
+  {
+   "set": "woodland_mansions",
+   "chunk": [
+    -201,
+    -510
+   ]
+  },
+  {
+   "set": "woodland_mansions",
+   "chunk": [
+    -150,
+    102
+   ]
+  },
+  {
+   "set": "woodland_mansions",
+   "chunk": [
+    21,
+    94
+   ]
+  },
+  {
+   "set": "woodland_mansions",
+   "chunk": [
+    427,
+    -360
+   ]
+  }
+ ]
+}

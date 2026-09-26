@@ -22,6 +22,8 @@ BASE_PROPERTIES = {
     "simulation-distance": "4",
     # 1.21.2+ pauses an empty server after 60 s, which also stops force-loaded chunks from generating
     "pause-when-empty-seconds": "0",
+    # force-loading a patch can take one tick past the 60 s watchdog on slower cores (the testbox)
+    "max-tick-time": "-1",
 }
 FORCELOAD_MAX_CHUNKS = 256
 OVERWORLD = "minecraft:overworld"

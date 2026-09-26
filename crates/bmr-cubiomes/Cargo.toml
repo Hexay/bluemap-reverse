@@ -1,0 +1,9 @@
+[package]
+name = "bmr-cubiomes"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+links = "cubiomes"
+
+[build-dependencies]
+cc = "1"

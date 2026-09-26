@@ -4,11 +4,13 @@ stop serving. The mirror is taken over HTTP on purpose: it is exactly what a pub
 Usage: py -3 tools/mirror_fixture.py <fixture> [--force-render] [--mc 1.21.11 [--bluemap 5.27]]
 """
 import argparse
+import os
 import shutil
 import subprocess
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT, Toolchain
 from render_serve import bluemap, configure
@@ -17,7 +19,9 @@ URL = f"http://{WEB_HOST}:{WEB_PORT}/"
 
 
 def bmr_exe():
-    """Release build if present (fast), else debug."""
+    """$BMR_EXE if set (a build in another target dir), else the release build if present, else debug."""
+    if os.environ.get("BMR_EXE"):
+        return Path(os.environ["BMR_EXE"])
     release = ROOT / "target" / "release" / "bmr.exe"
     return release if release.exists() else ROOT / "target" / "debug" / "bmr.exe"
 

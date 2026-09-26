@@ -40,7 +40,7 @@
     {
       "original": "minecraft:dirt",
       "reconstructed": "minecraft:bedrock",
-      "count": 1568
+      "count": 1544
     },
     {
       "original": "minecraft:grass_block[snowy=false]",
@@ -70,6 +70,11 @@
     {
       "original": "minecraft:cobblestone_slab[type=double,waterlogged=false]",
       "reconstructed": "minecraft:cobblestone",
+      "count": 24
+    },
+    {
+      "original": "minecraft:dirt",
+      "reconstructed": "minecraft:soul_sand",
       "count": 24
     },
     {
@@ -155,11 +160,6 @@
     {
       "original": "minecraft:jungle_leaves[distance=7,persistent=false,waterlogged=false]",
       "reconstructed": "minecraft:jungle_leaves[distance=7,persistent=true,waterlogged=false]",
-      "count": 3
-    },
-    {
-      "original": "minecraft:oak_leaves[distance=7,persistent=false,waterlogged=false]",
-      "reconstructed": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
       "count": 3
     }
   ],

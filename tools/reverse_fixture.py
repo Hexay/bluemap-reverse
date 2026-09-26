@@ -10,7 +10,7 @@ import sys
 import time
 
 from mirror_fixture import bmr_exe
-from paths import DEFAULT, ROOT, WORK, WORLDS
+from paths import DEFAULT, FIXTURES, ROOT, WORK, WORLDS
 
 RESULTS = ROOT / "results"
 
@@ -24,13 +24,15 @@ def main() -> None:
     mirror = WORK / "cache" / fixture
     out = WORK / "out" / f"{fixture}-rev" / "world"
     shutil.rmtree(out.parent, ignore_errors=True)
-    subprocess.run([bmr_exe(), "reverse", "--mirror", mirror, out, *extra], check=True, cwd=ROOT)
+    spec = json.loads((FIXTURES / fixture / "fixture.json").read_text())
+    dim = ["--dimension", spec["dimension"]] if "dimension" in spec else []
+    subprocess.run([bmr_exe(), "reverse", "--mirror", mirror, out, *dim, *extra], check=True, cwd=ROOT)
 
     RESULTS.mkdir(exist_ok=True)
     report = RESULTS / f"{fixture}.json"
     subprocess.run(
         [bmr_exe(), "score", WORLDS / fixture / "world", out, "--mirror", mirror, "--top", "25", "--json", report,
-         "--pack", DEFAULT.pack],
+         "--pack", DEFAULT.pack, *dim],
         check=True, cwd=ROOT,
     )
     r = json.loads(report.read_text())

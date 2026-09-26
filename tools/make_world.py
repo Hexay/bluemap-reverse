@@ -20,8 +20,11 @@ BASE_PROPERTIES = {
     "max-players": "1",
     "view-distance": "4",
     "simulation-distance": "4",
+    # 1.21.2+ pauses an empty server after 60 s, which also stops force-loaded chunks from generating
+    "pause-when-empty-seconds": "0",
 }
 FORCELOAD_MAX_CHUNKS = 256
+OVERWORLD = "minecraft:overworld"
 
 
 def load_fixture(name: str) -> tuple[dict, list[str]]:
@@ -46,21 +49,27 @@ def write_server_files(server_dir, properties: dict) -> None:
     (server_dir / "server.properties").write_text("\n".join(lines) + "\n")
 
 
-def forceload_commands(x0: int, z0: int, x1: int, z1: int) -> list[str]:
+def fixture_dimensions(spec: dict) -> list[str]:
+    """`dimensions` (several, each rendered as its own map), else `dimension`, else the overworld."""
+    return spec.get("dimensions") or [spec.get("dimension", OVERWORLD)]
+
+
+def forceload_commands(x0: int, z0: int, x1: int, z1: int, dimension: str = OVERWORLD) -> list[str]:
     cx0, cz0, cx1, cz1 = x0 >> 4, z0 >> 4, x1 >> 4, z1 >> 4
     rows_per_batch = max(1, FORCELOAD_MAX_CHUNKS // (cx1 - cx0 + 1))
     out = []
     for cz in range(cz0, cz1 + 1, rows_per_batch):
         cz_end = min(cz + rows_per_batch - 1, cz1)
-        out.append(f"forceload add {cx0 * 16} {cz * 16} {cx1 * 16 + 15} {cz_end * 16 + 15}")
+        out.append(f"execute in {dimension} run forceload add {cx0 * 16} {cz * 16} {cx1 * 16 + 15} {cz_end * 16 + 15}")
     return out
 
 
-def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, timeout: float = 600) -> None:
+def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, dimension: str = OVERWORLD,
+                      timeout: float = 600) -> None:
     deadline = time.monotonic() + timeout
     for x, z in [(x0, z0), (x0, z1), (x1, z0), (x1, z1)]:
         while True:
-            m = server.query(f"execute if loaded {x} 0 {z}", r"Test (passed|failed)")
+            m = server.query(f"execute in {dimension} if loaded {x} 0 {z}", r"Test (passed|failed)")
             if m.group(1) == "passed":
                 break
             if time.monotonic() > deadline:
@@ -88,11 +97,21 @@ def generate(server_dir, spec: dict, commands: list[str], force: bool, tc: Toolc
     server = Server(server_dir, heap, tc)
     try:
         server.wait_for(r"Done \(", timeout=600, echo=True)
-        area = spec["area"]
-        for cmd in forceload_commands(*area):
-            server.send(cmd)
-        wait_until_loaded(server, *area)
+        area, dimension = spec["area"], spec.get("dimension", OVERWORLD)
+        for dim in fixture_dimensions(spec):
+            for cmd in forceload_commands(*area, dim):
+                server.send(cmd)
+            wait_until_loaded(server, *area, dim)
         print(f"loaded  area {area}")
+        # patches (e.g. around known structures) are generated one at a time and released, so memory stays flat
+        for extra in spec.get("extra_areas", []):
+            for cmd in forceload_commands(*extra, dimension):
+                server.send(cmd)
+            wait_until_loaded(server, *extra, dimension)
+            for cmd in forceload_commands(*extra, dimension):
+                server.send(cmd.replace("forceload add", "forceload remove"))
+        if spec.get("extra_areas"):
+            print(f"loaded  {len(spec['extra_areas'])} extra areas")
         for cmd in commands:
             server.send(cmd)
         server.query("save-all flush", r"Saved the game", timeout=300)

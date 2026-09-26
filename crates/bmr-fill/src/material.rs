@@ -9,6 +9,7 @@ use rustc_hash::FxHashMap;
 use bmr_world::{BlockRegistry, BlockState};
 
 use crate::columns::{Column, ring};
+use crate::profile::Profile;
 
 /// How far pass 2 searches for a column to copy (Chebyshev radius).
 const COPY_RADIUS: i32 = 16;
@@ -33,7 +34,7 @@ pub struct SolidGap<'a> {
 /// `full_cube_at`: observed full-cube block at a cell (pass 2 copies these as well as pass-1 results).
 pub fn solid_segments(
     gaps: &[SolidGap],
-    min_y: i32,
+    profile: &Profile,
     registry: &BlockRegistry,
     full_cube_at: &dyn Fn((i32, i32, i32)) -> Option<BlockState>,
 ) -> Vec<Run> {
@@ -45,9 +46,11 @@ pub fn solid_segments(
     let mut resolved: FxHashMap<Column, Vec<(i32, i32, BlockState)>> = FxHashMap::default();
     let mut deferred = Vec::new();
     for g in gaps {
-        match g.above.and_then(|s| surface_kind(&s.name)) {
+        // end bedrock is always built (pillar tops, exit portal): copy the walls instead
+        let natural = |s: &&BlockState| profile.bedrock_floor() || s.name != "minecraft:bedrock";
+        match g.above.filter(natural).and_then(|s| surface_kind(&s.name)) {
             Some(kind) => {
-                for (ylo, yhi, name) in layer_profile(kind, g, min_y) {
+                for (ylo, yhi, name) in layer_profile(kind, g, profile) {
                     let state = named(&name);
                     resolved.entry(g.column).or_default().push((ylo, yhi, state.clone()));
                     out.push(Run { column: g.column, ylo, yhi, state });
@@ -57,7 +60,7 @@ pub fn solid_segments(
         }
     }
     for g in deferred {
-        out.extend(copy_nearest(g, &resolved, min_y, &named, full_cube_at));
+        out.extend(copy_nearest(g, &resolved, profile, &named, full_cube_at));
     }
     out
 }
@@ -69,7 +72,7 @@ fn surface_kind(name: &str) -> Option<&str> {
         s,
         "grass_block" | "podzol" | "mycelium" | "dirt" | "coarse_dirt" | "rooted_dirt" | "dirt_path" | "farmland"
             | "sand" | "sandstone" | "red_sand" | "red_sandstone" | "gravel" | "snow_block" | "powder_snow"
-            | "snow"
+            | "snow" | "soul_sand" | "soul_soil" | "crimson_nylium" | "warped_nylium"
     ) || CONTINUING.contains(&s)
         || STONY.contains(&s)
         || s.ends_with("terracotta");
@@ -77,10 +80,8 @@ fn surface_kind(name: &str) -> Option<&str> {
 }
 
 /// Blocks that usually continue downwards as themselves (layers or whole dimensions).
-const CONTINUING: &[&str] = &[
-    "netherrack", "end_stone", "blackstone", "basalt", "smooth_basalt", "packed_ice", "blue_ice", "soul_sand",
-    "soul_soil",
-];
+const CONTINUING: &[&str] =
+    &["netherrack", "end_stone", "basalt", "blackstone", "smooth_basalt", "packed_ice", "blue_ice"];
 
 /// Overworld rock: below it comes the stone/deepslate default, not more of the same (ore-like blobs).
 const STONY: &[&str] = &[
@@ -89,7 +90,7 @@ const STONY: &[&str] = &[
 ];
 
 /// (ylo, yhi, block name) runs for a gap below a terrain surface, top-down layering.
-fn layer_profile(kind: &str, g: &SolidGap, min_y: i32) -> Vec<(i32, i32, String)> {
+fn layer_profile(kind: &str, g: &SolidGap, profile: &Profile) -> Vec<(i32, i32, String)> {
     let layers: &[(&str, i32)] = match kind {
         "grass_block" | "podzol" | "mycelium" | "dirt" | "coarse_dirt" | "rooted_dirt" | "dirt_path" | "farmland"
         | "snow_block" | "powder_snow" | "snow" => &[("dirt", 3)],
@@ -99,12 +100,15 @@ fn layer_profile(kind: &str, g: &SolidGap, min_y: i32) -> Vec<(i32, i32, String)
         "red_sand" => &[("red_sand", 3), ("red_sandstone", 3)],
         "red_sandstone" => &[("red_sandstone", 6)],
         "gravel" => &[("gravel", 2)],
+        // soul sand valleys: ~4 deep over netherrack (median on the nether fixture; basalt runs deep instead)
+        "soul_sand" => &[("soul_sand", 4)],
+        "soul_soil" => &[("soul_soil", 4)],
         _ => &[],
     };
     let mut runs = Vec::new();
     let mut y = g.yhi;
     // the world floor is bedrock whatever lies above it
-    let floor = if g.ylo == min_y { g.ylo + 1 } else { g.ylo };
+    let floor = if g.ylo == profile.min_y && profile.bedrock_floor() { g.ylo + 1 } else { g.ylo };
     for (name, depth) in layers {
         let lo = (y - depth + 1).max(floor);
         if lo <= y {
@@ -113,17 +117,19 @@ fn layer_profile(kind: &str, g: &SolidGap, min_y: i32) -> Vec<(i32, i32, String)
         y = lo - 1;
     }
     let base = CONTINUING.contains(&kind).then(|| format!("minecraft:{kind}"));
-    runs.extend(by_height_runs(g.ylo, y, min_y, base));
+    runs.extend(by_height_runs(g.ylo, y, profile, base));
     runs
 }
 
-/// Default fill for [ylo, yhi], one cell at a time merged into runs: `base` if given, else `default_block`.
-fn by_height_runs(ylo: i32, yhi: i32, min_y: i32, base: Option<String>) -> Vec<(i32, i32, String)> {
+/// Default fill for [ylo, yhi], one cell at a time merged into runs: `base` if given (not over the
+/// dimension's bedrock), else the profile's default block.
+fn by_height_runs(ylo: i32, yhi: i32, profile: &Profile, base: Option<String>) -> Vec<(i32, i32, String)> {
     let mut runs: Vec<(i32, i32, String)> = Vec::new();
     for y in (ylo..=yhi).rev() {
+        let default = profile.default_block(y);
         let name = match &base {
-            Some(b) if y > min_y + 2 => b.clone(),
-            _ => default_block(y, min_y).to_owned(),
+            Some(b) if default != "minecraft:bedrock" => b.clone(),
+            _ => default.to_owned(),
         };
         match runs.last_mut() {
             Some(r) if r.2 == name => r.0 = y,
@@ -133,23 +139,11 @@ fn by_height_runs(ylo: i32, yhi: i32, min_y: i32, base: Option<String>) -> Vec<(
     runs
 }
 
-/// Vanilla majority by height: bedrock floor band (100/80/60% bedrock at min_y+0/1/2), deepslate up to
-/// y=3 (stone↔deepslate blends over y 0..8), stone above.
-pub fn default_block(y: i32, min_y: i32) -> &'static str {
-    if y <= min_y + 2 {
-        "minecraft:bedrock"
-    } else if y <= 3 {
-        "minecraft:deepslate"
-    } else {
-        "minecraft:stone"
-    }
-}
-
 /// Pass 2: per y, the nearest column's pass-1 result or observed full cube at that y, else by height.
 fn copy_nearest(
     g: &SolidGap,
     resolved: &FxHashMap<Column, Vec<(i32, i32, BlockState)>>,
-    min_y: i32,
+    profile: &Profile,
     named: &impl Fn(&str) -> BlockState,
     full_cube_at: &dyn Fn((i32, i32, i32)) -> Option<BlockState>,
 ) -> Vec<Run> {
@@ -173,7 +167,7 @@ fn copy_nearest(
                 }
             }
         }
-        push(y, named(default_block(y, min_y)));
+        push(y, named(profile.default_block(y)));
     }
     out
 }

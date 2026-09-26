@@ -1,5 +1,8 @@
-//! `bmr pull <url>`: the one-command user path — mirror the site, check the pack fits, reconstruct,
-//! package as a zip (or folder) and optionally a schematic. Only use on maps you own or may reverse.
+//! `bmr pull <url>`: the one-command user path — mirror the site, check the pack fits, reconstruct every
+//! map into its dimension of one world, package as a zip (or folder) and optionally a schematic. Only use on
+//! maps you own or may reverse.
+
+mod plan;
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -17,10 +20,10 @@ use crate::reverse::OptionArgs;
 pub struct Args {
     /// BlueMap web address, e.g. https://map.example.com/
     url: String,
-    /// Output: `*.zip` (a world to drop into saves/) or a folder [default: <site>-<map>.zip]
+    /// Output: `*.zip` (a world to drop into saves/) or a folder [default: <site>.zip, <site>-<map>.zip with --map]
     #[arg(short, long)]
     out: Option<PathBuf>,
-    /// Map id when the site has several (the list is printed otherwise)
+    /// Only this map [default: every map, each into its dimension of the one world]
     #[arg(long)]
     map: Option<String>,
     /// Pack file [default: best fit among installed and indexed packs, downloaded if needed]
@@ -28,7 +31,7 @@ pub struct Args {
     pack: Option<PathBuf>,
     #[command(flatten)]
     index: IndexArgs,
-    /// Also export the whole reconstruction as a Sponge .schem
+    /// Also export the overworld (else the first map) as a Sponge .schem
     #[arg(long)]
     schem: Option<PathBuf>,
     /// Download cache (resumable; re-runs download nothing new)
@@ -43,7 +46,7 @@ pub struct Args {
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for exact underground
     #[arg(long)]
     regen: Option<PathBuf>,
-    /// Dimension [default: guessed from the map id: nether / end / overworld]
+    /// Dimension of the (single) map [default: guessed from the map id, else from BlueMap's default sky colour]
     #[arg(long)]
     dimension: Option<String>,
     /// Continue even if the pack does not fit the site
@@ -70,25 +73,21 @@ pub fn run(a: Args) -> Result<()> {
         delay: Duration::from_millis(a.delay_ms),
     };
     let summaries = t.time("fetch", || bmr_fetch::mirror(&fetch_opts))?;
-    let map_id = match (&a.map, summaries.as_slice()) {
-        (Some(m), _) => m.clone(),
-        (None, [only]) => only.id.clone(),
-        (None, many) => {
-            let ids: Vec<&str> = many.iter().map(|s| s.id.as_str()).collect();
-            bail!("the site has several maps {ids:?}: pick one with --map (all were mirrored)");
-        }
-    };
-    let map = bmr_fetch::LocalMap::open(&cache, Some(&map_id))?;
-    println!("      map `{}` ({}), {} hires tiles", map_id, map.settings.name, map.tiles(0).len());
+    let ids: Vec<String> = summaries.iter().map(|s| s.id.clone()).collect();
+    let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_deref())?;
+    for m in &maps {
+        println!("      map `{}` ({}) → {}, {} hires tiles", m.id, m.map.settings.name, m.dimension, m.map.tiles(0).len());
+    }
+    let first = &maps.first().context("the site has no maps")?.map;
 
-    println!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", map.bluemap_version.as_deref().unwrap_or("?"));
-    let site_textures = bmr_prbm::parse_texture_names(&map.textures_json()?)?;
-    let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, map.bluemap_version.as_deref(), &site_textures)?;
+    println!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", first.bluemap_version.as_deref().unwrap_or("?"));
+    let site_textures = bmr_prbm::parse_texture_names(&first.textures_json()?)?;
+    let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, first.bluemap_version.as_deref(), &site_textures)?;
     for (i, line) in ranking.iter().enumerate() {
         println!("      {} {line}", if i == 0 { "→" } else { " " });
     }
     let pack = t.time("pack_load", || Pack::load(&pack_path))?;
-    let compat = bmr_pack::check(&pack, map.bluemap_version.as_deref(), &site_textures);
+    let compat = bmr_pack::check(&pack, first.bluemap_version.as_deref(), &site_textures);
     println!("      pack {} (Minecraft {}, BlueMap {})", pack_path.display(), pack.meta.mc_version, pack.meta.bluemap_version);
     for line in compat.explain() {
         println!("      {line}");
@@ -99,40 +98,45 @@ pub fn run(a: Args) -> Result<()> {
         Verdict::Ok => {}
     }
 
-    let (dimension, heights) = dimension_for(&map_id, a.dimension.as_deref());
-    let mut opts = a.opts.options();
-    if a.dimension.is_none() && heights != (opts.min_y, opts.max_y) {
-        (opts.min_y, opts.max_y) = heights;
-    }
-    let out = a.out.clone().unwrap_or_else(|| PathBuf::from(format!("{slug}-{map_id}.zip")));
+    let name = match &a.map {
+        Some(m) => format!("{slug}-{m}"),
+        None => slug.clone(),
+    };
+    let out = a.out.clone().unwrap_or_else(|| PathBuf::from(format!("{name}.zip")));
     let zip = out.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip"));
-    let world_dir = if zip { cache.join("reconstructed").join(&map_id).join("world") } else { out.clone() };
+    let world_dir = if zip { cache.join("reconstructed").join(&name).join("world") } else { out.clone() };
     if zip {
         let _ = std::fs::remove_dir_all(world_dir.parent().context("world dir")?);
     }
 
-    println!("[3/4] reconstructing ({dimension}, y {}..{})", opts.min_y, opts.max_y);
-    let regen = a.regen.as_ref().map(|p| bmr_world::World::open(p, &dimension, Some(pack.registry.clone()))).transpose()?;
-    let inputs = Inputs {
-        map: &map,
-        lib: &pack.library,
-        registry: &pack.registry,
-        template: &pack.template,
-        style: pack.palette_style(),
-        dimension: &dimension,
-        regen: regen.as_ref(),
-        out: &world_dir,
-        opts: &opts,
-    };
-    let (totals, wt) = reconstruct(&inputs)?;
-    t.accumulate(wt);
-    let unmatched_pct = 100.0 * totals.unmatched as f64 / totals.cells.max(1) as f64;
-    println!(
-        "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks",
-        totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks
-    );
-    if unmatched_pct > 1.0 {
-        println!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
+    for (i, m) in maps.iter().enumerate() {
+        let opts = a.opts.options(&m.dimension)?;
+        let p = opts.profile;
+        let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
+        println!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
+        let regen = a.regen.as_ref().map(|r| bmr_world::World::open(r, &m.dimension, Some(pack.registry.clone()))).transpose()?;
+        let inputs = Inputs {
+            map: &m.map,
+            lib: &pack.library,
+            registry: &pack.registry,
+            template: &pack.template,
+            style: pack.palette_style(),
+            dimension: &m.dimension,
+            regen: regen.as_ref(),
+            out: &world_dir,
+            extend: i > 0,
+            opts: &opts,
+        };
+        let (totals, wt) = reconstruct(&inputs)?;
+        t.accumulate(wt);
+        let unmatched_pct = 100.0 * totals.unmatched as f64 / totals.cells.max(1) as f64;
+        println!(
+            "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks",
+            totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks
+        );
+        if unmatched_pct > 1.0 {
+            println!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
+        }
     }
 
     println!("[4/4] writing output");
@@ -143,12 +147,14 @@ pub fn run(a: Args) -> Result<()> {
         println!("      world folder {}", out.display());
     }
     if let Some(schem) = &a.schem {
-        let world = bmr_world::World::open(&world_dir, &dimension, Some(pack.registry.clone()))?;
-        let area = bmr_world::Area { min: [i32::MIN / 4, opts.min_y, i32::MIN / 4], max: [i32::MAX / 4, opts.max_y, i32::MAX / 4] };
+        let m = &maps[0];
+        let p = a.opts.options(&m.dimension)?.profile;
+        let world = bmr_world::World::open(&world_dir, &m.dimension, Some(pack.registry.clone()))?;
+        let area = bmr_world::Area { min: [i32::MIN / 4, p.min_y, i32::MIN / 4], max: [i32::MAX / 4, p.max_y, i32::MAX / 4] };
         let extent = region_extent(&world, area)?;
-        let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &map_id, schem))?;
+        let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &m.id, schem))?;
         let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
-        println!("      {} ({}x{}x{}, {:.1} MB)", schem.display(), size[0], size[1], size[2], size_mb(schem));
+        println!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
     }
     t.record("total", total.elapsed());
     println!("done in {:.1?}", total.elapsed());
@@ -156,18 +162,6 @@ pub fn run(a: Args) -> Result<()> {
         report(&t, a.timings.as_deref())?;
     }
     Ok(())
-}
-
-/// (dimension id, (min_y, max_y)) from an explicit value or the map id.
-fn dimension_for(map_id: &str, explicit: Option<&str>) -> (String, (i32, i32)) {
-    let id = explicit.map_or_else(|| map_id.to_ascii_lowercase(), str::to_ascii_lowercase);
-    if id.contains("nether") {
-        ("minecraft:the_nether".into(), (0, 255))
-    } else if id.contains("end") {
-        ("minecraft:the_end".into(), (0, 255))
-    } else {
-        ("minecraft:overworld".into(), (-64, 319))
-    }
 }
 
 /// Block box of the world's region files, clamped to `area`'s heights.

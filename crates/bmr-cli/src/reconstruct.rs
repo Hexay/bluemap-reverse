@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use bmr_fetch::LocalMap;
-use bmr_fill::Bounds;
+use bmr_fill::{Bounds, Profile};
 use bmr_invert::Library;
 use bmr_invert::face::Tex;
 use bmr_invert::timings::Timings;
@@ -23,10 +23,8 @@ pub struct Options {
     /// Whole map in one pass (memory grows with the map).
     pub no_window: bool,
     pub halo: i32,
-    pub min_y: i32,
-    pub max_y: i32,
-    /// The map's BlueMap `remove-caves-below-y`.
-    pub cave_y: i32,
+    /// Build height, cave cut-off and render mask of the map's dimension.
+    pub profile: Profile,
     pub show_unmatched: usize,
 }
 
@@ -40,6 +38,8 @@ pub struct Inputs<'a> {
     pub dimension: &'a str,
     pub regen: Option<&'a World>,
     pub out: &'a Path,
+    /// `out` already holds a world (another dimension of the same site): add this dimension to it.
+    pub extend: bool,
     pub opts: &'a Options,
 }
 
@@ -57,7 +57,8 @@ pub struct Totals {
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let textures = bmr_invert::map_textures(inp.map)?;
     let windows = if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
-    let writer = WorldWriter::create(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
+    let open = if inp.extend { WorldWriter::extend } else { WorldWriter::create };
+    let writer = open(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
     let mut table = StateTable::default();
     let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
 
@@ -98,7 +99,7 @@ fn run_window(
 
     let layout = ChunkLayout {
         data_version: inp.lib.data_version,
-        sections: (o.min_y.div_euclid(16), o.max_y.div_euclid(16)),
+        sections: (o.profile.min_y.div_euclid(16), o.profile.max_y.div_euclid(16)),
         biome: "minecraft:plains".into(),
     };
     let mut builder = ChunkBuilder::new(layout, air);
@@ -111,7 +112,7 @@ fn run_window(
     } else {
         // regen decides each cell on its own; only the prior fill searches neighbouring columns
         let columns = if regen.is_some() { win.columns.clone() } else { win.halo_columns.clone() };
-        let bounds = Bounds { columns, min_y: o.min_y, max_y: o.max_y, cave_y: o.cave_y };
+        let bounds = Bounds { columns, profile: o.profile };
         let filled =
             t.time("fill", || bmr_fill::complete(&inv, inp.lib, inp.registry, &bounds, regen.as_ref(), table));
         totals.solid += filled.stats.solid_cells;

@@ -12,7 +12,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from make_world import fixture_dimensions
 from paths import DEFAULT, FIXTURES, WEB_HOST, WEB_PORT, Toolchain
+
+TEMPLATES = {"minecraft:overworld": "overworld.conf", "minecraft:the_nether": "nether.conf", "minecraft:the_end": "end.conf"}
 
 
 def set_conf(path: Path, key: str, value: str) -> None:
@@ -46,19 +49,23 @@ def configure(fixture: str, tc: Toolchain = DEFAULT) -> Path:
     set_conf(cfg / "webserver.conf", "ip", json.dumps(WEB_HOST))
     set_conf(cfg / "webserver.conf", "port", str(WEB_PORT))
 
-    maps = cfg / "maps"
-    template = maps / "overworld.conf"
-    target = maps / f"{fixture}.conf"
-    if template.exists():
-        template.replace(target)
-    for other in maps.glob("*.conf"):
-        if other != target:
-            other.unlink()
-    set_conf(target, "world", json.dumps(world.as_posix()))
-    set_conf(target, "name", json.dumps(fixture))
     spec = json.loads((FIXTURES / fixture / "fixture.json").read_text())
-    for key, value in spec.get("bluemap", {}).items():
-        set_conf(target, key, conf_value(value))
+    maps = cfg / "maps"
+    # BlueMap's own default map per dimension (the nether one masks out the roof, y 90..127). Several
+    # dimensions keep BlueMap's default ids (overworld/nether/end), like a stock install; one is renamed.
+    dims = fixture_dimensions(spec)
+    targets = [maps / TEMPLATES[d] for d in dims] if len(dims) > 1 else [maps / f"{fixture}.conf"]
+    if len(dims) == 1 and (maps / TEMPLATES[dims[0]]).exists():
+        (maps / TEMPLATES[dims[0]]).replace(targets[0])
+    for other in maps.glob("*.conf"):
+        if other not in targets:
+            other.unlink()
+    for target in targets:
+        set_conf(target, "world", json.dumps(world.as_posix()))
+        if len(dims) == 1:
+            set_conf(target, "name", json.dumps(fixture))
+        for key, value in spec.get("bluemap", {}).items():
+            set_conf(target, key, conf_value(value))
     return base
 
 

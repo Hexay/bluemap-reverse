@@ -60,6 +60,9 @@ real output. The model port is only needed later for round-trip verification (ph
   100% vs 89.5%), then overlap, then BlueMap version.
 - Version-sensitive output, learned per pack: palette encoding (legacy `{Name,Properties}` ≤ 26.2 vs 26.3
   compact) from the debug world; folder layout (`dimensions/` from 26.1) from the template.
+- Distribution: `index.json` + packs on the GitHub release `packs`; the index carries each pack's texture
+  fingerprint (bitset over a shared name table), so `pull` ranks indexed packs without downloading them and
+  fetches only the winner (sha256-verified). Format and index: `bmr-pack/src/format.rs`, `index.rs`.
 - Server and BlueMap need different Javas (1.21 server: 21; BlueMap 5.27: 25) — BlueMap's is read from its
   jar's class-file version. Supported: Minecraft 1.18+ (older chunk formats unread).
 

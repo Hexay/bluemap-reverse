@@ -42,7 +42,7 @@ def main() -> None:
     try:
         wait_until_serving()
         pull = subprocess.run(
-            [bmr_exe(), "pull", f"http://{WEB_HOST}:{WEB_PORT}/", "-o", zip_path, "--cache", out_dir / "cache"],
+            [bmr_exe(), "pull", f"http://{WEB_HOST}:{WEB_PORT}/", "-o", zip_path, "--cache", out_dir / "cache", "--offline"],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
     finally:

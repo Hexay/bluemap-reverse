@@ -9,7 +9,7 @@ use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
-use bmr_world::{BlockRegistry, BlockState, World};
+use bmr_world::{BlockInfo, BlockRegistry, BlockState, World};
 
 use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, WorldFace, normalized, signature, texture_ids, world_faces};
 use crate::timings::Timings;
@@ -115,14 +115,11 @@ impl Library {
                 lib.stats.overhang_faces += overhang.len();
                 lib.stats.overhang_states += 1;
             }
-            let default_distance = registry.get(&state.name).map_or(0, |b| {
-                state.properties.iter().filter(|p| !b.default.contains(p)).count() as u32
-            });
+            let default_distance = registry.get(&state.name).map_or(0, |b| default_distance(state, b));
             let tint = cell.tint();
             let liquid = cell.keys.iter().find_map(FaceKey::liquid);
             let sig = signature(cell.keys.into_iter().filter(|k| k.liquid().is_none()).collect());
-            let sides: BTreeSet<Cell> = sig.iter().filter(|k| k.full_side()).filter_map(FaceKey::boundary_dir).collect();
-            let full_cube = sides.len() == 6;
+            let full_cube = is_full_cube(&sig);
             lib.add(Entry { state: state.clone(), sig, liquid, overhang, tint, default_distance, full_cube });
         }
         lib.stats.states = lib.entries.len();
@@ -210,6 +207,16 @@ impl Library {
 
 /// Debug-world block a face belongs to. An owner cell on an odd coordinate is the block itself; an even
 /// one lies between two blocks (overhanging geometry), so pick the side whose block centre is nearer.
+/// Number of properties differing from the block's default state.
+pub fn default_distance(state: &BlockState, info: &BlockInfo) -> u32 {
+    state.properties.iter().filter(|p| !info.default.contains(p)).count() as u32
+}
+
+/// Renders all 6 sides as full outer quads.
+pub fn is_full_cube(sig: &[FaceKey]) -> bool {
+    sig.iter().filter(|k| k.full_side()).filter_map(FaceKey::boundary_dir).collect::<BTreeSet<Cell>>().len() == 6
+}
+
 fn anchor(f: &WorldFace) -> Cell {
     let (ox, _, oz) = f.owner();
     let c = f.centroid();

@@ -149,8 +149,8 @@ fn gather(map: &LocalMap, tiles: &[Tile], names: &[Tex]) -> Result<FxHashMap<Cel
 
 /// Distinct signatures are few compared to cells (terrain repeats), so each is matched exactly once.
 fn match_all(lib: &Library, cells: &FxHashMap<Cell, CellFaces>) -> FxHashMap<Cell, Matched> {
-    let sigs: Vec<(Cell, Vec<FaceKey>, Option<[u8; 3]>)> =
-        cells.par_iter().map(|(&cell, obs)| (cell, signature(obs.keys.clone()), obs.tint())).collect();
+    let sigs: Vec<(Cell, Vec<FaceKey>, &CellFaces)> =
+        cells.par_iter().map(|(&cell, obs)| (cell, signature(obs.keys.clone()), obs)).collect();
     let mut unique: FxHashMap<&[FaceKey], usize> = FxHashMap::default();
     for (_, sig, _) in &sigs {
         let n = unique.len();
@@ -160,9 +160,9 @@ fn match_all(lib: &Library, cells: &FxHashMap<Cell, CellFaces>) -> FxHashMap<Cel
     distinct.sort_unstable_by_key(|&(_, i)| i);
     let results: Vec<Option<Candidates>> = distinct.par_iter().map(|&(sig, _)| candidates(lib, sig)).collect();
     sigs.par_iter()
-        .map(|(cell, sig, tint)| {
+        .map(|(cell, sig, obs)| {
             let c = &results[unique[sig.as_slice()]];
-            (*cell, c.as_ref().map(|c| (resolve(lib, &c.ids, *tint), c.how)))
+            (*cell, c.as_ref().map(|c| (resolve(lib, &c.ids, obs), c.how)))
         })
         .collect()
 }
@@ -170,7 +170,7 @@ fn match_all(lib: &Library, cells: &FxHashMap<Cell, CellFaces>) -> FxHashMap<Cel
 fn match_cullable(lib: &Library, cells: &FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>) {
     for (cell, m) in matched.iter_mut().filter(|(_, m)| m.is_none()) {
         let obs = &cells[cell];
-        *m = candidates_cullable(lib, &signature(obs.keys.clone())).map(|c| (resolve(lib, &c.ids, obs.tint()), c.how));
+        *m = candidates_cullable(lib, &signature(obs.keys.clone())).map(|c| (resolve(lib, &c.ids, obs), c.how));
     }
 }
 

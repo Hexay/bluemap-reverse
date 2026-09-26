@@ -3,6 +3,7 @@
 pub mod evidence;
 pub mod face;
 pub mod library;
+pub mod lookalike;
 pub mod matcher;
 pub mod overhang;
 pub mod reverse;

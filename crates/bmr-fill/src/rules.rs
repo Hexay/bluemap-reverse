@@ -56,7 +56,11 @@ fn is_leaves(s: &BlockState) -> bool {
     s.name.ends_with("_leaves") && s.properties.iter().any(|(k, _)| k == "distance")
 }
 
-fn set_prop(s: &mut BlockState, key: &str, value: &str) {
+pub fn prop<'a>(s: &'a BlockState, key: &str) -> Option<&'a str> {
+    s.properties.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
+}
+
+pub fn set_prop(s: &mut BlockState, key: &str, value: &str) {
     if let Some(p) = s.properties.iter_mut().find(|(k, _)| k == key) {
         p.1 = value.to_owned();
     }

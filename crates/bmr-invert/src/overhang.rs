@@ -66,5 +66,5 @@ pub fn strip_foreign(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matc
 fn rematch(lib: &Library, cells: &FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>, n: Cell) {
     let obs = &cells[&n];
     let sig = signature(obs.keys.clone());
-    matched.insert(n, candidates(lib, &sig).map(|c| (resolve(lib, &c.ids, obs.tint()), c.how)));
+    matched.insert(n, candidates(lib, &sig).map(|c| (resolve(lib, &c.ids, obs), c.how)));
 }

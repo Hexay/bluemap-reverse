@@ -11,7 +11,7 @@ use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
 use bmr_world::{BlockInfo, BlockRegistry, BlockState, World};
 
-use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, WorldFace, normalized, signature, texture_ids, world_faces};
+use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, Uv, WorldFace, normalized, signature_uv, texture_ids, world_faces};
 use crate::timings::Timings;
 
 const DEBUG_Y: i32 = 70;
@@ -20,6 +20,10 @@ pub struct Entry {
     pub state: BlockState,
     /// In-cell, non-liquid faces (liquid faces depend on neighbours; handled by direction, not by key).
     pub sig: Vec<FaceKey>,
+    /// UVs of `sig`, index for index (ties among equal keys sorted by UV).
+    pub uvs: Vec<Uv>,
+    /// Dimmest block light on its faces in the debug world (≈ its own emission − 1; see `CellFaces`).
+    pub light: u8,
     /// Renders liquid: water/lava themselves, waterlogged=true, always-waterlogged plants.
     pub liquid: Option<Liquid>,
     /// Faces owned by a neighbouring cell: (offset to that cell, key relative to it).
@@ -74,7 +78,7 @@ impl Library {
             for f in &faces {
                 let (a, o) = (anchor(f), f.owner());
                 if o == a {
-                    by_anchor.entry(a).or_default().push(f, f.key_at(a));
+                    by_anchor.entry(a).or_default().push(f, a);
                 } else {
                     overhang.entry(a).or_default().push(((o.0 - a.0, o.1 - a.1, o.2 - a.2), f.key_at(o)));
                 }
@@ -120,9 +124,10 @@ impl Library {
             let default_distance = registry.get(&state.name).map_or(0, |b| default_distance(state, b));
             let tint = cell.tint();
             let liquid = cell.keys.iter().find_map(FaceKey::liquid);
-            let sig = signature(cell.keys.into_iter().filter(|k| k.liquid().is_none()).collect());
+            let light = cell.light();
+            let (sig, uvs) = signature_uv(cell.uvs);
             let full_cube = is_full_cube(&sig);
-            lib.add(Entry { state: state.clone(), sig, liquid, overhang, tint, default_distance, full_cube });
+            lib.add(Entry { state: state.clone(), sig, uvs, light, liquid, overhang, tint, default_distance, full_cube });
         }
         lib.stats.states = lib.entries.len();
         t.record("index", index_start.elapsed());
@@ -148,7 +153,7 @@ impl Library {
     pub fn from_entries(entries: Vec<Entry>, data_version: i32) -> Self {
         let mut lib = Self::empty(data_version);
         for mut e in entries {
-            e.sig = signature(std::mem::take(&mut e.sig));
+            (e.sig, e.uvs) = signature_uv(std::mem::take(&mut e.sig).into_iter().zip(std::mem::take(&mut e.uvs)).collect());
             lib.stats.overhang_faces += e.overhang.len();
             lib.stats.overhang_states += (!e.overhang.is_empty()) as usize;
             lib.add(e);
@@ -216,17 +221,6 @@ impl Library {
 
     pub fn exact_normalized(&self, norm: &[FaceKey]) -> Option<&[usize]> {
         self.exact_norm.get(norm).map(Vec::as_slice)
-    }
-
-    /// Groups of 2+ states BlueMap renders identically (faces, overhang, liquid, tint): no tile tells them apart.
-    pub fn lookalikes(&self) -> Vec<Vec<usize>> {
-        let mut groups: FxHashMap<_, Vec<usize>> = FxHashMap::default();
-        for (i, e) in self.entries.iter().enumerate() {
-            let mut overhang = e.overhang.clone();
-            overhang.sort();
-            groups.entry((&e.sig, overhang, e.liquid, e.tint)).or_default().push(i);
-        }
-        groups.into_values().filter(|g| g.len() > 1).collect()
     }
 
     /// Entries whose signature uses every texture in `textures` (ids ascending).

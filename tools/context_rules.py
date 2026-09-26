@@ -35,6 +35,9 @@ class Blocks(dict):
         super().__init__()
         self.full = full
         self.defaults = defaults
+        # (pos, name, props) placed after everything else, in order: their neighbour updates make the game
+        # compute states setblock skips (a door's `powered`, a note block's instrument)
+        self.late: list[tuple] = []
 
     def name(self, p):
         b = self.get(p)

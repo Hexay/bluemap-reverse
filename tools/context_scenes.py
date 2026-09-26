@@ -200,6 +200,50 @@ def pool(w: Blocks, rng: random.Random, x0, z0):
                 w[(x, Y0, z)] = [name, {"waterlogged": "true"} if name not in ("seagrass", "horn_coral_block") else {}]
 
 
+def powered(w: Blocks, rng: random.Random, x0, z0):
+    """Doors, trapdoors, gates, heads and note blocks, most next to a redstone source placed afterwards."""
+    sources = [None, ("redstone_block", {}), ("lever", {"face": "floor", "powered": "true"}),
+               ("redstone_torch", {"lit": "true"})]
+    for x in range(x0 + 1, x0 + SIZE - 1, 3):
+        for z in range(z0 + 1, z0 + SIZE - 1, 3):
+            kind = rng.choice(["door", "trapdoor", "gate", "head", "note"])
+            f = rng.choice(FACINGS)
+            p = (x, Y0, z)
+            if kind == "door":
+                props = {"facing": f, "hinge": "left", "open": "false", "powered": "false"}
+                w[p] = ["oak_door", {**props, "half": "lower"}]
+                w[step(p, (0, 1, 0))] = ["oak_door", {**props, "half": "upper"}]
+            elif kind == "trapdoor":
+                w[p] = ["spruce_trapdoor", {"facing": f, "half": "bottom", "open": "false", "powered": "false", "waterlogged": "false"}]
+            elif kind == "gate":
+                w[p] = ["birch_fence_gate", {"facing": f, "in_wall": "false", "open": "false", "powered": "false"}]
+            elif kind == "head":
+                w[p] = ["zombie_head", {"rotation": str(rng.randrange(16)), "powered": "false"}]
+            else:
+                w[p] = ["note_block", {"instrument": "harp", "note": "0", "powered": "false"}]
+            source = rng.choice(sources)
+            if source:
+                w.late.append((step(p, rng.choice(FACINGS)), *source))
+
+
+def note_blocks(w: Blocks, rng: random.Random, x0, z0):
+    """Note blocks on assorted materials, some with a mob head on top (the head sets the instrument)."""
+    below = ["oak_planks", "stone", "glass", "white_wool", "gold_block", "clay", "packed_ice", "bone_block",
+             "iron_block", "soul_sand", "pumpkin", "emerald_block", "hay_block", "glowstone", "copper_block",
+             "dirt", "sandstone", "bricks", "sand", "exposed_cut_copper"]
+    heads = ["zombie_head", "skeleton_skull", "creeper_head", "piglin_head", "dragon_head"]
+    for x in range(x0, x0 + SIZE, 2):
+        for z in range(z0, z0 + SIZE, 2):
+            w[(x, Y0, z)] = [rng.choice(below), {}]
+            w[(x, Y0 + 1, z)] = ["note_block", {"instrument": "harp", "note": "0", "powered": "false"}]
+            top = (x, Y0 + 2, z)
+            if rng.random() < 0.3:
+                w.late.append((top, rng.choice(heads), {"rotation": "0", "powered": "false"}))
+            else:
+                # a neighbour update makes the note block read the block below
+                w.late += [(top, "stone", {}), (top, "air", {})]
+
+
 def jumble(w: Blocks, rng: random.Random, x0, z0, choose):
     """Random blocks packed with stone, 3 high: `choose(rng)` → (name, props)."""
     for x, z in cells(x0, z0):

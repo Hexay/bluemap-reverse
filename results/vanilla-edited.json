@@ -4,23 +4,23 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29069092,
+    "exact": 29069096,
     "name": 29072156
   },
   "occupied": {
     "total": 10528628,
-    "exact": 7747224,
+    "exact": 7747228,
     "name": 7750288
   },
   "rendered": {
     "total": 224149,
-    "exact": 221052,
+    "exact": 221056,
     "name": 224101
   },
   "rendered_alike": 224096,
   "exposed": {
     "total": 420694,
-    "exact": 363685,
+    "exact": 363688,
     "name": 363774
   },
   "solid": {

@@ -2,10 +2,14 @@
 //! `candidates` (cacheable per signature) returns every equally good entry; `resolve` picks one using the
 //! observed tint (redstone power) and closeness to the default state.
 
+use std::cmp::Reverse;
 use std::collections::BTreeSet;
 
-use crate::face::{FaceKey, Tex, close, corner_aligned, normalized};
-use crate::library::Library;
+use rustc_hash::FxHashMap;
+
+use crate::face::{CellFaces, FaceKey, Tex, Uv, close, corner_aligned, normalized};
+use crate::library::{Entry, Library};
+use crate::lookalike::{light_decides, uv_decides};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum How {
@@ -81,11 +85,22 @@ fn partial(lib: &Library, sig: &[FaceKey], textures: BTreeSet<Tex>, strict: bool
     Some(Candidates { ids, how: How::Partial })
 }
 
-/// Pick among equally good candidates: nearest library tint when tints tell them apart, then fewest
-/// properties off the default state, then lowest id.
-pub fn resolve(lib: &Library, ids: &[usize], tint: Option<[u8; 3]>) -> usize {
+/// Pick among equally good candidates (same faces): nearest library tint when tints tell them apart, then
+/// most faces whose UVs agree (door hinges, glazed terracotta), then nearest own light (lit ores), each
+/// only where it decides (see lookalike.rs), then fewest properties off the default state, then lowest id.
+pub fn resolve(lib: &Library, ids: &[usize], obs: &CellFaces) -> usize {
+    if let [id] = ids {
+        return *id;
+    }
     let tints: BTreeSet<[u8; 3]> = ids.iter().filter_map(|&id| lib.entries[id].tint).collect();
-    let by_tint = tint.filter(|_| tints.len() > 1);
+    let by_tint = obs.tint().filter(|_| tints.len() > 1);
+    let mut seen: FxHashMap<(FaceKey, Uv), u32> = FxHashMap::default();
+    if uv_decides(lib, ids) {
+        for &p in &obs.uvs {
+            *seen.entry(p).or_default() += 1;
+        }
+    }
+    let light = light_decides(lib, ids).then(|| obs.light());
     *ids.iter()
         .min_by_key(|&&id| {
             let e = &lib.entries[id];
@@ -93,9 +108,21 @@ pub fn resolve(lib: &Library, ids: &[usize], tint: Option<[u8; 3]>) -> usize {
                 (Some(o), Some(t)) => (0..3).map(|a| (o[a] as i32 - t[a] as i32).pow(2)).sum::<i32>(),
                 _ => 0,
             };
-            (tint_err, e.default_distance, id)
+            let uv = if seen.is_empty() { 0 } else { uv_agreement(e, &seen) };
+            (tint_err, Reverse(uv), light.map_or(0, |l| l.abs_diff(e.light)), e.default_distance, id)
         })
         .expect("non-empty candidates")
+}
+
+/// Faces of `e` observed with the same UVs (multiset intersection).
+fn uv_agreement(e: &Entry, seen: &FxHashMap<(FaceKey, Uv), u32>) -> u32 {
+    let mut used: FxHashMap<(FaceKey, Uv), u32> = FxHashMap::default();
+    let mut fits = |p: (FaceKey, Uv)| {
+        let n = used.entry(p).or_default();
+        *n += 1;
+        *n <= seen.get(&p).copied().unwrap_or(0)
+    };
+    e.sig.iter().zip(&e.uvs).map(|(k, uv)| (*k, *uv)).filter(|&p| fits(p)).count() as u32
 }
 
 /// Offset jitter only matters for small plant-like models; bigger signatures skip the O(n²) pairing.

@@ -4,33 +4,33 @@
   "columns": 173056,
   "all": {
     "total": 66453504,
-    "exact": 66259444,
-    "name": 66269760
+    "exact": 66269317,
+    "name": 66277873
   },
   "occupied": {
-    "total": 217554,
-    "exact": 23494,
+    "total": 209441,
+    "exact": 25254,
     "name": 33810
   },
   "rendered": {
     "total": 35653,
-    "exact": 23494,
+    "exact": 25254,
     "name": 33810
   },
   "rendered_alike": 35081,
   "exposed": {
     "total": 208776,
-    "exact": 23494,
+    "exact": 25254,
     "name": 33810
   },
   "solid": {
     "original": 208776,
-    "reconstructed": 44258,
-    "both": 35480
+    "reconstructed": 36084,
+    "both": 35419
   },
   "surface": {
     "total": 173056,
-    "hits": 23494
+    "hits": 25254
   },
   "biomes": {
     "total": 1038336,
@@ -40,32 +40,27 @@
     {
       "original": "minecraft:barrier[waterlogged=false]",
       "reconstructed": "minecraft:air",
-      "count": 172991
+      "count": 173052
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 4290
+      "count": 325
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:stone",
-      "count": 3380
+      "count": 269
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 896
+      "count": 42
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:bedrock",
-      "count": 198
-    },
-    {
-      "original": "minecraft:barrier[waterlogged=false]",
-      "reconstructed": "minecraft:water[level=0]",
-      "count": 64
+      "count": 15
     },
     {
       "original": "minecraft:air",
@@ -73,93 +68,98 @@
       "count": 14
     },
     {
-      "original": "minecraft:acacia_button[face=ceiling,facing=east,powered=false]",
-      "reconstructed": "minecraft:acacia_button[face=ceiling,facing=west,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=ceiling,facing=east,powered=true]",
-      "reconstructed": "minecraft:acacia_button[face=ceiling,facing=west,powered=true]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=ceiling,facing=south,powered=false]",
-      "reconstructed": "minecraft:acacia_button[face=ceiling,facing=north,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=ceiling,facing=south,powered=true]",
-      "reconstructed": "minecraft:acacia_button[face=ceiling,facing=north,powered=true]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=floor,facing=east,powered=false]",
-      "reconstructed": "minecraft:acacia_button[face=floor,facing=west,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=floor,facing=east,powered=true]",
-      "reconstructed": "minecraft:acacia_button[face=floor,facing=west,powered=true]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=floor,facing=south,powered=false]",
-      "reconstructed": "minecraft:acacia_button[face=floor,facing=north,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_button[face=floor,facing=south,powered=true]",
-      "reconstructed": "minecraft:acacia_button[face=floor,facing=north,powered=true]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=false,powered=false]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
-      "count": 1
+      "original": "minecraft:barrier[waterlogged=false]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 3
     },
     {
       "original": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=false,powered=true]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=true,powered=false]",
-      "reconstructed": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=false,powered=false]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=false,powered=false]",
       "count": 1
     },
     {
       "original": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=true,powered=true]",
-      "reconstructed": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=false,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=false,powered=false]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=lower,hinge=left,open=true,powered=false]",
       "count": 1
     },
     {
       "original": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=false,powered=true]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=true,powered=false]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=false,powered=false]",
       "count": 1
     },
     {
       "original": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=true,powered=true]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:acacia_door[facing=east,half=upper,hinge=left,open=false,powered=false]",
-      "reconstructed": "minecraft:acacia_door[facing=north,half=upper,hinge=left,open=true,powered=false]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=lower,hinge=right,open=true,powered=false]",
       "count": 1
     },
     {
       "original": "minecraft:acacia_door[facing=east,half=upper,hinge=left,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=upper,hinge=left,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=east,half=upper,hinge=left,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=upper,hinge=left,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=east,half=upper,hinge=right,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=upper,hinge=right,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=east,half=upper,hinge=right,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=east,half=upper,hinge=right,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=lower,hinge=right,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=right,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=lower,hinge=right,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=lower,hinge=right,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=upper,hinge=left,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=upper,hinge=left,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=upper,hinge=left,open=true,powered=true]",
       "reconstructed": "minecraft:acacia_door[facing=north,half=upper,hinge=left,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=upper,hinge=right,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=upper,hinge=right,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=north,half=upper,hinge=right,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=north,half=upper,hinge=right,open=true,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=false,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=false,powered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=true,powered=true]",
+      "reconstructed": "minecraft:acacia_door[facing=south,half=lower,hinge=left,open=true,powered=false]",
       "count": 1
     }
   ],

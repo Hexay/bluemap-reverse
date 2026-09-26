@@ -6,6 +6,8 @@
 
 use bmr_invert::evidence::Evidence;
 use bmr_invert::face::Liquid;
+
+use crate::profile::Profile;
 use rustc_hash::FxHashMap;
 
 pub type Column = (i32, i32);
@@ -13,10 +15,7 @@ pub type Column = (i32, i32);
 pub struct Bounds {
     /// Every rendered column.
     pub columns: Vec<Column>,
-    pub min_y: i32,
-    pub max_y: i32,
-    /// BlueMap `remove-caves-below-y` of the map (not published by the site; default 55).
-    pub cave_y: i32,
+    pub profile: Profile,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,21 +88,54 @@ pub fn evidence_by_column(ev: &Evidence) -> EvidenceByColumn {
 pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn, bounds: &Bounds) -> Vec<Gap> {
     let mut out = Vec::new();
     let empty = ColumnEvidence::default();
+    let p = &bounds.profile;
     for &col in &bounds.columns {
         let mut ys = observed_ys.get(&col).cloned().unwrap_or_default();
         ys.sort_unstable_by(|a, b| b.cmp(a));
         let ce = by_col.get(&col).unwrap_or(&empty);
-        let mut cursor = bounds.max_y;
-        for y in ys.into_iter().chain([bounds.min_y - 1]) {
+        let mut cursor = p.max_y;
+        for y in ys.into_iter().chain([p.min_y - 1]) {
             if y < cursor {
-                // open to the sky: anything in it would show its top face
-                let fill = if cursor == bounds.max_y { Fill::Air } else { classify(ce, y + 1, cursor) };
-                out.push(Gap { column: col, ylo: y + 1, yhi: cursor, fill, floored: y >= bounds.min_y });
+                let parts = split_at_mask(y + 1, cursor, p.mask);
+                // rock just under the mask carries on into it; open space goes on up to the roof's underside
+                let rock_under = parts.iter().find(|(_, hi)| p.mask.is_some_and(|(mlo, _)| *hi == mlo - 1)).map_or(
+                    true,
+                    |&(lo, hi)| classify(ce, lo, hi) == Fill::Solid,
+                );
+                for (ylo, yhi) in parts {
+                    let floored = ylo > p.min_y || y >= p.min_y;
+                    let mut push = |ylo: i32, yhi: i32, fill| {
+                        if ylo <= yhi {
+                            out.push(Gap { column: col, ylo, yhi, fill, floored });
+                        }
+                    };
+                    if p.masked(ylo) {
+                        // left out of the render (nether roof): its drawn faces say nothing
+                        let roof = if rock_under { ylo } else { p.roof_from.max(ylo) };
+                        push(ylo, roof - 1, Fill::Air);
+                        push(roof, yhi, Fill::Solid);
+                    } else if yhi == p.max_y {
+                        // open to the sky: anything in it would show its top face
+                        push(ylo, yhi, Fill::Air);
+                    } else {
+                        push(ylo, yhi, classify(ce, ylo, yhi));
+                    }
+                }
             }
             cursor = cursor.min(y - 1);
         }
     }
     out
+}
+
+/// [ylo, yhi] cut into the parts below, inside and above `mask`, top-down.
+fn split_at_mask(ylo: i32, yhi: i32, mask: Option<(i32, i32)>) -> Vec<(i32, i32)> {
+    let Some((mlo, mhi)) = mask else { return vec![(ylo, yhi)] };
+    [(mhi + 1, yhi), (mlo.max(ylo), mhi.min(yhi)), (ylo, mlo - 1)]
+        .into_iter()
+        .map(|(lo, hi)| (lo.max(ylo), hi.min(yhi)))
+        .filter(|(lo, hi)| lo <= hi)
+        .collect()
 }
 
 /// Column offsets on the square ring at Chebyshev distance `r`.

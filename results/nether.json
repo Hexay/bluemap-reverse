@@ -1,0 +1,189 @@
+{
+  "chunks": 361,
+  "partial_chunks_skipped": 1364,
+  "columns": 82944,
+  "all": {
+    "total": 21233664,
+    "exact": 20147588,
+    "name": 20147617
+  },
+  "occupied": {
+    "total": 6065660,
+    "exact": 4979584,
+    "name": 4979613
+  },
+  "rendered": {
+    "total": 520308,
+    "exact": 520279,
+    "name": 520307
+  },
+  "rendered_alike": 520279,
+  "exposed": {
+    "total": 530962,
+    "exact": 467044,
+    "name": 467072
+  },
+  "solid": {
+    "original": 5847413,
+    "reconstructed": 5918128,
+    "both": 5699881
+  },
+  "surface": {
+    "total": 82944,
+    "hits": 82944
+  },
+  "biomes": {
+    "total": 331776,
+    "hits": 0
+  },
+  "confusions": [
+    {
+      "original": "minecraft:air",
+      "reconstructed": "minecraft:netherrack",
+      "count": 216442
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:air",
+      "count": 116093
+    },
+    {
+      "original": "minecraft:basalt[axis=y]",
+      "reconstructed": "minecraft:netherrack",
+      "count": 108678
+    },
+    {
+      "original": "minecraft:bedrock",
+      "reconstructed": "minecraft:netherrack",
+      "count": 90201
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:bedrock",
+      "count": 73930
+    },
+    {
+      "original": "minecraft:soul_sand",
+      "reconstructed": "minecraft:netherrack",
+      "count": 68865
+    },
+    {
+      "original": "minecraft:soul_soil",
+      "reconstructed": "minecraft:netherrack",
+      "count": 59182
+    },
+    {
+      "original": "minecraft:blackstone",
+      "reconstructed": "minecraft:netherrack",
+      "count": 58559
+    },
+    {
+      "original": "minecraft:basalt[axis=y]",
+      "reconstructed": "minecraft:blackstone",
+      "count": 30161
+    },
+    {
+      "original": "minecraft:gravel",
+      "reconstructed": "minecraft:netherrack",
+      "count": 29275
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:blackstone",
+      "count": 27967
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:soul_sand",
+      "count": 24773
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:soul_soil",
+      "count": 23827
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:basalt[axis=y]",
+      "count": 23378
+    },
+    {
+      "original": "minecraft:blackstone",
+      "reconstructed": "minecraft:basalt[axis=y]",
+      "count": 21862
+    },
+    {
+      "original": "minecraft:nether_quartz_ore",
+      "reconstructed": "minecraft:netherrack",
+      "count": 20889
+    },
+    {
+      "original": "minecraft:magma_block",
+      "reconstructed": "minecraft:netherrack",
+      "count": 16370
+    },
+    {
+      "original": "minecraft:soul_soil",
+      "reconstructed": "minecraft:air",
+      "count": 14849
+    },
+    {
+      "original": "minecraft:soul_sand",
+      "reconstructed": "minecraft:air",
+      "count": 12194
+    },
+    {
+      "original": "minecraft:soul_soil",
+      "reconstructed": "minecraft:bedrock",
+      "count": 8746
+    },
+    {
+      "original": "minecraft:soul_sand",
+      "reconstructed": "minecraft:bedrock",
+      "count": 8732
+    },
+    {
+      "original": "minecraft:nether_gold_ore",
+      "reconstructed": "minecraft:netherrack",
+      "count": 7157
+    },
+    {
+      "original": "minecraft:basalt[axis=y]",
+      "reconstructed": "minecraft:bedrock",
+      "count": 3752
+    },
+    {
+      "original": "minecraft:basalt[axis=y]",
+      "reconstructed": "minecraft:air",
+      "count": 2391
+    },
+    {
+      "original": "minecraft:bedrock",
+      "reconstructed": "minecraft:basalt[axis=y]",
+      "count": 2226
+    }
+  ],
+  "rendered_confusions": [
+    {
+      "original": "minecraft:lava[level=8]",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 18
+    },
+    {
+      "original": "minecraft:lava[level=1]",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 7
+    },
+    {
+      "original": "minecraft:lava[level=2]",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:spawner",
+      "reconstructed": "minecraft:air",
+      "count": 1
+    }
+  ],
+  "samples": []
+}

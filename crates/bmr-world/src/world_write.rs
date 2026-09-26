@@ -73,6 +73,35 @@ impl WorldWriter {
             }
             fs::write(&path, bytes).with_context(|| path.display().to_string())?;
         }
+        Self::for_dimension(out, template, dimension, registry, style)
+    }
+
+    /// Adds `dimension` to a world `create` made from the same template (one world, several dimensions).
+    /// Refuses a dimension that already has chunks.
+    pub fn extend(
+        out: &Path,
+        template: &[(String, Vec<u8>)],
+        dimension: &str,
+        registry: Arc<BlockRegistry>,
+        style: PaletteStyle,
+    ) -> Result<Self> {
+        if !out.join("level.dat").exists() {
+            bail!("{} has no world to add {dimension} to", out.display());
+        }
+        let writer = Self::for_dimension(out, template, dimension, registry, style)?;
+        if fs::read_dir(&writer.region_dir)?.next().is_some() {
+            bail!("{} already has chunks for {dimension}", out.display());
+        }
+        Ok(writer)
+    }
+
+    fn for_dimension(
+        out: &Path,
+        template: &[(String, Vec<u8>)],
+        dimension: &str,
+        registry: Arc<BlockRegistry>,
+        style: PaletteStyle,
+    ) -> Result<Self> {
         let modern = template.iter().any(|(rel, _)| rel.starts_with("dimensions/"));
         let region_dir = region_dir(out, dimension, modern);
         fs::create_dir_all(&region_dir)?;

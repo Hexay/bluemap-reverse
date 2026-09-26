@@ -29,6 +29,9 @@ pub struct MapSettings {
     pub start_pos: [f64; 2],
     #[serde(default)]
     pub ambient_light: f32,
+    /// RGBA 0..1; BlueMap's per-dimension defaults tell the dimension apart when the map id does not.
+    #[serde(default)]
+    pub sky_color: Option<[f32; 4]>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -184,6 +184,18 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
   `overhang::strip_foreign`; interior faces with a cullface (candle on a cake) by the last-resort
   `candidates_cullable`; a gap reaching the build limit is always air.
 
+## Dimensions (2026-09-26)
+
+- Sites publish neither a map's dimension nor its render settings. `bmr pull` puts every map into its
+  dimension of one world (map id, else BlueMap's default sky colour: `pull/plan.rs`) and assumes BlueMap's
+  default map for it (`bmr-fill/src/profile.rs`): overworld caves hidden below y 55; nether `render-mask`
+  hides y 90..127 (the roof) and nothing is cave-culled; end is fully drawn.
+- The nether mask is not air: drawn faces next to it say nothing. Rock under the mask continues up into it;
+  over open space the roof starts at y 108 (measured on the `nether` fixture: 88% of those cells right vs ~55%
+  all-rock). Soul sand/soil are ~4 deep over netherrack; basalt/blackstone run deep. End bedrock is always
+  built (pillars), never a terrain surface.
+- `nether` fixture: 82% occupied, 99.99% rendered; `end` 97.6% (misses: obsidian inside pillars).
+
 ## Open questions — settle with quick experiments in phase 0/1
 
 - Debug world level-type string on a 26.3 server.

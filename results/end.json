@@ -1,0 +1,48 @@
+{
+  "chunks": 361,
+  "partial_chunks_skipped": 1364,
+  "columns": 82944,
+  "all": {
+    "total": 21233664,
+    "exact": 21216222,
+    "name": 21216222
+  },
+  "occupied": {
+    "total": 729300,
+    "exact": 711858,
+    "name": 711858
+  },
+  "rendered": {
+    "total": 64687,
+    "exact": 64687,
+    "name": 64687
+  },
+  "rendered_alike": 64687,
+  "exposed": {
+    "total": 64685,
+    "exact": 64685,
+    "name": 64685
+  },
+  "solid": {
+    "original": 729300,
+    "reconstructed": 729300,
+    "both": 729300
+  },
+  "surface": {
+    "total": 22864,
+    "hits": 22864
+  },
+  "biomes": {
+    "total": 331776,
+    "hits": 0
+  },
+  "confusions": [
+    {
+      "original": "minecraft:obsidian",
+      "reconstructed": "minecraft:end_stone",
+      "count": 17442
+    }
+  ],
+  "rendered_confusions": [],
+  "samples": []
+}

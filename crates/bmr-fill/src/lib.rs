@@ -7,6 +7,7 @@ mod liquid;
 mod material;
 mod regen;
 mod note_block;
+mod profile;
 mod redstone;
 mod rules;
 mod stairs;
@@ -24,7 +25,8 @@ use rayon::prelude::*;
 
 pub use columns::{Bounds, Column};
 use columns::{Fill, Gap, evidence_by_column, gaps};
-use material::{SolidGap, default_block, solid_segments};
+use material::{SolidGap, solid_segments};
+pub use profile::{Kind, Profile};
 pub use regen::RegenWorld;
 
 /// Inclusive y run of one interned state within a column.
@@ -104,15 +106,13 @@ pub fn complete(
         Some(regen) => {
             let water = table.intern(&liquid_states[&Liquid::Water]);
             let lava = table.intern(&liquid_states[&Liquid::Lava]);
-            let priors: FxHashMap<&str, StateId> = ["minecraft:bedrock", "minecraft:deepslate", "minecraft:stone"]
-                .into_iter()
-                .map(|n| (n, table.intern(&named(n))))
-                .collect();
+            let profile = bounds.profile;
+            let priors: FxHashMap<&str, StateId> =
+                profile.default_blocks().iter().map(|&n| (n, table.intern(&named(n)))).collect();
             let full: Vec<bool> =
                 table.iter().map(|(_, s)| lib.find(s).is_some_and(|e| lib.entries[e].full_cube)).collect();
             let air: Vec<bool> = table.iter().map(|(id, _)| table.is_air(id)).collect();
-            let min_y = bounds.min_y;
-            let prior = move |y: i32| priors[default_block(y, min_y)];
+            let prior = move |y: i32| priors[profile.default_block(y)];
             let liquid = move |l: Liquid| if l == Liquid::Water { water } else { lava };
             let cx = regen::Context {
                 regen,
@@ -121,7 +121,7 @@ pub fn complete(
                 air: &air,
                 prior: &prior,
                 liquid: &liquid,
-                cave_y: bounds.cave_y,
+                cave_y: bounds.profile.cave_y,
             };
             all_gaps
                 .par_iter()
@@ -194,7 +194,7 @@ fn prior_segments(
     }
     let full_cube_at =
         |c: Cell| inv.blocks.get(&c).filter(|&&e| lib.entries[e].full_cube).map(|&e| lib.entries[e].state.clone());
-    for r in solid_segments(&solid, bounds.min_y, registry, &full_cube_at) {
+    for r in solid_segments(&solid, &bounds.profile, registry, &full_cube_at) {
         segments.push(Segment { column: r.column, ylo: r.ylo, yhi: r.yhi, state: table.intern(&r.state) });
     }
     segments

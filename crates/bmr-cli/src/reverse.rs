@@ -6,6 +6,7 @@ use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_invert::Library;
+use bmr_fill::Profile;
 use bmr_invert::timings::Timings;
 
 use crate::copy_world::DEFAULT_TEMPLATE;
@@ -53,30 +54,41 @@ pub struct OptionArgs {
     /// Halo around each region window, in blocks
     #[arg(long, default_value_t = 32)]
     halo: i32,
-    /// Dimension build height (overworld default)
-    #[arg(long, default_value_t = -64, allow_hyphen_values = true)]
-    min_y: i32,
-    #[arg(long, default_value_t = 319)]
-    max_y: i32,
-    /// The map's BlueMap `remove-caves-below-y` (not published by the site)
-    #[arg(long, default_value_t = 55, allow_hyphen_values = true)]
-    cave_y: i32,
+    /// Build height [default: the dimension's]
+    #[arg(long, allow_hyphen_values = true)]
+    min_y: Option<i32>,
+    #[arg(long, allow_hyphen_values = true)]
+    max_y: Option<i32>,
+    /// The map's BlueMap `remove-caves-below-y`, not published by the site [default: BlueMap's for the
+    /// dimension: 55 overworld, none nether/end]
+    #[arg(long, allow_hyphen_values = true)]
+    cave_y: Option<i32>,
+    /// Heights the map's `render-mask` leaves out, `lo,hi` or `none` [default: BlueMap's for the dimension:
+    /// 90,127 in the nether]
+    #[arg(long)]
+    mask_y: Option<String>,
     /// Print this many most frequent unmatched texture sets per window
     #[arg(long, default_value_t = 5)]
     show_unmatched: usize,
 }
 
 impl OptionArgs {
-    pub fn options(&self) -> Options {
-        Options {
-            no_fill: self.no_fill,
-            no_window: self.no_window,
-            halo: self.halo,
-            min_y: self.min_y,
-            max_y: self.max_y,
-            cave_y: self.cave_y,
-            show_unmatched: self.show_unmatched,
+    /// BlueMap's default map for `dimension`, with any heights given on the command line.
+    pub fn options(&self, dimension: &str) -> Result<Options> {
+        let mut profile = Profile::for_dimension(dimension);
+        profile.min_y = self.min_y.unwrap_or(profile.min_y);
+        profile.max_y = self.max_y.unwrap_or(profile.max_y);
+        profile.cave_y = self.cave_y.unwrap_or(profile.cave_y);
+        if let Some(m) = &self.mask_y {
+            profile.mask = match m.as_str() {
+                "none" => None,
+                _ => {
+                    let (lo, hi) = m.split_once(',').context("--mask-y takes lo,hi or none")?;
+                    Some((lo.trim().parse()?, hi.trim().parse()?))
+                }
+            };
         }
+        Ok(Options { no_fill: self.no_fill, no_window: self.no_window, halo: self.halo, profile, show_unmatched: self.show_unmatched })
     }
 }
 
@@ -84,7 +96,8 @@ pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
     let registry = t.time("registry", || a.world_args.registry())?.context("reverse needs the block registry")?;
-    let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
+    // the debug world lives in the overworld whatever dimension is being reversed
+    let lib_world = bmr_world::World::open(&a.library_world, "minecraft:overworld", Some(registry.clone()))?;
     let style = lib_world.palette_style()?.context("library world has no palettes")?;
     let lib = t.time("library", || -> Result<Library> {
         let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
@@ -96,7 +109,7 @@ pub fn run(a: Args) -> Result<()> {
     let map = a.mirror.open()?;
     let regen = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
     let template = bmr_world::read_template(&a.template)?;
-    let opts = a.opts.options();
+    let opts = a.opts.options(&a.world_args.dimension)?;
     let inputs = Inputs {
         map: &map,
         lib: &lib,
@@ -106,6 +119,7 @@ pub fn run(a: Args) -> Result<()> {
         dimension: &a.world_args.dimension,
         regen: regen.as_ref(),
         out: &a.out,
+        extend: false,
         opts: &opts,
     };
     let (totals, wt) = reconstruct(&inputs)?;

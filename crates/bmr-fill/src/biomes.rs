@@ -1,10 +1,14 @@
-//! Biomes without a seed. Minecraft stores one biome per 4×4×4 cell. The nether's are told by what grows on
-//! them (nylium, stems, soul sand, basalt), voted over each cell and its neighbours; the end's by distance
-//! from the main island. Overworld biomes need tints and stay at the chunk default.
+//! Biomes without a seed. Minecraft stores one biome per 4×4×4 cell. Overworld biomes are told by the grass,
+//! foliage and water tints BlueMap drew (nearest entry of the pack's learned table, per 4×4 column); the
+//! nether's by what grows there (nylium, stems, soul sand, basalt), voted over each cell and its neighbours;
+//! the end's by distance from the main island.
+
+use std::collections::VecDeque;
 
 use rustc_hash::FxHashMap;
 
 use bmr_invert::face::Cell;
+use bmr_invert::tints::{BiomeTint, TintSum, nearest};
 use bmr_world::BlockState;
 
 use crate::profile::{Kind, Profile};
@@ -33,59 +37,95 @@ const MARKERS: [(&str, usize, f32); 14] = [
 
 /// Radius of the main end island's biome (vanilla: `the_end` within 1024 blocks of the origin).
 const END_ISLAND: i64 = 1024;
+/// How far (in 4-block columns) an overworld column without tints looks for a tinted one.
+const SPREAD: i32 = 8;
 
 pub struct Biomes {
     kind: Kind,
     /// Nether: winning biome per 4×4×4 cell with evidence nearby.
-    decided: FxHashMap<Cell, &'static str>,
+    cells: FxHashMap<Cell, &'static str>,
+    /// Overworld: biome per 4×4 column, spread from the tinted ones.
+    columns: FxHashMap<(i32, i32), String>,
 }
 
 impl Biomes {
-    pub fn from_blocks(blocks: &FxHashMap<Cell, BlockState>, profile: &Profile) -> Self {
-        let mut decided = FxHashMap::default();
-        if profile.kind == Kind::Nether {
-            let mut votes: FxHashMap<Cell, [f32; 5]> = FxHashMap::default();
-            for (&(x, y, z), s) in blocks {
-                let name = s.name.trim_start_matches("minecraft:");
-                if let Some(&(_, biome, w)) = MARKERS.iter().find(|(m, _, _)| name.contains(m)) {
-                    votes.entry((x >> 2, y >> 2, z >> 2)).or_default()[biome] += w;
-                }
-            }
-            for &(cx, cy, cz) in votes.keys() {
-                for n in neighbours((cx, cy, cz)) {
-                    decided.entry(n).or_insert_with(|| {
-                        let mut sum = [0f32; 5];
-                        for m in neighbours(n) {
-                            if let Some(v) = votes.get(&m) {
-                                (0..5).for_each(|i| sum[i] += v[i]);
-                            }
-                        }
-                        NETHER[(0..5).max_by(|&a, &b| sum[a].total_cmp(&sum[b])).unwrap_or(0)]
-                    });
-                }
-            }
+    /// `tints`: what was seen per 4×4 column; `table`: the pack's biome tints (empty: overworld unknown).
+    pub fn new(blocks: &FxHashMap<Cell, BlockState>, profile: &Profile, tints: &FxHashMap<(i32, i32), TintSum>, table: &[BiomeTint]) -> Self {
+        let mut me = Self { kind: profile.kind, cells: FxHashMap::default(), columns: FxHashMap::default() };
+        match profile.kind {
+            Kind::Nether => me.cells = nether_cells(blocks),
+            Kind::Overworld if !table.is_empty() => me.columns = overworld_columns(tints, table),
+            _ => {}
         }
-        Self { kind: profile.kind, decided }
+        me
     }
 
     /// Biome of the 4×4×4 cell at cell coordinates `c`; `None` keeps the chunk's default.
-    pub fn at(&self, c @ (cx, cy, cz): Cell) -> Option<&'static str> {
+    pub fn at(&self, c @ (cx, cy, cz): Cell) -> Option<&str> {
         match self.kind {
-            Kind::Overworld => None,
+            Kind::Overworld => self.columns.get(&(cx, cz)).map(String::as_str),
             Kind::End => {
                 let (x, z) = (cx as i64 * 4, cz as i64 * 4);
                 Some(if x * x + z * z <= END_ISLAND * END_ISLAND { "minecraft:the_end" } else { "minecraft:end_highlands" })
             }
             // no evidence within a cell: the nearest decided cell straight up or down, else the commonest biome
             Kind::Nether => Some(
-                self.decided
+                self.cells
                     .get(&c)
-                    .or_else(|| (1..16).find_map(|d| self.decided.get(&(cx, cy - d, cz)).or(self.decided.get(&(cx, cy + d, cz)))))
+                    .or_else(|| (1..16).find_map(|d| self.cells.get(&(cx, cy - d, cz)).or(self.cells.get(&(cx, cy + d, cz)))))
                     .copied()
                     .unwrap_or(NETHER[0]),
             ),
         }
     }
+}
+
+fn nether_cells(blocks: &FxHashMap<Cell, BlockState>) -> FxHashMap<Cell, &'static str> {
+    let mut votes: FxHashMap<Cell, [f32; 5]> = FxHashMap::default();
+    for (&(x, y, z), s) in blocks {
+        let name = s.name.trim_start_matches("minecraft:");
+        if let Some(&(_, biome, w)) = MARKERS.iter().find(|(m, _, _)| name.contains(m)) {
+            votes.entry((x >> 2, y >> 2, z >> 2)).or_default()[biome] += w;
+        }
+    }
+    let mut decided = FxHashMap::default();
+    for &c in votes.keys() {
+        for n in neighbours(c) {
+            decided.entry(n).or_insert_with(|| {
+                let mut sum = [0f32; 5];
+                for v in neighbours(n).filter_map(|m| votes.get(&m)) {
+                    (0..5).for_each(|i| sum[i] += v[i]);
+                }
+                NETHER[(0..5).max_by(|&a, &b| sum[a].total_cmp(&sum[b])).unwrap_or(0)]
+            });
+        }
+    }
+    decided
+}
+
+/// Tinted columns take the nearest biome of `table`; the rest the nearest tinted column's, up to SPREAD away.
+fn overworld_columns(tints: &FxHashMap<(i32, i32), TintSum>, table: &[BiomeTint]) -> FxHashMap<(i32, i32), String> {
+    let mut out: FxHashMap<(i32, i32), String> = FxHashMap::default();
+    let mut queue = VecDeque::new();
+    for (&col, t) in tints {
+        if let Some(b) = nearest(table, &t.means()) {
+            out.insert(col, b.to_owned());
+            queue.push_back((col, 0));
+        }
+    }
+    while let Some(((x, z), d)) = queue.pop_front() {
+        if d == SPREAD {
+            continue;
+        }
+        let b = out[&(x, z)].clone();
+        for n in [(x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)] {
+            if !out.contains_key(&n) {
+                out.insert(n, b.clone());
+                queue.push_back((n, d + 1));
+            }
+        }
+    }
+    out
 }
 
 fn neighbours((x, y, z): Cell) -> impl Iterator<Item = Cell> {

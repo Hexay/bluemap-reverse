@@ -1,6 +1,6 @@
 """Build a bmr pack for any Minecraft + BlueMap version, unattended: download the toolchain (right Java
-from Mojang's metadata), generate reports, the debug and void-template worlds, render + mirror the debug
-world with that BlueMap, then `bmr pack build`. Resumable: finished steps are skipped (--force redoes worlds).
+from Mojang's metadata), generate reports, the debug, biomes and void-template worlds, render + mirror the
+debug and biomes worlds with that BlueMap, then `bmr pack build`. Resumable: finished steps are skipped (--force redoes worlds).
 
 Usage: py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27] [--force]
 Output: packs/bmr-mc<mc>-bluemap<bluemap>.pack
@@ -13,6 +13,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
+from gen_biomes import make as make_biomes
 from make_world import make_world
 from mirror_fixture import bmr_exe, mirror
 from paths import DEFAULT, ROOT
@@ -45,16 +46,18 @@ def main() -> None:
     with stage("worlds"), ThreadPoolExecutor() as pool:
         worlds = [pool.submit(make_world, name, args.force, tc, "2G", port)
                   for name, port in [("debug", 25601), ("template-void", 25602)]]
+        worlds.append(pool.submit(make_biomes, tc, args.force, "2G", 25603))
         for w in worlds:
             w.result()
 
     with stage("render + mirror"):
-        mirrored = tc.cache / "debug" / "settings.json"
-        if args.force or not mirrored.exists():
-            if mirror("debug", tc, force_render=args.force):
-                sys.exit("mirroring the debug world failed")
-        else:
-            print(f"ok      {mirrored.parent}")
+        for fixture in ("debug", "biomes"):
+            mirrored = tc.cache / fixture / "settings.json"
+            if args.force or not mirrored.exists():
+                if mirror(fixture, tc, force_render=args.force):
+                    sys.exit(f"mirroring the {fixture} world failed")
+            else:
+                print(f"ok      {mirrored.parent}")
 
     with stage("pack"):
         code = subprocess.call(
@@ -64,6 +67,8 @@ def main() -> None:
                 "--library-mirror", tc.cache / "debug",
                 "--library-world", tc.worlds / "debug" / "world",
                 "--template", tc.worlds / "template-void" / "world",
+                "--biome-mirror", tc.cache / "biomes",
+                "--biome-world", tc.worlds / "biomes" / "world",
                 "--blocks", tc.blocks_json,
                 "--out", tc.pack,
             ],

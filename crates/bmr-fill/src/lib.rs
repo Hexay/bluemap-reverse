@@ -20,6 +20,7 @@ use rustc_hash::FxHashMap;
 
 use bmr_invert::face::{Cell, Liquid};
 use bmr_invert::timings::Timings;
+use bmr_invert::tints::BiomeTint;
 use bmr_invert::{Inverted, Library};
 use bmr_world::{BlockRegistry, BlockState, StateId, StateTable};
 use rayon::prelude::*;
@@ -74,6 +75,7 @@ pub fn complete(
     registry: &BlockRegistry,
     bounds: &Bounds,
     regen: Option<&RegenWorld>,
+    biome_tints: &[BiomeTint],
     table: &mut StateTable,
 ) -> Filled {
     let named = |name: &str| {
@@ -158,7 +160,7 @@ pub fn complete(
         stats.adopted_from_regen =
             t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, table, &same_render));
     }
-    let biomes = t.time("biomes", || Biomes::from_blocks(&blocks, &bounds.profile));
+    let biomes = t.time("biomes", || Biomes::new(&blocks, &bounds.profile, &inv.tints, biome_tints));
     stats.timings = t;
     Filled { blocks, segments, biomes, stats }
 }

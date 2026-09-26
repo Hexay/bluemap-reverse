@@ -17,6 +17,7 @@ use crate::library::Library;
 use crate::matcher::{Candidates, How, candidates, candidates_cullable, resolve};
 use crate::overhang::{self, Matched};
 use crate::timings::Timings;
+use crate::tints::{self, TintSum};
 
 pub struct Inverted {
     /// Matched non-liquid blocks → library entry (waterlogged already resolved).
@@ -24,6 +25,8 @@ pub struct Inverted {
     /// Cells showing nothing but liquid.
     pub liquids: FxHashMap<Cell, Liquid>,
     pub evidence: Evidence,
+    /// Biome tints seen per 4×4 column cell (x >> 2, z >> 2).
+    pub tints: Tints,
     pub stats: Stats,
 }
 
@@ -52,7 +55,7 @@ pub fn map_textures(map: &LocalMap) -> Result<Vec<Tex>> {
 /// tile set lack neighbours, so only use results at least one cell inside it.
 pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) -> Result<Inverted> {
     let mut t = Timings::default();
-    let cells = t.time("gather", || gather(map, tiles, textures))?;
+    let (cells, tints) = t.time("gather", || gather(map, tiles, textures))?;
     let (mut solid_faces, liquid_faces) = t.time("split_liquid", || split_liquid(cells));
     let mut matched = t.time("match", || match_all(lib, &solid_faces));
     let mut stats = Stats::default();
@@ -100,7 +103,7 @@ pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) 
         }
     }
     stats.timings = t;
-    Ok(Inverted { blocks, liquids, evidence, stats })
+    Ok(Inverted { blocks, liquids, evidence, tints, stats })
 }
 
 fn split_liquid(cells: FxHashMap<Cell, CellFaces>) -> (FxHashMap<Cell, CellFaces>, FxHashMap<Cell, Vec<FaceKey>>) {
@@ -126,25 +129,35 @@ fn split_liquid(cells: FxHashMap<Cell, CellFaces>) -> (FxHashMap<Cell, CellFaces
 
 /// Every cell BlueMap drew at least one face for (the "visible" set for scoring).
 pub fn rendered_cells(map: &LocalMap) -> Result<FxHashSet<Cell>> {
-    Ok(gather(map, &map.tiles(0), &map_textures(map)?)?.into_keys().collect())
+    Ok(gather(map, &map.tiles(0), &map_textures(map)?)?.0.into_keys().collect())
 }
 
-fn gather(map: &LocalMap, tiles: &[Tile], names: &[Tex]) -> Result<FxHashMap<Cell, CellFaces>> {
+type Tints = FxHashMap<(i32, i32), TintSum>;
+
+/// Faces per cell, and biome tints per 4×4 column cell.
+fn gather(map: &LocalMap, tiles: &[Tile], names: &[Tex]) -> Result<(FxHashMap<Cell, CellFaces>, Tints)> {
     let per_tile = tiles
         .par_iter()
         .map(|&t| -> Result<_> {
             let tile = bmr_prbm::parse(&map.tile_bytes(0, t)?)?;
-            Ok(faces_by_cell(&world_faces(&tile, map.hires_origin(t), names)))
+            let faces = world_faces(&tile, map.hires_origin(t), names);
+            let mut tints = Tints::default();
+            tints::collect(&faces, &mut tints);
+            Ok((faces_by_cell(&faces), tints))
         })
         .collect::<Result<Vec<_>>>()?;
-    let total: usize = per_tile.iter().map(|t| t.len()).sum();
+    let total: usize = per_tile.iter().map(|t| t.0.len()).sum();
     let mut cells: FxHashMap<Cell, CellFaces> = FxHashMap::with_capacity_and_hasher(total, Default::default());
-    for tile_cells in per_tile {
+    let mut tints = Tints::default();
+    for (tile_cells, tile_tints) in per_tile {
         for (cell, obs) in tile_cells {
             cells.entry(cell).or_default().merge(obs);
         }
+        for (col, t) in tile_tints {
+            tints.entry(col).or_default().merge(&t);
+        }
     }
-    Ok(cells)
+    Ok((cells, tints))
 }
 
 /// Distinct signatures are few compared to cells (terrain repeats), so each is matched exactly once.

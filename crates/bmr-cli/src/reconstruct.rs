@@ -10,6 +10,7 @@ use bmr_fill::{Bounds, Profile};
 use bmr_invert::Library;
 use bmr_invert::face::Tex;
 use bmr_invert::timings::Timings;
+use bmr_invert::tints::BiomeTint;
 use bmr_world::{
     BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateId, StateTable, World, WorldWriter,
 };
@@ -31,6 +32,8 @@ pub struct Options {
 pub struct Inputs<'a> {
     pub map: &'a LocalMap,
     pub lib: &'a Library,
+    /// The pack's learned biome tints (overworld biomes from what the map shows).
+    pub biome_tints: &'a [BiomeTint],
     pub registry: &'a Arc<BlockRegistry>,
     pub template: &'a [(String, Vec<u8>)],
     /// Palette encoding of the target Minecraft version.
@@ -118,7 +121,7 @@ fn run_window(
         let columns = if regen.is_some() { win.columns.clone() } else { win.halo_columns.clone() };
         let bounds = Bounds { columns, profile: o.profile };
         let filled =
-            t.time("fill", || bmr_fill::complete(&inv, inp.lib, inp.registry, &bounds, regen.as_ref(), table));
+            t.time("fill", || bmr_fill::complete(&inv, inp.lib, inp.registry, &bounds, regen.as_ref(), inp.biome_tints, table));
         totals.solid += filled.stats.solid_cells;
         totals.liquid += filled.stats.liquid_cells;
         totals.adopted += filled.stats.adopted_from_regen;

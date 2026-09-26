@@ -190,7 +190,7 @@ impl Chunk {
     }
 
     /// Set each 4×4×4 biome cell to `biome_at(world cell coordinates)`, where it returns one.
-    pub fn set_biomes(&mut self, biome_at: impl Fn((i32, i32, i32)) -> Option<&'static str>) {
+    pub fn set_biomes<'a>(&mut self, biome_at: impl Fn((i32, i32, i32)) -> Option<&'a str>) {
         let (x0, z0) = (self.x * 4, self.z * 4);
         for s in &mut self.sections {
             for cy in 0..4 {

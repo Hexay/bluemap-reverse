@@ -195,6 +195,11 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
   all-rock). Soul sand/soil are ~4 deep over netherrack; basalt/blackstone run deep. End bedrock is always
   built (pillars), never a terrain surface.
 - `nether` fixture: 82% occupied, 99.99% rendered; `end` 97.6% (misses: obsidian inside pillars).
+- Biomes without a seed (`bmr-fill/src/biomes.rs`): overworld from BlueMap's grass/foliage/water tints,
+  matched per 4×4 column to a table packs learn from the `biomes` fixture (`bmr-invert/src/tints.rs`; pack
+  format 5); nether from surface markers voted per 4×4×4 cell; end by distance from the main island.
+  Vanilla 2.5% → 94.3%, nether 0 → 73.6%, end 100%. Cave biomes (underground) take their column's surface
+  biome. Every rendered chunk is written, even if empty (else the game generates it with template biomes).
 
 ## Open questions — settle with quick experiments in phase 0/1
 

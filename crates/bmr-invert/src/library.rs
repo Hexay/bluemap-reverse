@@ -49,6 +49,8 @@ pub struct Library {
     exact_norm: FxHashMap<Vec<FaceKey>, Vec<usize>>,
     by_texture: FxHashMap<Tex, Vec<usize>>,
     by_state: FxHashMap<BlockState, usize>,
+    /// Face key (relative to the cell it lands in) → offsets from the cells that may overhang it there.
+    overhang_from: FxHashMap<FaceKey, Vec<Cell>>,
 }
 
 impl Library {
@@ -137,6 +139,7 @@ impl Library {
             exact_norm: FxHashMap::default(),
             by_texture: FxHashMap::default(),
             by_state: FxHashMap::default(),
+            overhang_from: FxHashMap::default(),
         }
     }
 
@@ -155,6 +158,12 @@ impl Library {
     }
 
     fn add(&mut self, e: Entry) {
+        for &(off, key) in &e.overhang {
+            let from = self.overhang_from.entry(key).or_default();
+            if !from.contains(&off) {
+                from.push(off);
+            }
+        }
         if e.sig.is_empty() {
             return; // only overhanging geometry: never matchable from its own cell
         }
@@ -173,13 +182,32 @@ impl Library {
         self.by_state.get(state).copied()
     }
 
-    /// The same state with `waterlogged=true`, if the block has that property.
-    pub fn waterlogged_variant(&self, id: usize) -> Option<usize> {
-        let s = &self.entries[id].state;
-        let (i, _) = s.properties.iter().enumerate().find(|(_, (k, v))| k == "waterlogged" && v == "false")?;
-        let mut w = s.clone();
-        w.properties[i].1 = "true".into();
-        self.find(&w)
+    /// An entry drawing the same solid faces as `id` but holding `liquid` (liquid faces are matched apart):
+    /// the same state with `waterlogged` flipped, else any same-signature state (cauldron ↔ lava_cauldron).
+    /// None when `id` already fits or nothing does.
+    pub fn liquid_variant(&self, id: usize, liquid: Option<Liquid>) -> Option<usize> {
+        let e = &self.entries[id];
+        if e.liquid == liquid {
+            return None;
+        }
+        let (from, to) = if liquid == Some(Liquid::Water) { ("false", "true") } else { ("true", "false") };
+        if let Some(i) = e.state.properties.iter().position(|(k, v)| k == "waterlogged" && v == from) {
+            let mut w = e.state.clone();
+            w.properties[i].1 = to.into();
+            if let Some(w) = self.find(&w).filter(|&w| self.entries[w].liquid == liquid) {
+                return Some(w);
+            }
+        }
+        self.exact(&e.sig)?
+            .iter()
+            .copied()
+            .filter(|&c| self.entries[c].liquid == liquid)
+            .min_by_key(|&c| (self.entries[c].default_distance, c))
+    }
+
+    /// Offsets (source → this cell) of the neighbours whose block may have drawn `key` into this cell.
+    pub fn overhang_from(&self, key: &FaceKey) -> &[Cell] {
+        self.overhang_from.get(key).map_or(&[], Vec::as_slice)
     }
 
     pub fn exact(&self, sig: &[FaceKey]) -> Option<&[usize]> {
@@ -188,6 +216,17 @@ impl Library {
 
     pub fn exact_normalized(&self, norm: &[FaceKey]) -> Option<&[usize]> {
         self.exact_norm.get(norm).map(Vec::as_slice)
+    }
+
+    /// Groups of 2+ states BlueMap renders identically (faces, overhang, liquid, tint): no tile tells them apart.
+    pub fn lookalikes(&self) -> Vec<Vec<usize>> {
+        let mut groups: FxHashMap<_, Vec<usize>> = FxHashMap::default();
+        for (i, e) in self.entries.iter().enumerate() {
+            let mut overhang = e.overhang.clone();
+            overhang.sort();
+            groups.entry((&e.sig, overhang, e.liquid, e.tint)).or_default().push(i);
+        }
+        groups.into_values().filter(|g| g.len() > 1).collect()
     }
 
     /// Entries whose signature uses every texture in `textures` (ids ascending).
@@ -205,8 +244,6 @@ impl Library {
     }
 }
 
-/// Debug-world block a face belongs to. An owner cell on an odd coordinate is the block itself; an even
-/// one lies between two blocks (overhanging geometry), so pick the side whose block centre is nearer.
 /// Number of properties differing from the block's default state.
 pub fn default_distance(state: &BlockState, info: &BlockInfo) -> u32 {
     state.properties.iter().filter(|p| !info.default.contains(p)).count() as u32
@@ -217,6 +254,8 @@ pub fn is_full_cube(sig: &[FaceKey]) -> bool {
     sig.iter().filter(|k| k.full_side()).filter_map(FaceKey::boundary_dir).collect::<BTreeSet<Cell>>().len() == 6
 }
 
+/// Debug-world block a face belongs to. An owner cell on an odd coordinate is the block itself; an even
+/// one lies between two blocks (overhanging geometry), so pick the side whose block centre is nearer.
 fn anchor(f: &WorldFace) -> Cell {
     let (ox, _, oz) = f.owner();
     let c = f.centroid();

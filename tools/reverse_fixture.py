@@ -9,9 +9,9 @@ import subprocess
 import sys
 import time
 
-from paths import ROOT, WORK, WORLDS
+from mirror_fixture import bmr_exe
+from paths import DEFAULT, ROOT, WORK, WORLDS
 
-BMR = ROOT / "target" / "debug" / "bmr.exe"
 RESULTS = ROOT / "results"
 
 
@@ -24,12 +24,13 @@ def main() -> None:
     mirror = WORK / "cache" / fixture
     out = WORK / "out" / f"{fixture}-rev" / "world"
     shutil.rmtree(out.parent, ignore_errors=True)
-    subprocess.run([BMR, "reverse", "--mirror", mirror, out, *extra], check=True, cwd=ROOT)
+    subprocess.run([bmr_exe(), "reverse", "--mirror", mirror, out, *extra], check=True, cwd=ROOT)
 
     RESULTS.mkdir(exist_ok=True)
     report = RESULTS / f"{fixture}.json"
     subprocess.run(
-        [BMR, "score", WORLDS / fixture / "world", out, "--mirror", mirror, "--top", "25", "--json", report],
+        [bmr_exe(), "score", WORLDS / fixture / "world", out, "--mirror", mirror, "--top", "25", "--json", report,
+         "--pack", DEFAULT.pack],
         check=True, cwd=ROOT,
     )
     r = json.loads(report.read_text())
@@ -41,6 +42,7 @@ def main() -> None:
         "args": extra,
         "occupied": pct(r["occupied"]),
         "rendered": pct(r["rendered"]),
+        "rendered_alike": round(100.0 * r["rendered_alike"] / max(r["rendered"]["total"], 1), 3),
         "exposed": pct(r["exposed"]),
         "solid_iou": round(100.0 * r["solid"]["both"] / max(r["solid"]["original"] + r["solid"]["reconstructed"] - r["solid"]["both"], 1), 3),
         "surface": round(100.0 * r["surface"]["hits"] / max(r["surface"]["total"], 1), 3),

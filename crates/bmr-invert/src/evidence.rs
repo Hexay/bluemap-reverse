@@ -79,6 +79,11 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
         for d in DIRS {
             let n = step(cell, d);
             if o.contains(&n) {
+                // liquid faces are culled only by the same liquid or full blocks: a partial block is wet
+                let partial = o.blocks.get(&n).is_some_and(|&e| !lib.entries[e].full_cube);
+                if partial && !faces.iter().any(|k| k.liquid_dir() == Some(d)) {
+                    ev.liquid.entry(n).or_insert(kind);
+                }
                 continue;
             }
             if faces.iter().any(|k| k.liquid_dir() == Some(d)) {

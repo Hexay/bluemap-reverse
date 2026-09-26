@@ -28,12 +28,20 @@ struct Fit {
     matched: u32,
     extra: u32,
     missing_interior: u32,
+    /// Interior but axis-aligned: culled when the model gives it a cullface (a candle's base on a cake).
+    missing_cullable: u32,
     missing_boundary: u32,
 }
 
 impl Fit {
-    fn acceptable(&self) -> bool {
-        self.matched > 0 && self.extra == 0 && self.missing_interior == 0
+    /// Strict: only boundary faces may be missing. Relaxed: also cullable ones, while most of the model shows
+    /// (a cell holding only a neighbour's overhang must not pass as that neighbour's block).
+    fn missing(&self, strict: bool) -> Option<u32> {
+        let ok = self.matched > 0 && self.extra == 0 && self.missing_interior == 0;
+        match strict {
+            true => (ok && self.missing_cullable == 0).then_some(self.missing_boundary),
+            false => (ok && self.missing_cullable < self.matched).then_some(self.missing_boundary + self.missing_cullable),
+        }
     }
 }
 
@@ -56,20 +64,21 @@ pub fn candidates(lib: &Library, sig: &[FaceKey]) -> Option<Candidates> {
             return Some(Candidates { ids, how: How::Offset });
         }
     }
-    let mut best_missing = u32::MAX;
-    let mut ids = Vec::new();
-    for id in lib.with_textures(textures) {
-        let fit = fit(sig, &lib.entries[id].sig);
-        if !fit.acceptable() || fit.missing_boundary > best_missing {
-            continue;
-        }
-        if fit.missing_boundary < best_missing {
-            best_missing = fit.missing_boundary;
-            ids.clear();
-        }
-        ids.push(id);
-    }
-    (!ids.is_empty()).then_some(Candidates { ids, how: How::Partial })
+    partial(lib, sig, textures, true)
+}
+
+/// Last resort for cells nothing else explains (run after overhang crediting): a partial match that may
+/// also miss interior axis-aligned faces, which a model's cullface hides next to a solid neighbour.
+pub fn candidates_cullable(lib: &Library, sig: &[FaceKey]) -> Option<Candidates> {
+    partial(lib, sig, sig.iter().map(|k| k.texture).collect(), false)
+}
+
+fn partial(lib: &Library, sig: &[FaceKey], textures: BTreeSet<Tex>, strict: bool) -> Option<Candidates> {
+    let missing: Vec<(usize, u32)> =
+        lib.with_textures(textures).into_iter().filter_map(|id| fit(sig, &lib.entries[id].sig).missing(strict).map(|m| (id, m))).collect();
+    let best = missing.iter().map(|&(_, m)| m).min()?;
+    let ids = missing.into_iter().filter(|&(_, m)| m == best).map(|(id, _)| id).collect();
+    Some(Candidates { ids, how: How::Partial })
 }
 
 /// Pick among equally good candidates: nearest library tint when tints tell them apart, then fewest
@@ -123,7 +132,11 @@ fn fit(observed: &[FaceKey], sig: &[FaceKey]) -> Fit {
                 i += 1;
             }
             (_, Some(s)) => {
-                if s.on_boundary() { f.missing_boundary += 1 } else { f.missing_interior += 1 }
+                match (s.on_boundary(), s.axis_aligned()) {
+                    (true, _) => f.missing_boundary += 1,
+                    (false, true) => f.missing_cullable += 1,
+                    (false, false) => f.missing_interior += 1,
+                }
                 j += 1;
             }
             (None, None) => unreachable!(),

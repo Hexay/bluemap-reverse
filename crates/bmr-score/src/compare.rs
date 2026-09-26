@@ -20,6 +20,8 @@ pub struct Scope<'a> {
     pub rendered: Option<&'a FxHashSet<Cell>>,
     /// (original, reconstructed) labels whose positions to sample into `Report::samples`.
     pub sample: Option<(&'a str, &'a str)>,
+    /// State label → look-alike group (states BlueMap renders identically); enables `rendered_alike`.
+    pub lookalikes: Option<&'a FxHashMap<String, u32>>,
 }
 
 const MAX_SAMPLES: usize = 20;
@@ -58,7 +60,7 @@ fn score_region(original: &World, reconstructed: &World, region: (i32, i32), sco
                 if filter(pos.0 * 16 + lx as i32, pos.1 * 16 + lz as i32) {
                     scored = true;
                     rep.columns += 1;
-                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range, scope.rendered, scope.sample);
+                    score_column(&mut rep, &orig, pos, chunk, other, lx, lz, y_range, scope);
                 }
             }
         }
@@ -80,8 +82,7 @@ fn score_column(
     lx: usize,
     lz: usize,
     (y0, y1): (i32, i32),
-    rendered: Option<&FxHashSet<Cell>>,
-    sample: Option<(&str, &str)>,
+    scope: &Scope,
 ) {
     let mut orig_top = None;
     let mut recon_top = None;
@@ -110,12 +111,17 @@ fn score_column(
         if o.is_some() {
             rep.solid.original += 1;
             let cell = (pos.0 * 16 + lx as i32, y, pos.1 * 16 + lz as i32);
-            if rendered.is_some_and(|r| r.contains(&cell)) {
+            if scope.rendered.is_some_and(|r| r.contains(&cell)) {
                 rep.rendered.total += 1;
                 rep.rendered.exact += exact as u64;
                 rep.rendered.name += name as u64;
-                if !exact {
-                    *rep.rendered_confusion_counts.entry((label(o), label(r))).or_default() += 1;
+                let key = (!exact).then(|| (label(o), label(r)));
+                let alike = key.as_ref().is_none_or(|(a, b)| {
+                    scope.lookalikes.is_some_and(|g| g.get(a).is_some_and(|ga| g.get(b) == Some(ga)))
+                });
+                rep.rendered_alike += alike as u64;
+                if let Some(key) = key.filter(|_| !alike) {
+                    *rep.rendered_confusion_counts.entry(key).or_default() += 1;
                 }
             }
             if exposed(orig, pos, chunk, lx, y, lz, y0, y1) {
@@ -132,7 +138,7 @@ fn score_column(
         }
         if !exact {
             let key = (label(o), label(r));
-            if rep.samples.len() < MAX_SAMPLES && sample.is_some_and(|(a, b)| a == key.0 && b == key.1) {
+            if rep.samples.len() < MAX_SAMPLES && scope.sample.is_some_and(|(a, b)| a == key.0 && b == key.1) {
                 rep.samples.push((pos.0 * 16 + lx as i32, y, pos.1 * 16 + lz as i32));
             }
             *rep.confusion_counts.entry(key).or_default() += 1;

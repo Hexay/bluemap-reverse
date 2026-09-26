@@ -1,0 +1,294 @@
+{
+  "chunks": 121,
+  "partial_chunks_skipped": 1012,
+  "columns": 25600,
+  "all": {
+    "total": 9830400,
+    "exact": 9827233,
+    "name": 9827643
+  },
+  "occupied": {
+    "total": 111347,
+    "exact": 108180,
+    "name": 108590
+  },
+  "rendered": {
+    "total": 55435,
+    "exact": 54782,
+    "name": 55192
+  },
+  "rendered_alike": 55390,
+  "exposed": {
+    "total": 55116,
+    "exact": 54505,
+    "name": 54887
+  },
+  "solid": {
+    "original": 111271,
+    "reconstructed": 111333,
+    "both": 111257
+  },
+  "surface": {
+    "total": 25600,
+    "hits": 25206
+  },
+  "biomes": {
+    "total": 153600,
+    "hits": 153600
+  },
+  "confusions": [
+    {
+      "original": "minecraft:dirt",
+      "reconstructed": "minecraft:bedrock",
+      "count": 1567
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 745
+    },
+    {
+      "original": "minecraft:air",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 68
+    },
+    {
+      "original": "minecraft:dirt",
+      "reconstructed": "minecraft:sandstone",
+      "count": 44
+    },
+    {
+      "original": "minecraft:prismarine_slab[type=double,waterlogged=false]",
+      "reconstructed": "minecraft:prismarine",
+      "count": 35
+    },
+    {
+      "original": "minecraft:oak_slab[type=double,waterlogged=false]",
+      "reconstructed": "minecraft:oak_planks",
+      "count": 31
+    },
+    {
+      "original": "minecraft:cobblestone_slab[type=double,waterlogged=false]",
+      "reconstructed": "minecraft:cobblestone",
+      "count": 24
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:sandstone",
+      "count": 22
+    },
+    {
+      "original": "minecraft:stone_slab[type=double,waterlogged=false]",
+      "reconstructed": "minecraft:stone",
+      "count": 22
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:packed_ice",
+      "count": 15
+    },
+    {
+      "original": "minecraft:spruce_fence_gate[facing=south,in_wall=false,open=false,powered=false]",
+      "reconstructed": "minecraft:spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]",
+      "count": 14
+    },
+    {
+      "original": "minecraft:spruce_fence_gate[facing=east,in_wall=false,open=false,powered=false]",
+      "reconstructed": "minecraft:spruce_fence_gate[facing=west,in_wall=false,open=false,powered=false]",
+      "count": 13
+    },
+    {
+      "original": "minecraft:oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]",
+      "count": 12
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:dirt",
+      "count": 11
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:netherrack",
+      "count": 11
+    },
+    {
+      "original": "minecraft:oak_fence_gate[facing=east,in_wall=false,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_fence_gate[facing=west,in_wall=false,open=false,powered=false]",
+      "count": 11
+    },
+    {
+      "original": "minecraft:grass_block[snowy=false]",
+      "reconstructed": "minecraft:soul_sand",
+      "count": 8
+    },
+    {
+      "original": "minecraft:oak_fence_gate[facing=south,in_wall=true,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_fence_gate[facing=north,in_wall=true,open=false,powered=false]",
+      "count": 8
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:air",
+      "count": 8
+    },
+    {
+      "original": "minecraft:air",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 7
+    },
+    {
+      "original": "minecraft:cherry_trapdoor[facing=south,half=bottom,open=false,powered=false,waterlogged=false]",
+      "reconstructed": "minecraft:cherry_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]",
+      "count": 5
+    },
+    {
+      "original": "minecraft:iron_trapdoor[facing=south,half=top,open=false,powered=false,waterlogged=false]",
+      "reconstructed": "minecraft:iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]",
+      "count": 5
+    },
+    {
+      "original": "minecraft:mud_brick_stairs[facing=east,half=bottom,shape=outer_left,waterlogged=false]",
+      "reconstructed": "minecraft:mud_brick_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]",
+      "count": 5
+    },
+    {
+      "original": "minecraft:mud_brick_stairs[facing=west,half=bottom,shape=outer_left,waterlogged=false]",
+      "reconstructed": "minecraft:mud_brick_stairs[facing=south,half=bottom,shape=outer_right,waterlogged=false]",
+      "count": 5
+    },
+    {
+      "original": "minecraft:oak_fence_gate[facing=east,in_wall=true,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_fence_gate[facing=west,in_wall=true,open=false,powered=false]",
+      "count": 5
+    }
+  ],
+  "rendered_confusions": [
+    {
+      "original": "minecraft:tube_coral_fan[waterlogged=true]",
+      "reconstructed": "minecraft:tube_coral_fan[waterlogged=false]",
+      "count": 4
+    },
+    {
+      "original": "minecraft:fire_coral[waterlogged=true]",
+      "reconstructed": "minecraft:fire_coral[waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:sea_pickle[pickles=1,waterlogged=true]",
+      "reconstructed": "minecraft:sea_pickle[pickles=1,waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:chest[facing=north,type=single,waterlogged=true]",
+      "reconstructed": "minecraft:chest[facing=north,type=single,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:turtle_egg[eggs=1,hatch=0]",
+      "reconstructed": "minecraft:air",
+      "count": 2
+    },
+    {
+      "original": "minecraft:birch_shelf[facing=west,powered=false,side_chain=left,waterlogged=false]",
+      "reconstructed": "minecraft:birch_shelf[facing=west,powered=false,side_chain=unconnected,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:blackstone_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "reconstructed": "minecraft:blackstone_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:blue_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "reconstructed": "minecraft:blue_wool_stairs[facing=north,half=bottom,shape=straight,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:brown_stained_glass_pane[east=false,north=false,south=false,waterlogged=false,west=true]",
+      "reconstructed": "minecraft:brown_stained_glass_pane[east=false,north=false,south=false,waterlogged=true,west=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:cherry_hanging_sign[attached=true,rotation=3,waterlogged=false]",
+      "reconstructed": "minecraft:cherry_hanging_sign[attached=true,rotation=3,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:cinnabar_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
+      "reconstructed": "minecraft:cinnabar_brick_stairs[facing=south,half=top,shape=straight,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:cinnabar_slab[type=top,waterlogged=false]",
+      "reconstructed": "minecraft:cinnabar_slab[type=top,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=none]",
+      "reconstructed": "minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:crimson_fence[east=false,north=false,south=false,waterlogged=false,west=false]",
+      "reconstructed": "minecraft:crimson_fence[east=false,north=false,south=false,waterlogged=true,west=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:dark_oak_trapdoor[facing=east,half=top,open=true,powered=false,waterlogged=false]",
+      "reconstructed": "minecraft:dark_oak_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:dark_oak_wood[axis=x]",
+      "reconstructed": "minecraft:dark_oak_log[axis=y]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:dark_oak_wood[axis=z]",
+      "reconstructed": "minecraft:dark_oak_log[axis=y]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:dropper[facing=north,triggered=false]",
+      "reconstructed": "minecraft:dispenser[facing=north,triggered=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:exposed_copper_chest[facing=north,type=single,waterlogged=false]",
+      "reconstructed": "minecraft:exposed_copper_chest[facing=north,type=single,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:glass_pane[east=false,north=false,south=false,waterlogged=true,west=false]",
+      "reconstructed": "minecraft:glass_pane[east=false,north=false,south=false,waterlogged=false,west=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:green_concrete",
+      "reconstructed": "minecraft:air",
+      "count": 1
+    },
+    {
+      "original": "minecraft:jungle_log[axis=z]",
+      "reconstructed": "minecraft:jungle_wood[axis=y]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:jungle_wall_sign[facing=south,waterlogged=false]",
+      "reconstructed": "minecraft:jungle_wall_sign[facing=south,waterlogged=true]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:light_blue_concrete_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
+      "reconstructed": "minecraft:light_blue_concrete_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:nether_brick_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "reconstructed": "minecraft:nether_brick_wall[east=none,north=low,south=none,up=true,waterlogged=true,west=none]",
+      "count": 1
+    }
+  ],
+  "samples": []
+}

@@ -1,9 +1,10 @@
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use anyhow::Result;
 use bmr_world::World;
+use rustc_hash::FxHashMap;
 
 use crate::WorldArgs;
 
@@ -32,6 +33,20 @@ pub struct Args {
     /// Also write the report as JSON
     #[arg(long)]
     json: Option<PathBuf>,
+    /// Pack whose library defines look-alike states: adds the look-alike-tolerant rendered metric and
+    /// drops look-alikes from the rendered confusions
+    #[arg(long)]
+    pack: Option<PathBuf>,
+}
+
+/// State label → look-alike group id.
+fn lookalike_groups(pack: &Path) -> Result<FxHashMap<String, u32>> {
+    let lib = bmr_pack::Pack::load(pack)?.library;
+    let mut groups = FxHashMap::default();
+    for (id, g) in lib.lookalikes().into_iter().enumerate() {
+        groups.extend(g.into_iter().map(|i| (lib.entries[i].state.to_string(), id as u32)));
+    }
+    Ok(groups)
 }
 
 pub fn run(a: Args) -> Result<()> {
@@ -55,7 +70,8 @@ pub fn run(a: Args) -> Result<()> {
 
     let t = Instant::now();
     let sample = a.sample.as_deref().and_then(|s| s.split_once("->")).map(|(o, r)| (o.trim(), r.trim()));
-    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample };
+    let lookalikes = a.pack.as_deref().map(lookalike_groups).transpose()?;
+    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample, lookalikes: lookalikes.as_ref() };
     let report = bmr_score::score(&original, &reconstructed, &scope, a.top)?;
     print!("{report}");
     println!("scored in {:.1?}", t.elapsed());

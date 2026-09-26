@@ -163,6 +163,22 @@ Phases 0–4 are plumbing; the accuracy work is 5–10. Don't start 6 before 5's
 - Server does not recreate missing block entities → writer emits minimal `{id,x,y,z}` per BE block
   (`bmr-world/src/block_entities.rs`; test checks all registry BE types are mapped). 26.3 beds have no BE.
 
+## Block-state coverage (2026-09-26)
+
+- `debug` fixture = every state isolated; `context` fixture (`tools/gen_context.py`) = states among neighbours:
+  stair corners, connected fences/walls/panes/bars, redstone, doors, double chests, attached blocks, culling,
+  waterlogging, a jumble of every block. `setblock` does not compute neighbour-dependent shapes, so the generator
+  ports the game's rules (`tools/context_rules.py`).
+- Headline for inversion: `rendered_alike` (`bmr score --pack`), which counts look-alikes as correct. Half the
+  states have a look-alike (`bmr pack lookalikes`): stair corners (east inner_left = north inner_right), door
+  open/facing/hinge pairs, invisible properties (powered, note, leaf distance, age, occupied), waxed copper,
+  sign rotation 0/8. The reconstruction is as good as the tiles allow for these; they are not errors.
+- Still irreducible: partially hidden blocks whose telling face is culled (wood vs log, dropper vs dispenser),
+  fire age, block-entity models (heads) overhanging into a full block's cell.
+- Overhang between neighbours that are both unmatched (stacked bars trade cap faces) is stripped by
+  `overhang::strip_foreign`; interior faces with a cullface (candle on a cake) by the last-resort
+  `candidates_cullable`; a gap reaching the build limit is always air.
+
 ## Open questions — settle with quick experiments in phase 0/1
 
 - Debug world level-type string on a 26.3 server.

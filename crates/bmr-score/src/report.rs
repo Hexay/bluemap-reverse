@@ -45,6 +45,8 @@ pub struct Report {
     /// Voxels non-air in either world — the headline number.
     pub occupied: Accuracy,
     pub rendered: Accuracy,
+    /// Rendered cells reconstructed exactly or as a look-alike (needs a pack): the achievable ceiling is 100%.
+    pub rendered_alike: u64,
     pub exposed: Accuracy,
     /// Non-air voxels.
     pub solid: Overlap,
@@ -68,6 +70,7 @@ impl Report {
         self.chunks += o.chunks;
         self.partial_chunks_skipped += o.partial_chunks_skipped;
         self.columns += o.columns;
+        self.rendered_alike += o.rendered_alike;
         for (a, b) in [
             (&mut self.all, o.all),
             (&mut self.occupied, o.occupied),
@@ -136,6 +139,9 @@ impl fmt::Display for Report {
                 continue;
             }
             writeln!(f, "{label}  state {}  name {}  (n={})", pct(a.exact, a.total), pct(a.name, a.total), a.total)?;
+        }
+        if self.rendered_alike > self.rendered.exact {
+            writeln!(f, "rendered    state {}  counting look-alikes as correct", pct(self.rendered_alike, self.rendered.total))?;
         }
         writeln!(f, "solid IoU   {:6.2}%  (orig {}, recon {}, both {})", 100.0 * self.solid_iou(), self.solid.original, self.solid.reconstructed, self.solid.both)?;
         writeln!(f, "surface     {}  (n={})", pct(self.surface.hits, self.surface.total), self.surface.total)?;

@@ -4,6 +4,7 @@
 
 mod compat;
 mod format;
+mod index;
 mod select;
 
 use std::io::{Read, Write};
@@ -13,16 +14,14 @@ use std::sync::Arc;
 use anyhow::{Context, Result, bail, ensure};
 use bmr_fetch::LocalMap;
 use bmr_invert::Library;
-use bmr_invert::face::Tex;
 use bmr_world::{BlockRegistry, PaletteStyle, TemplateFiles, World};
-use flate2::Compression;
-use flate2::read::GzDecoder;
-use flate2::write::GzEncoder;
+use lzma_rust2::{XzOptions, XzReader, XzWriter};
 
 pub use compat::{Compat, Verdict, check};
 pub use format::{Header, Meta};
-use format::{Body, FORMAT, MAGIC, TexTable, dto_to_entry, entry_to_dto};
-pub use select::{Ranked, rank};
+use format::{Body, FORMAT, MAGIC, decode, encode};
+pub use index::{Index, IndexEntry};
+pub use select::{Candidate, Ranked, Source, indexed, installed, rank};
 
 pub struct Pack {
     pub meta: Meta,
@@ -67,26 +66,34 @@ impl Pack {
     /// Returns the file size in bytes.
     pub fn save(&self, path: &Path) -> Result<u64> {
         let header = Header { format: FORMAT, meta: self.meta.clone(), site_textures: self.site_textures.clone() };
-        let mut tex = TexTable::default();
-        let entries = self.library.entries.iter().map(|e| entry_to_dto(e, &mut tex)).collect();
-        let body = Body {
-            key_textures: tex.names,
-            entries,
-            registry: self.registry.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            template: self.template.clone(),
-        };
-        let header_bytes = postcard::to_stdvec(&header)?;
-        let mut out = Vec::from(&MAGIC[..]);
-        out.extend((header_bytes.len() as u32).to_le_bytes());
-        out.extend(header_bytes);
-        let mut gz = GzEncoder::new(out, Compression::best());
-        gz.write_all(&postcard::to_stdvec(&body)?)?;
-        let bytes = gz.finish()?;
+        let mut registry: Vec<_> = self.registry.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+        registry.sort_by(|a, b| a.0.cmp(&b.0));
+        let body = encode(&self.library.entries, registry, self.template.clone())?;
+        let header_bytes = compress(&postcard::to_stdvec(&header)?)?;
+        let mut bytes = Vec::from(&MAGIC[..]);
+        bytes.extend((header_bytes.len() as u32).to_le_bytes());
+        bytes.extend(header_bytes);
+        bytes.extend(compress(&postcard::to_stdvec(&body)?)?);
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir)?;
         }
         std::fs::write(path, &bytes).with_context(|| path.display().to_string())?;
         Ok(bytes.len() as u64)
+    }
+
+    /// The saved file at `path` loads back to this pack's library (the encoding is lossless).
+    pub fn verify_saved(&self, path: &Path) -> Result<()> {
+        let back = Self::load(path)?;
+        let view = |e: &bmr_invert::library::Entry| {
+            (e.state.clone(), e.sig.clone(), e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
+        };
+        let a: Vec<_> = self.library.entries.iter().map(view).collect();
+        let b: Vec<_> = back.library.entries.iter().map(view).collect();
+        ensure!(a.len() == b.len(), "{}: {} entries saved, {} loaded", path.display(), a.len(), b.len());
+        if let Some(i) = (0..a.len()).find(|&i| a[i] != b[i]) {
+            bail!("{}: entry {i} ({:?}) differs after loading", path.display(), a[i].0);
+        }
+        Ok(())
     }
 
     /// Header only: versions and texture fingerprint, without decompressing the body.
@@ -95,22 +102,55 @@ impl Pack {
         Ok(split(&bytes, path)?.0)
     }
 
+    /// Bytes per part: the header and compressed body as stored, then each body field uncompressed.
+    pub fn sizes(path: &Path) -> Result<Vec<(&'static str, usize)>> {
+        let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
+        let (_, compressed) = split(&bytes, path)?;
+        let body = read_body(compressed)?;
+        let len = |v: Result<Vec<u8>, postcard::Error>| v.map(|b| b.len());
+        Ok(vec![
+            ("header", bytes.len() - compressed.len()),
+            ("body (xz)", compressed.len()),
+            ("  key textures (raw)", len(postcard::to_stdvec(&body.key_textures))?),
+            ("  face keys (raw)", len(postcard::to_stdvec(&body.keys))?),
+            ("  signatures (raw)", len(postcard::to_stdvec(&body.sigs))?),
+            ("  entries (raw)", len(postcard::to_stdvec(&body.entries))?),
+            ("  registry (raw)", len(postcard::to_stdvec(&body.registry))?),
+            ("  template (raw)", len(postcard::to_stdvec(&body.template))?),
+        ])
+    }
+
     pub fn load(path: &Path) -> Result<Self> {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
         let (header, compressed) = split(&bytes, path)?;
-        let mut raw = Vec::new();
-        GzDecoder::new(compressed).read_to_end(&mut raw)?;
-        let body: Body = postcard::from_bytes(&raw).context("corrupt pack body")?;
-        let textures: Vec<Tex> = body.key_textures.iter().map(|n| Tex::intern(n)).collect();
-        let entries = body.entries.into_iter().map(|d| dto_to_entry(d, &textures)).collect();
+        let (entries, registry, template) = decode(read_body(compressed)?);
         Ok(Self {
             library: Library::from_entries(entries, header.meta.data_version),
             meta: header.meta,
-            registry: Arc::new(BlockRegistry::from_blocks(body.registry)),
-            template: body.template,
+            registry: Arc::new(BlockRegistry::from_blocks(registry)),
+            template,
             site_textures: header.site_textures,
         })
     }
+}
+
+fn read_body(compressed: &[u8]) -> Result<Body> {
+    postcard::from_bytes(&decompress(compressed)?).context("corrupt pack body")
+}
+
+fn compress(raw: &[u8]) -> Result<Vec<u8>> {
+    let mut opts = XzOptions::with_preset(9);
+    // the reader allocates the whole declared dictionary (64 MB at preset 9)
+    opts.lzma_options.dict_size = (raw.len() as u32).next_power_of_two().clamp(1 << 12, opts.lzma_options.dict_size);
+    let mut xz = XzWriter::new(Vec::new(), opts)?;
+    xz.write_all(raw)?;
+    Ok(xz.finish()?)
+}
+
+fn decompress(compressed: &[u8]) -> Result<Vec<u8>> {
+    let mut raw = Vec::new();
+    XzReader::new(compressed, false).read_to_end(&mut raw)?;
+    Ok(raw)
 }
 
 /// (header, compressed body) after validating magic and format.
@@ -118,7 +158,9 @@ fn split<'a>(bytes: &'a [u8], path: &Path) -> Result<(Header, &'a [u8])> {
     ensure!(bytes.len() > 12 && bytes.starts_with(MAGIC), "{} is not a bmr pack", path.display());
     let len = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
     ensure!(bytes.len() >= 12 + len, "{}: truncated header", path.display());
-    let header: Header = postcard::from_bytes(&bytes[12..12 + len])
+    let header: Header = decompress(&bytes[12..12 + len])
+        .ok()
+        .and_then(|raw| postcard::from_bytes(&raw).ok())
         .with_context(|| format!("{}: unreadable header (older pack format?)", path.display()))?;
     if header.format != FORMAT {
         bail!("{}: pack format {} not supported by this bmr (expects {FORMAT})", path.display(), header.format);

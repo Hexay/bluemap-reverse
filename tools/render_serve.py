@@ -6,6 +6,7 @@ Map settings are BlueMap defaults (what public maps run) unless fixture.json has
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -41,6 +42,7 @@ def configure(fixture: str, tc: Toolchain = DEFAULT) -> Path:
         bluemap(base, tc=tc).wait()
     set_conf(cfg / "core.conf", "accept-download", "true")
     set_conf(cfg / "core.conf", "metrics", "false")
+    set_conf(cfg / "core.conf", "render-thread-count", str(os.cpu_count() or 1))
     set_conf(cfg / "webserver.conf", "ip", json.dumps(WEB_HOST))
     set_conf(cfg / "webserver.conf", "port", str(WEB_PORT))
 

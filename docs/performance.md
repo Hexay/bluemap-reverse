@@ -29,9 +29,21 @@ Numbers live in `results/bench.jsonl` (one line per benchmark run); this file is
 - Parallel: tile parsing, chunk decompress/decode (within a region), regen fill (fold per thread),
   evidence block pass, chunk encode + compress. Deliberately serial: liquid evidence (first-claim wins).
 
+## Pack builds (`tools/build_pack.py` prints time per stage)
+
+Cold new version 693 s → ~100 s, forced rebuild ~80 s (2026-09-26, 22 cores, RAM-starved machine). What mattered:
+- BlueMap `render-thread-count` defaults to 1: set to all cores in `render_serve.configure` (render 340 s → ~25 s).
+- The server jar's bundler unpacks its libraries into every server folder, and the first JVM to load fresh jars
+  pays ~2 min (virus scan; the extraction itself takes 1.5 s). One `-DbundlerRepoDir` for all versions
+  (`console.bundler_args`) pays it once.
+- Debug and template worlds are generated concurrently (own ports, 2 GB heaps).
+- Left: ~40 s of server bootstrap for the worlds, ~20 s reports, ~10 s pack (xz preset 9).
+
+Pack size 592 → ~200 KB (format 3, `bmr pack info` prints the breakdown): states as (block, ordinal) into the
+registry, face keys and signatures deduplicated (identical-looking states share one), xz instead of gzip
+(on the deduplicated body: gzip 421 KB, xz 217 KB), header compressed (70 → 10 KB).
+
 ## Next candidates
 
 - `invert.gather`: per-tile maps are merged into one map serially.
-- Library build (~1 s, fixed per run): cache it on disk per BlueMap/MC version (re-sort signatures on load —
-  texture ids are process-local).
 - Run 2+ windows concurrently to recover the wall time windowing costs (per-window `StateTable` merge needed).

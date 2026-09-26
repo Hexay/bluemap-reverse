@@ -9,7 +9,7 @@ use bmr_invert::timings::Timings;
 use bmr_pack::{Pack, Verdict};
 
 use crate::fetch::site_slug;
-use crate::pack::select_pack;
+use crate::pack_source::{IndexArgs, select_pack};
 use crate::reconstruct::{Inputs, reconstruct, report};
 use crate::reverse::OptionArgs;
 
@@ -23,9 +23,11 @@ pub struct Args {
     /// Map id when the site has several (the list is printed otherwise)
     #[arg(long)]
     map: Option<String>,
-    /// Pack file [default: from ./packs or next to bmr, matching the site's BlueMap version]
+    /// Pack file [default: best fit among installed and indexed packs, downloaded if needed]
     #[arg(long)]
     pack: Option<PathBuf>,
+    #[command(flatten)]
+    index: IndexArgs,
     /// Also export the whole reconstruction as a Sponge .schem
     #[arg(long)]
     schem: Option<PathBuf>,
@@ -81,7 +83,7 @@ pub fn run(a: Args) -> Result<()> {
 
     println!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", map.bluemap_version.as_deref().unwrap_or("?"));
     let site_textures = bmr_prbm::parse_texture_names(&map.textures_json()?)?;
-    let (pack_path, ranking) = select_pack(a.pack.as_deref(), map.bluemap_version.as_deref(), &site_textures)?;
+    let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, map.bluemap_version.as_deref(), &site_textures)?;
     for (i, line) in ranking.iter().enumerate() {
         println!("      {} {line}", if i == 0 { "→" } else { " " });
     }

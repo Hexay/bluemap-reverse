@@ -14,6 +14,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from console import bundler_args
 from paths import DEFAULT, DOWNLOADS, MC_MANIFEST_URL, Toolchain, jdk_dir, jdk_url, toolchain
 
 
@@ -104,7 +105,7 @@ def generate_reports(tc: Toolchain) -> None:
     print("gen     vanilla data reports")
     tc.reports.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        [str(tc.java), "-DbundlerMainClass=net.minecraft.data.Main", "-jar", str(tc.server_jar),
+        [str(tc.java), "-DbundlerMainClass=net.minecraft.data.Main", *bundler_args(tc), "-jar", str(tc.server_jar),
          "--reports", "--output", str(tc.reports)],
         cwd=tc.reports.parent, check=True, stdout=subprocess.DEVNULL,
     )

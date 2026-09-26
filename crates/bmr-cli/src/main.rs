@@ -4,6 +4,7 @@ mod explain;
 mod fetch;
 mod obj;
 mod pack;
+mod pack_source;
 mod probe;
 mod pull;
 mod reconstruct;

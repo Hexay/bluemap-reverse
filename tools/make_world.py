@@ -68,12 +68,15 @@ def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, timeou
             time.sleep(1)
 
 
-def make_world(name: str, force: bool, tc: Toolchain = DEFAULT) -> None:
+def make_world(name: str, force: bool, tc: Toolchain = DEFAULT, heap: str = "4G", port: int | None = None) -> None:
+    """`port` lets several servers run at once."""
     spec, commands = load_fixture(name)
-    generate(tc.worlds / name, spec, commands, force, tc)
+    if port is not None:
+        spec = {**spec, "properties": {**spec.get("properties", {}), "server-port": str(port)}}
+    generate(tc.worlds / name, spec, commands, force, tc, heap)
 
 
-def generate(server_dir, spec: dict, commands: list[str], force: bool, tc: Toolchain = DEFAULT) -> None:
+def generate(server_dir, spec: dict, commands: list[str], force: bool, tc: Toolchain = DEFAULT, heap: str = "4G") -> None:
     """Fresh server in `server_dir`: properties + area from `spec`, then `commands`, save, stop."""
     if server_dir.exists():
         if not force:
@@ -82,7 +85,7 @@ def generate(server_dir, spec: dict, commands: list[str], force: bool, tc: Toolc
         shutil.rmtree(server_dir)
     write_server_files(server_dir, spec.get("properties", {}))
 
-    server = Server(server_dir, tc=tc)
+    server = Server(server_dir, heap, tc)
     try:
         server.wait_for(r"Done \(", timeout=600, echo=True)
         area = spec["area"]

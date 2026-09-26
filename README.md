@@ -7,8 +7,10 @@ Everything BlueMap draws is recovered ~99.99% by block type; the underground is 
 
 ## Use it
 
-Needs only `bmr` + packs (`packs/*.pack`, ~0.5 MB each: Minecraft 26.3 and 1.21.11, BlueMap 5.27) — no Java,
-server or BlueMap. `pull` picks the pack whose texture list matches the site (a Minecraft-version fingerprint).
+Needs only `bmr` — no Java, server or BlueMap. `pull` picks the pack (~0.2 MB, one per Minecraft + BlueMap
+version) whose texture list matches the site (a Minecraft-version fingerprint), among installed packs
+(`./packs`, `packs/` next to bmr) and the online pack index, and downloads it if needed (`--offline` to skip;
+`bmr pack list`, `bmr pack fetch <mc-version|all>`).
 ```
 bmr pull https://map.example.com/ -o world.zip           # mirror + check + reconstruct + zip; extract into saves/
 bmr pull https://map.example.com/ --map world_nether      # sites with several maps: pick one (list is printed)
@@ -23,9 +25,11 @@ bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out
 
 ## Development
 
-New Minecraft/BlueMap version (1.18+), unattended, ~2–15 min: `py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27]`
-→ `packs/bmr-mc<mc>-bluemap<bm>.pack`. Prove it end to end: `py -3 tools/check_version.py --mc 1.21.11`
+New Minecraft/BlueMap version (1.18+), unattended, ~2 min: `py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27]`
+→ `packs/bmr-mc<mc>-bluemap<bm>.pack` (prints time per stage). Prove it end to end: `py -3 tools/check_version.py --mc 1.21.11`
 (fixture world in that version → BlueMap → `bmr pull` → score → load in that version's server).
+Publish: `bmr pack index packs` writes `packs/index.json`; upload it with the packs to the GitHub release
+`packs` (the default `--pack-index`). `py -3 tools/check_index.py` tests index → download → pull locally.
 ```
 bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
 bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender

@@ -1,20 +1,35 @@
-//! `bmr pack build|info`: create a pack from the local debug world (maintainer), or describe one.
+//! `bmr pack build|info|index|list|fetch`: create packs and their index (maintainer), inspect them, and
+//! list/download packs from the index (users rarely need to: `pull` downloads the pack it picks).
 
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
-use bmr_pack::Pack;
+use bmr_pack::{Index, Pack, Source};
 
 use crate::WorldArgs;
 use crate::copy_world::DEFAULT_TEMPLATE;
+use crate::pack_source::{IndexArgs, candidates, download, fetch_index, find_packs};
 
 #[derive(clap::Subcommand)]
 pub enum Cmd {
     /// Build a pack from work/cache/debug + work/worlds/debug + the void template
     Build(BuildArgs),
-    /// Show a pack's versions and size
+    /// Show a pack's versions and size breakdown
     Info { pack: PathBuf },
+    /// Write index.json for the packs in a folder (publish it next to them)
+    Index {
+        #[arg(default_value = "packs")]
+        dir: PathBuf,
+    },
+    /// Installed and indexed packs
+    List(IndexArgs),
+    /// Download packs from the index: a Minecraft version, or `all`
+    Fetch {
+        mc_version: String,
+        #[command(flatten)]
+        index: IndexArgs,
+    },
 }
 
 #[derive(clap::Args)]
@@ -38,6 +53,9 @@ pub fn run(cmd: Cmd) -> Result<()> {
     match cmd {
         Cmd::Build(a) => build(a),
         Cmd::Info { pack } => info(&pack),
+        Cmd::Index { dir } => index(&dir),
+        Cmd::List(a) => list(&a),
+        Cmd::Fetch { mc_version, index } => fetch(&mc_version, &index),
     }
 }
 
@@ -51,8 +69,9 @@ fn build(a: BuildArgs) -> Result<()> {
         PathBuf::from("packs").join(format!("bmr-mc{}-bluemap{}.pack", pack.meta.mc_version, pack.meta.bluemap_version))
     });
     let bytes = pack.save(&out)?;
+    pack.verify_saved(&out)?;
     println!(
-        "{} states, {} registry blocks, {} template files → {} ({:.1} MB) in {:.1?}",
+        "{} states, {} registry blocks, {} template files → {} ({:.2} MB) in {:.1?}",
         pack.library.entries.len(),
         pack.registry.len(),
         pack.template.len(),
@@ -75,40 +94,53 @@ fn info(path: &Path) -> Result<()> {
         p.site_textures.len(),
         t.elapsed()
     );
+    for (part, bytes) in Pack::sizes(path)? {
+        println!("  {part:<24} {:>9.1} KB", bytes as f64 / 1e3);
+    }
     Ok(())
 }
 
-/// Candidate pack files: `packs/` in the working directory and next to the executable.
-pub fn find_packs() -> Vec<PathBuf> {
-    let mut dirs = vec![PathBuf::from("packs")];
-    if let Some(exe_dir) = std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)) {
-        dirs.push(exe_dir.join("packs"));
-    }
-    let mut out: Vec<PathBuf> = dirs
-        .iter()
-        .filter_map(|d| std::fs::read_dir(d).ok())
-        .flatten()
+fn index(dir: &Path) -> Result<()> {
+    let mut packs: Vec<PathBuf> = std::fs::read_dir(dir)
+        .with_context(|| dir.display().to_string())?
         .filter_map(|e| e.ok().map(|e| e.path()))
         .filter(|p| p.extension().is_some_and(|x| x == "pack"))
         .collect();
-    out.sort();
-    out.dedup();
-    out
+    packs.sort();
+    let index = Index::build(&packs)?;
+    let out = dir.join("index.json");
+    index.save(&out)?;
+    println!("{} packs, {} texture names → {}", index.packs.len(), index.textures.len(), out.display());
+    Ok(())
 }
 
-/// The pack to use: explicit, else the installed pack whose texture fingerprint fits the site best.
-/// Also returns the ranking as printable lines (best first).
-pub fn select_pack(explicit: Option<&Path>, site_version: Option<&str>, site_textures: &[String]) -> Result<(PathBuf, Vec<String>)> {
-    if let Some(p) = explicit {
-        return Ok((p.to_path_buf(), Vec::new()));
+fn list(a: &IndexArgs) -> Result<()> {
+    let (all, notes) = candidates(a);
+    for c in &all {
+        let where_ = match &c.source {
+            Source::Installed(p) => p.display().to_string(),
+            Source::Indexed(e) => format!("index, {:.2} MB", e.size as f64 / 1e6),
+        };
+        println!("Minecraft {:<8} BlueMap {:<6} {where_}", c.mc_version, c.bluemap_version);
     }
-    let packs = find_packs();
-    if packs.is_empty() {
-        bail!("no .pack file found in ./packs or next to bmr; pass --pack <file>");
+    notes.iter().for_each(|n| println!("{n}"));
+    Ok(())
+}
+
+fn fetch(mc_version: &str, a: &IndexArgs) -> Result<()> {
+    let index = fetch_index(&a.pack_index)?;
+    let wanted: Vec<_> = index.usable().filter(|e| mc_version == "all" || e.mc_version == mc_version).collect();
+    if wanted.is_empty() {
+        let have: Vec<&str> = index.usable().map(|e| e.mc_version.as_str()).collect();
+        bail!("no pack for Minecraft {mc_version} in the index (has: {})", have.join(", "));
     }
-    let (ranked, warnings) = bmr_pack::rank(&packs, site_version, site_textures);
-    let mut lines: Vec<String> = ranked.iter().map(|r| r.describe()).collect();
-    lines.extend(warnings.into_iter().map(|w| format!("skipped: {w}")));
-    let best = ranked.first().context("no readable pack")?;
-    Ok((best.path.clone(), lines))
+    let installed = find_packs();
+    for e in wanted {
+        if installed.iter().any(|p| p.file_name().is_some_and(|n| n.to_string_lossy() == e.file)) {
+            println!("ok      {}", e.file);
+            continue;
+        }
+        println!("fetched {}", download(&a.pack_index, e)?.display());
+    }
+    Ok(())
 }

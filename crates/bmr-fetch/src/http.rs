@@ -21,7 +21,7 @@ pub struct Http {
 impl Http {
     pub fn new(base: &str, delay: Duration) -> Result<Self> {
         let agent = Agent::config_builder()
-            .user_agent(concat!("bluemap_reverse/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("bluemap-reverse/", env!("CARGO_PKG_VERSION")))
             .timeout_global(Some(Duration::from_secs(60)))
             .http_status_as_error(false)
             // OS store: the default (bundled webpki roots) makes SChannel reject cross-signed chains like GTS→GlobalSign.

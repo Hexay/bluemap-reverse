@@ -189,6 +189,22 @@ impl Chunk {
         }
     }
 
+    /// Set each 4×4×4 biome cell to `biome_at(world cell coordinates)`, where it returns one.
+    pub fn set_biomes(&mut self, biome_at: impl Fn((i32, i32, i32)) -> Option<&'static str>) {
+        let (x0, z0) = (self.x * 4, self.z * 4);
+        for s in &mut self.sections {
+            for cy in 0..4 {
+                for cz in 0..4 {
+                    for cx in 0..4 {
+                        if let Some(b) = biome_at((x0 + cx as i32, s.y * 4 + cy as i32, z0 + cz as i32)) {
+                            s.set_biome(cx, cy, cz, b);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn is_full(&self) -> bool {
         self.status == "minecraft:full" || self.status == "full"
     }

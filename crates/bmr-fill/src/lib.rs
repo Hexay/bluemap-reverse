@@ -2,6 +2,7 @@
 //! (solid / liquid / air), filled from a same-seed regeneration when available, else from priors;
 //! plus game-rule properties.
 
+mod biomes;
 mod columns;
 mod liquid;
 mod material;
@@ -23,6 +24,7 @@ use bmr_invert::{Inverted, Library};
 use bmr_world::{BlockRegistry, BlockState, StateId, StateTable};
 use rayon::prelude::*;
 
+pub use biomes::Biomes;
 pub use columns::{Bounds, Column};
 use columns::{Fill, Gap, evidence_by_column, gaps};
 use material::{SolidGap, solid_segments};
@@ -61,6 +63,8 @@ pub struct Filled {
     pub blocks: FxHashMap<Cell, BlockState>,
     /// Unseen solid/liquid runs (states interned in the caller's table).
     pub segments: Vec<Segment>,
+    /// Biome per 4×4×4 cell where the blocks tell it (a regeneration's biomes take precedence).
+    pub biomes: Biomes,
     pub stats: Stats,
 }
 
@@ -154,8 +158,9 @@ pub fn complete(
         stats.adopted_from_regen =
             t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, table, &same_render));
     }
+    let biomes = t.time("biomes", || Biomes::from_blocks(&blocks, &bounds.profile));
     stats.timings = t;
-    Filled { blocks, segments, stats }
+    Filled { blocks, segments, biomes, stats }
 }
 
 /// No regeneration: estimated deep-water floors and material priors.

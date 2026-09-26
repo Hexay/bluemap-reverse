@@ -78,3 +78,10 @@
 {"time": "2026-09-26T21:04:31", "commit": "1e533f6", "fixture": "vanilla-edited", "args": [], "occupied": 73.583, "rendered": 98.62, "rendered_alike": 99.976, "exposed": 86.45, "solid_iou": 94.125, "surface": 99.941}
 {"time": "2026-09-26T21:04:37", "commit": "1e533f6", "fixture": "context", "args": [], "occupied": 97.492, "rendered": 99.436, "rendered_alike": 99.984, "exposed": 99.458, "solid_iou": 99.976, "surface": 99.332}
 {"time": "2026-09-26T21:05:10", "commit": "1e533f6", "fixture": "structures", "args": [], "occupied": 73.044, "rendered": 98.466, "rendered_alike": 99.978, "exposed": 83.47, "solid_iou": 93.015, "surface": 99.721}
+{"time": "2026-09-26T21:19:18", "commit": "eb7ce1a", "fixture": "nether", "args": [], "occupied": 82.095, "rendered": 99.994, "rendered_alike": 99.994, "exposed": 87.962, "solid_iou": 93.97, "surface": 100.0}
+{"time": "2026-09-26T21:19:23", "commit": "eb7ce1a", "fixture": "end", "args": [], "occupied": 97.608, "rendered": 100.0, "rendered_alike": 100.0, "exposed": 100.0, "solid_iou": 100.0, "surface": 100.0}
+{"time": "2026-09-26T21:19:32", "commit": "eb7ce1a", "fixture": "vanilla", "args": [], "occupied": 73.624, "rendered": 98.608, "rendered_alike": 99.99, "exposed": 86.486, "solid_iou": 94.14, "surface": 99.941}
+{"time": "2026-09-26T21:25:05", "commit": "eb7ce1a", "fixture": "nether", "args": [], "occupied": 82.095, "rendered": 99.994, "rendered_alike": 99.994, "exposed": 87.962, "solid_iou": 93.97, "surface": 100.0}
+{"time": "2026-09-26T21:25:07", "commit": "eb7ce1a", "fixture": "end", "args": [], "occupied": 97.608, "rendered": 100.0, "rendered_alike": 100.0, "exposed": 100.0, "solid_iou": 100.0, "surface": 100.0}
+{"time": "2026-09-26T21:25:13", "commit": "eb7ce1a", "fixture": "vanilla", "args": [], "occupied": 73.624, "rendered": 98.608, "rendered_alike": 99.99, "exposed": 86.486, "solid_iou": 94.14, "surface": 99.941}
+{"time": "2026-09-26T21:25:15", "commit": "eb7ce1a", "fixture": "superflat", "args": [], "occupied": 99.922, "rendered": 99.856, "rendered_alike": 100.0, "exposed": 99.874, "solid_iou": 100.0, "surface": 99.902}

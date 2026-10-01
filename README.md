@@ -1,6 +1,6 @@
 <div align="center">
 
-# orereversal
+# bluemap-reverse
 
 **Turn a BlueMap web map back into a playable Minecraft Java world.**
 

@@ -4,6 +4,7 @@
 //! the end's by distance from the main island.
 
 use std::collections::VecDeque;
+use std::collections::hash_map::Entry;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -129,8 +130,8 @@ fn overworld_columns(
         }
         let b = out[&(x, z)].clone();
         for n in [(x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)] {
-            if !out.contains_key(&n) {
-                out.insert(n, b.clone());
+            if let Entry::Vacant(e) = out.entry(n) {
+                e.insert(b.clone());
                 queue.push_back((n, d + 1));
             }
         }

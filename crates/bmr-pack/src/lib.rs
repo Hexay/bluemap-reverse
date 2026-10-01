@@ -92,14 +92,10 @@ impl Pack {
     /// The saved file at `path` loads back to this pack's library (the encoding is lossless).
     pub fn verify_saved(&self, path: &Path) -> Result<()> {
         let back = Self::load(path)?;
-        let view = |e: &bmr_invert::library::Entry| {
-            (e.state.clone(), e.sig.clone(), e.uvs.clone(), e.light, e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
-        };
-        let a: Vec<_> = self.library.entries.iter().map(view).collect();
-        let b: Vec<_> = back.library.entries.iter().map(view).collect();
+        let (a, b) = (&self.library.entries, &back.library.entries);
         ensure!(a.len() == b.len(), "{}: {} entries saved, {} loaded", path.display(), a.len(), b.len());
         if let Some(i) = (0..a.len()).find(|&i| a[i] != b[i]) {
-            bail!("{}: entry {i} ({:?}) differs after loading", path.display(), a[i].0);
+            bail!("{}: entry {i} ({:?}) differs after loading", path.display(), a[i].state);
         }
         Ok(())
     }

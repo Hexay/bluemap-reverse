@@ -1,4 +1,4 @@
-//! Lowres tile PNGs: top half = column colours, bottom half = height/blocklight (research/01 §5).
+//! Lowres tile PNGs: top half = column colours, bottom half = height/blocklight (docs/research/01 §5).
 
 use std::io::Cursor;
 
@@ -39,10 +39,6 @@ impl LowresImage {
     pub fn block_height(&self, x: usize, z: usize) -> i16 {
         let [_, g, b, _] = self.px(x, self.height + z);
         i16::from_be_bytes([g, b])
-    }
-
-    pub fn blocklight(&self, x: usize, z: usize) -> u8 {
-        self.px(x, self.height + z)[0]
     }
 
     /// Pixel coords (x, z) in the colour half with alpha > 0, i.e. columns that have rendered geometry.

@@ -17,11 +17,11 @@ pub fn credit(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matched: &m
         let Some((entry, _)) = m else { continue };
         for (off, key) in &lib.entries[*entry].overhang {
             let n = step(cell, *off);
-            if let Some(obs) = cells.get_mut(&n) {
-                if let Some(i) = obs.keys.iter().position(|k| k == key) {
-                    obs.keys.swap_remove(i);
-                    touched.insert(n);
-                }
+            if let Some(obs) = cells.get_mut(&n)
+                && let Some(i) = obs.keys.iter().position(|k| k == key)
+            {
+                obs.keys.swap_remove(i);
+                touched.insert(n);
             }
         }
     }

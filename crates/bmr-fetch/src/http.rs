@@ -69,14 +69,14 @@ impl Http {
 }
 
 /// Servers disagree on Content-Encoding for stored `.gz` files, so trust the bytes, not the headers.
-pub fn decompress(bytes: Vec<u8>) -> Result<Vec<u8>> {
+fn decompress(bytes: Vec<u8>) -> Result<Vec<u8>> {
     match bytes.get(..4) {
         Some([0x1f, 0x8b, ..]) => {
             let mut out = Vec::with_capacity(bytes.len() * 4);
             GzDecoder::new(&bytes[..]).read_to_end(&mut out).context("gunzip")?;
             Ok(out)
         }
-        // TODO: zstd/lz4/deflate storage compressions (research/01 §1) — add when a site needs them
+        // TODO: zstd/lz4/deflate storage compressions (docs/research/01 §1) — add when a site needs them
         Some([0x28, 0xb5, 0x2f, 0xfd]) => bail!("zstd-compressed response not supported yet"),
         _ => Ok(bytes),
     }

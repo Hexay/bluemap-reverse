@@ -46,15 +46,17 @@ fn shape(blocks: &FxHashMap<Cell, BlockState>, at: Cell, s: &BlockState) -> &'st
     let can_take = |d: &str| {
         blocks.get(&step(at, d)).is_none_or(|n| !is_stairs(n) || prop(n, "facing") != Some(f) || prop(n, "half") != Some(half))
     };
-    if let Some(d1) = same_half(step(at, f)).and_then(|n| prop(n, "facing")) {
-        if axis(d1) != axis(f) && can_take(opposite(d1)) {
-            return if d1 == ccw(f) { "outer_left" } else { "outer_right" };
-        }
+    if let Some(d1) = same_half(step(at, f)).and_then(|n| prop(n, "facing"))
+        && axis(d1) != axis(f)
+        && can_take(opposite(d1))
+    {
+        return if d1 == ccw(f) { "outer_left" } else { "outer_right" };
     }
-    if let Some(d2) = same_half(step(at, opposite(f))).and_then(|n| prop(n, "facing")) {
-        if axis(d2) != axis(f) && can_take(d2) {
-            return if d2 == ccw(f) { "inner_left" } else { "inner_right" };
-        }
+    if let Some(d2) = same_half(step(at, opposite(f))).and_then(|n| prop(n, "facing"))
+        && axis(d2) != axis(f)
+        && can_take(d2)
+    {
+        return if d2 == ccw(f) { "inner_left" } else { "inner_right" };
     }
     "straight"
 }

@@ -69,10 +69,10 @@ impl World {
         for e in entries {
             let name = e?.file_name();
             let parts: Vec<&str> = name.to_str().unwrap_or("").split('.').collect();
-            if let ["r", x, z, "mca"] = parts.as_slice() {
-                if let (Ok(x), Ok(z)) = (x.parse(), z.parse()) {
-                    out.push((x, z));
-                }
+            if let ["r", x, z, "mca"] = parts.as_slice()
+                && let (Ok(x), Ok(z)) = (x.parse(), z.parse())
+            {
+                out.push((x, z));
             }
         }
         out.sort();

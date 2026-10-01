@@ -65,7 +65,7 @@ pub fn run(a: Args) -> Result<()> {
 
     println!("{faces} faces, {} textures used", per_texture.len());
     let mut by_count: Vec<_> = per_texture.into_iter().collect();
-    by_count.sort_by(|a, b| b.1.cmp(&a.1));
+    by_count.sort_by_key(|b| std::cmp::Reverse(b.1));
     for (name, n) in by_count.iter().take(8) {
         println!("  {n:>6}  {name}");
     }

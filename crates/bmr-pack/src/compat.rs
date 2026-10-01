@@ -50,6 +50,48 @@ pub fn check(pack: &Pack, site_version: Option<&str>, site_textures: &[String]) 
     }
 }
 
+impl Compat {
+    pub fn coverage(&self) -> f64 {
+        if self.total == 0 { 0.0 } else { self.known as f64 / self.total as f64 }
+    }
+
+    pub fn verdict(&self) -> Verdict {
+        match self.coverage() {
+            c if c >= OK_COVERAGE => Verdict::Ok,
+            c if c >= FAIL_COVERAGE => Verdict::Warn,
+            _ => Verdict::Fail,
+        }
+    }
+
+    /// Human explanation, one line per finding.
+    pub fn explain(&self) -> Vec<String> {
+        let mut out = vec![format!(
+            "textures: {}/{} known to the pack ({:.1}%)",
+            self.known,
+            self.total,
+            100.0 * self.coverage()
+        )];
+        match &self.site_version {
+            Some(v) if *v != self.pack_version => out.push(format!(
+                "site runs BlueMap {v}, pack was built with {} (model rendering may differ slightly)",
+                self.pack_version
+            )),
+            None => out.push("site does not publish its BlueMap version".into()),
+            _ => {}
+        }
+        for (ns, list) in &self.unknown_by_namespace {
+            let why = if ns == "minecraft" {
+                "a different Minecraft version, or a resource pack adding textures"
+            } else {
+                "a mod or a resource pack with its own namespace"
+            };
+            let sample: Vec<&str> = list.iter().take(4).map(String::as_str).collect();
+            out.push(format!("{} unknown `{ns}:` textures → {why} (e.g. {})", list.len(), sample.join(", ")));
+        }
+        out
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -104,47 +146,5 @@ mod tests {
         let p = pack(&["minecraft:block/stone"]);
         let c = check(&p, None, &names(50, "minecraft:block/new"));
         assert_eq!(c.verdict(), Verdict::Fail);
-    }
-}
-
-impl Compat {
-    pub fn coverage(&self) -> f64 {
-        if self.total == 0 { 0.0 } else { self.known as f64 / self.total as f64 }
-    }
-
-    pub fn verdict(&self) -> Verdict {
-        match self.coverage() {
-            c if c >= OK_COVERAGE => Verdict::Ok,
-            c if c >= FAIL_COVERAGE => Verdict::Warn,
-            _ => Verdict::Fail,
-        }
-    }
-
-    /// Human explanation, one line per finding.
-    pub fn explain(&self) -> Vec<String> {
-        let mut out = vec![format!(
-            "textures: {}/{} known to the pack ({:.1}%)",
-            self.known,
-            self.total,
-            100.0 * self.coverage()
-        )];
-        match &self.site_version {
-            Some(v) if *v != self.pack_version => out.push(format!(
-                "site runs BlueMap {v}, pack was built with {} (model rendering may differ slightly)",
-                self.pack_version
-            )),
-            None => out.push("site does not publish its BlueMap version".into()),
-            _ => {}
-        }
-        for (ns, list) in &self.unknown_by_namespace {
-            let why = if ns == "minecraft" {
-                "a different Minecraft version, or a resource pack adding textures"
-            } else {
-                "a mod or a resource pack with its own namespace"
-            };
-            let sample: Vec<&str> = list.iter().take(4).map(String::as_str).collect();
-            out.push(format!("{} unknown `{ns}:` textures → {why} (e.g. {})", list.len(), sample.join(", ")));
-        }
-        out
     }
 }

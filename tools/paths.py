@@ -16,6 +16,7 @@ WORK = ROOT / "work"
 DOWNLOADS = WORK / "downloads"
 FIXTURES = ROOT / "fixtures"
 PACKS = ROOT / "packs"
+RESULTS = ROOT / "docs" / "results"
 
 MC_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 
@@ -49,14 +50,6 @@ class Toolchain:
     @property
     def bluemap_java(self) -> Path:
         return jdk_dir(self.bluemap_java_major) / "bin" / f"java{EXE}"
-
-    @property
-    def jdk_dir(self) -> Path:
-        return jdk_dir(self.java_major)
-
-    @property
-    def jdk_url(self) -> str:
-        return jdk_url(self.java_major)
 
     @property
     def server_jar(self) -> Path:
@@ -105,15 +98,5 @@ def toolchain(mc: str, bluemap: str, java_major: int, bluemap_java_major: int) -
 
 
 # default-toolchain aliases used by the original single-version tools
-MC_VERSION = DEFAULT.mc
-BLUEMAP_VERSION = DEFAULT.bluemap
-JAVA_MAJOR = DEFAULT.java_major
-JDK_DIR = DEFAULT.jdk_dir
-JAVA = DEFAULT.java
-SERVER_JAR = DEFAULT.server_jar
-BLUEMAP_JAR = DEFAULT.bluemap_jar
-REPORTS = DEFAULT.reports
 WORLDS = DEFAULT.worlds
 BLUEMAP = DEFAULT.bluemap_root
-JDK_URL = DEFAULT.jdk_url
-BLUEMAP_URL = DEFAULT.bluemap_url

@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 
 pub struct Reader<'a> {
     buf: &'a [u8],
-    pub pos: usize,
+    pos: usize,
 }
 
 impl<'a> Reader<'a> {

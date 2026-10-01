@@ -106,8 +106,10 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
     })
 }
 
+pub type Decoded = (Vec<Entry>, Vec<(String, BlockInfo)>, Vec<(String, Vec<u8>)>);
+
 /// Entries plus the registry and template, moved out of `body`.
-pub fn decode(body: Body) -> (Vec<Entry>, Vec<(String, BlockInfo)>, Vec<(String, Vec<u8>)>) {
+pub fn decode(body: Body) -> Decoded {
     let textures: Vec<Tex> = body.key_textures.iter().map(|n| Tex::intern(n)).collect();
     let keys: Vec<FaceKey> =
         body.keys.iter().map(|k| FaceKey { texture: textures[k.tex as usize], tinted: k.tinted, verts: k.verts }).collect();
@@ -239,9 +241,6 @@ mod tests {
         let body = encode(&entries, registry, vec![]).unwrap();
         assert_eq!(body.sigs.len(), 2, "identical signatures are stored once");
         let (back, _, _) = decode(body);
-        let view = |e: &Entry| {
-            (e.state.clone(), e.sig.clone(), e.uvs.clone(), e.light, e.liquid, e.overhang.clone(), e.tint, e.default_distance, e.full_cube)
-        };
-        assert_eq!(entries.iter().map(view).collect::<Vec<_>>(), back.iter().map(view).collect::<Vec<_>>());
+        assert_eq!(entries, back);
     }
 }

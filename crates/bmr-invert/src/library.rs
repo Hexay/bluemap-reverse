@@ -16,6 +16,7 @@ use crate::timings::Timings;
 
 const DEBUG_Y: i32 = 70;
 
+#[derive(Debug, PartialEq)]
 pub struct Entry {
     pub state: BlockState,
     /// In-cell, non-liquid faces (liquid faces depend on neighbours; handled by direction, not by key).

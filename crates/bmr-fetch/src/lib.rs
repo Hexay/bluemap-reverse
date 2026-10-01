@@ -9,6 +9,6 @@ mod mirror;
 pub mod settings;
 pub mod store;
 
-pub use http::{Http, decompress};
+pub use http::Http;
 pub use local::LocalMap;
 pub use mirror::{MapSummary, Options, mirror};

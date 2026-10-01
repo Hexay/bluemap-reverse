@@ -89,7 +89,7 @@ pub fn reverse(map: &LocalMap, lib: &Library, tiles: &[Tile], textures: &[Tex]) 
         }
     }
     let mut u: Vec<_> = unmatched.into_iter().collect();
-    u.sort_by(|a, b| b.1.cmp(&a.1));
+    u.sort_by_key(|e| std::cmp::Reverse(e.1));
     stats.unmatched_textures = u;
 
     let obs = Observed { blocks: &blocks, solid_faces: &solid_faces, liquid_faces: &liquid_faces, liquids: &liquids };

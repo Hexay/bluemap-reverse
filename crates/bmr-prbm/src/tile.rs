@@ -1,5 +1,5 @@
 //! Parsed hires tile. Vertex arrays are kept raw (lossless); triangles are 3 consecutive vertices.
-//! Semantics per attribute: research/01 §2.
+//! Semantics per attribute: docs/research/01 §2.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Group {
@@ -30,8 +30,6 @@ pub struct Tile {
 /// One triangle with its per-face values collapsed.
 #[derive(Debug, Clone, Copy)]
 pub struct Face {
-    /// Triangle index in the tile (emission order after the stable material sort).
-    pub index: usize,
     pub material: u32,
     pub pos: [[f32; 3]; 3],
     pub uv: [[f32; 2]; 3],
@@ -57,7 +55,6 @@ impl Tile {
     fn face(&self, i: usize, material: u32) -> Face {
         let v = i * 3;
         Face {
-            index: i,
             material,
             pos: [self.position[v], self.position[v + 1], self.position[v + 2]],
             uv: [self.uv[v], self.uv[v + 1], self.uv[v + 2]],

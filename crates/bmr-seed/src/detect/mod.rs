@@ -14,7 +14,7 @@ use anyhow::Result;
 use bmr_world::World;
 use serde::Serialize;
 
-pub use cluster::Bbox;
+use cluster::Bbox;
 
 use crate::observation::Observation;
 use rules::RULES;

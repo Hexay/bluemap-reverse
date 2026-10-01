@@ -6,15 +6,12 @@ Usage: py -3 tools/check_version.py --mc 1.21.11 [--bluemap 5.27]
 """
 import argparse
 import json
-import shutil
 import subprocess
 import sys
-import zipfile
 
 from make_world import load_fixture, make_world
-from mirror_fixture import bmr_exe, wait_until_serving
-from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT
-from render_serve import bluemap, configure
+from mirror_fixture import bmr_exe, pull_fixture
+from paths import DEFAULT, ROOT
 from resave_world import resave
 from setup import resolve, setup
 
@@ -32,34 +29,13 @@ def main() -> None:
     original = tc.worlds / FIXTURE / "world"
 
     out_dir = tc.work / "out" / "check"
-    shutil.rmtree(out_dir, ignore_errors=True)
-    out_dir.mkdir(parents=True)
-    zip_path = out_dir / "pulled.zip"
-    base = configure(FIXTURE, tc)
-    if bluemap(base, "-r", tc=tc).wait():
-        sys.exit("render failed")
-    server = bluemap(base, "-w", tc=tc)
-    try:
-        wait_until_serving()
-        pull = subprocess.run(
-            [bmr_exe(), "pull", f"http://{WEB_HOST}:{WEB_PORT}/", "-o", zip_path, "--cache", out_dir / "cache", "--offline"],
-            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        )
-    finally:
-        server.terminate()
-        server.wait(30)
-    print(pull.stdout[-3000:])
-    if pull.returncode:
-        sys.exit(f"pull failed: {pull.stderr[-2000:]}")
+    pulled, pull_log = pull_fixture(FIXTURE, tc, out_dir)
     expected = f"bmr-mc{tc.mc}-bluemap{tc.bluemap}.pack"
     # the ranking line marked with an arrow and naming a .pack (the progress lines have arrows too)
-    chosen = next((l for l in pull.stdout.splitlines() if ".pack:" in l and "→" in l.split(".pack:")[0]), "")
+    chosen = next((l for l in pull_log.splitlines() if ".pack:" in l and "→" in l.split(".pack:")[0]), "")
     ok_pick = expected in chosen
     print(f"pack picked: {'OK' if ok_pick else 'WRONG'} ({chosen.strip()})")
 
-    with zipfile.ZipFile(zip_path) as z:
-        z.extractall(out_dir / "unzipped")
-    pulled = out_dir / "unzipped" / "world"
     report = out_dir / "score.json"
     subprocess.run(
         [bmr_exe(), "score", original, pulled, "--mirror", out_dir / "cache", "--blocks", tc.blocks_json, "--json", report],

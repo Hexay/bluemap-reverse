@@ -67,17 +67,6 @@ impl Section {
         &self.palette[self.index((y * 16 + z) * 16 + x) as usize]
     }
 
-    pub fn set_block(&mut self, x: usize, y: usize, z: usize, state: &BlockState) {
-        let idx = palette_index(&mut self.palette, state);
-        if self.blocks.is_empty() {
-            if idx == 0 {
-                return;
-            }
-            self.blocks = vec![0; 4096];
-        }
-        self.blocks[(y * 16 + z) * 16 + x] = idx;
-    }
-
     pub fn set_biome(&mut self, cx: usize, cy: usize, cz: usize, biome: &str) {
         let idx = match self.biome_palette.iter().position(|b| b == biome) {
             Some(i) => i,
@@ -89,7 +78,7 @@ impl Section {
         self.biomes[(cy * 4 + cz) * 4 + cx] = idx as u16;
     }
 
-    /// Drop palette entries no longer referenced (after overwrites), remapping indices; a section left
+    /// Drop palette entries no longer referenced (e.g. by `ChunkBuilder::finish`), remapping indices; a section left
     /// with one entry becomes uniform.
     pub fn compact(&mut self) {
         if self.blocks.is_empty() {
@@ -144,16 +133,6 @@ pub struct Chunk {
     pub palette_style: Option<PaletteStyle>,
 }
 
-fn palette_index(palette: &mut Vec<BlockState>, state: &BlockState) -> u16 {
-    match palette.iter().position(|p| p == state) {
-        Some(i) => i as u16,
-        None => {
-            palette.push(state.clone());
-            (palette.len() - 1) as u16
-        }
-    }
-}
-
 impl Chunk {
     /// Full-status chunk with empty (air) sections `min_section..=max_section`.
     pub fn new(x: i32, z: i32, data_version: i32, (min_section, max_section): (i32, i32), biome: &str) -> Self {
@@ -164,18 +143,6 @@ impl Chunk {
             status: "minecraft:full".into(),
             sections: (min_section..=max_section).map(|y| Section::empty(y, biome)).collect(),
             palette_style: None,
-        }
-    }
-
-    /// World y, chunk-local x/z. Returns false if y is outside the chunk's sections.
-    pub fn set_block(&mut self, x: usize, y: i32, z: usize, state: &BlockState) -> bool {
-        let sy = y.div_euclid(16);
-        match self.sections.binary_search_by_key(&sy, |s| s.y) {
-            Ok(i) => {
-                self.sections[i].set_block(x, y.rem_euclid(16) as usize, z, state);
-                true
-            }
-            Err(_) => false,
         }
     }
 

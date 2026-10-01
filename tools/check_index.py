@@ -13,9 +13,9 @@ import tempfile
 import threading
 from pathlib import Path
 
-from mirror_fixture import bmr_exe, wait_until_serving
-from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT
-from render_serve import bluemap, configure
+from mirror_fixture import URL, bmr_exe, serving
+from paths import DEFAULT, ROOT, WEB_HOST
+from render_serve import configure
 
 INDEX_PORT = 8201
 
@@ -27,18 +27,15 @@ def main() -> None:
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(packs))
     index_server = http.server.ThreadingHTTPServer((WEB_HOST, INDEX_PORT), handler)
     threading.Thread(target=index_server.serve_forever, daemon=True).start()
-    site = bluemap(configure("superflat", DEFAULT), "-w")
     empty = Path(tempfile.mkdtemp(prefix="bmr-index-"))
     try:
-        wait_until_serving()
-        pull = subprocess.run(
-            [bmr_exe(), "pull", f"http://{WEB_HOST}:{WEB_PORT}/", "-o", "out.zip",
-             "--pack-index", f"http://{WEB_HOST}:{INDEX_PORT}/index.json"],
-            cwd=empty, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        )
+        with serving(configure("superflat", DEFAULT)):
+            pull = subprocess.run(
+                [bmr_exe(), "pull", URL, "-o", "out.zip",
+                 "--pack-index", f"http://{WEB_HOST}:{INDEX_PORT}/index.json"],
+                cwd=empty, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            )
     finally:
-        site.terminate()
-        site.wait(30)
         index_server.shutdown()
     print(pull.stdout[-2500:])
     expected = f"bmr-mc{DEFAULT.mc}-bluemap{DEFAULT.bluemap}.pack"

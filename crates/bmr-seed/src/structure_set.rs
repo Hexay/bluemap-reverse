@@ -67,10 +67,14 @@ const VANILLA: &[StructureSet] = &[
     set("end_cities", 20, 11, 10387313, Triangular),
 ];
 
-/// "1.21.4" → (1, 21, 4); "26.3" → (26, 3, 0). Year-numbered versions compare above 1.x.
+/// "1.21.4" → (1, 21, 4); "26.3" → (26, 3, 0); "1.20-pre1" → (1, 20, 0). Year-numbered versions compare above
+/// 1.x. A missing part is 0; a part without leading digits ("1.x") is `None`.
 pub fn parse_version(v: &str) -> Option<(u32, u32, u32)> {
-    let mut it = v.split('.').map(|p| p.parse::<u32>().ok());
-    Some((it.next()??, it.next().flatten().unwrap_or(0), it.next().flatten().unwrap_or(0)))
+    let leading = |p: &str| p[..p.find(|c: char| !c.is_ascii_digit()).unwrap_or(p.len())].parse::<u32>().ok();
+    let mut it = v.split('.');
+    let major = leading(it.next()?)?;
+    let mut part = || it.next().map_or(Some(0), leading);
+    Some((major, part()?, part()?))
 }
 
 /// The sets that exist in `mc`, or `None` for versions before 1.18.2 (other spacings and algorithms).
@@ -93,6 +97,19 @@ mod tests {
         assert!(names("26.3").contains(&"abandoned_camp"));
         assert!(!names("1.18.2").contains(&"ancient_cities"));
         assert!(vanilla("1.17.1").is_none());
+        assert!(names("26.3-snapshot").contains(&"abandoned_camp"));
+        assert!(names("1.20-pre1").contains(&"trail_ruins"));
+    }
+
+    #[test]
+    fn parse_version_parts() {
+        assert_eq!(parse_version("1.21.4"), Some((1, 21, 4)));
+        assert_eq!(parse_version("26.3"), Some((26, 3, 0)));
+        assert_eq!(parse_version("26.3-snapshot"), Some((26, 3, 0)));
+        assert_eq!(parse_version("1.20-pre1"), Some((1, 20, 0)));
+        assert_eq!(parse_version("1.20.1-rc1"), Some((1, 20, 1)));
+        assert_eq!(parse_version("1.x"), None);
+        assert_eq!(parse_version(""), None);
     }
 
     /// Cross-check against the server jar's data when a local toolchain has extracted it (tools/setup.py).

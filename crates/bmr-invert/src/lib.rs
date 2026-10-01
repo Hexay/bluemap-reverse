@@ -3,11 +3,11 @@
 pub mod evidence;
 pub mod face;
 pub mod library;
-pub mod lookalike;
+mod lookalike;
 pub mod matcher;
-pub mod overhang;
+mod overhang;
 pub mod reverse;
-pub mod texture;
+mod texture;
 pub mod timings;
 pub mod tints;
 

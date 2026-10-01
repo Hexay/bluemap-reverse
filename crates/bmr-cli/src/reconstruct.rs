@@ -46,7 +46,8 @@ pub struct Inputs<'a> {
     pub opts: &'a Options,
 }
 
-/// Map-wide sums over windows (window counts include their halo cells).
+/// Map-wide sums over windows. Cell counts include each window's halo, so with several windows the
+/// cells near region borders are counted more than once; `chunks` is exact.
 #[derive(Default)]
 pub struct Totals {
     pub cells: usize,
@@ -55,6 +56,14 @@ pub struct Totals {
     pub liquid: usize,
     pub adopted: usize,
     pub chunks: usize,
+    pub windows: usize,
+}
+
+impl Totals {
+    /// Suffix for printed cell counts, flagging halo double-counting when there were several windows.
+    pub fn overlap_note(&self) -> &'static str {
+        if self.windows > 1 { " (cell counts include window halo overlap)" } else { "" }
+    }
 }
 
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
@@ -65,7 +74,7 @@ pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let mut table = StateTable::default();
     let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
 
-    let mut totals = Totals::default();
+    let mut totals = Totals { windows: windows.len(), ..Totals::default() };
     let mut t = Timings::default();
     for (i, win) in windows.iter().enumerate() {
         let (chunks, mut wt) = run_window(win, inp, &textures, air, &mut table, &mut totals)?;

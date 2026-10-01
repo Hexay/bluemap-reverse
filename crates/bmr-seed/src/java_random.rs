@@ -39,10 +39,6 @@ impl JavaRandom {
     pub fn next_long(&mut self) -> i64 {
         ((self.next(32) as i64) << 32).wrapping_add(self.next(32) as i64)
     }
-
-    pub fn next_float(&mut self) -> f32 {
-        self.next(24) as f32 / (1 << 24) as f32
-    }
 }
 
 pub fn step(state: u64) -> u64 {

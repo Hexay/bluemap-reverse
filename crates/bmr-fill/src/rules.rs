@@ -26,7 +26,7 @@ pub fn leaves_distance(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
         }
         for (dx, dy, dz) in DIRS {
             let n = (x + dx, y + dy, z + dz);
-            if blocks.get(&n).is_some_and(|s| is_leaves(s)) && !dist.contains_key(&n) {
+            if blocks.get(&n).is_some_and(is_leaves) && !dist.contains_key(&n) {
                 dist.insert(n, d + 1);
                 queue.push_back(n);
             }

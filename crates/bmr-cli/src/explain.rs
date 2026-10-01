@@ -5,9 +5,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, bail};
 use bmr_invert::face::{FaceKey, faces_by_cell, signature, texture_ids, world_faces};
 use bmr_invert::matcher::candidates;
-use bmr_invert::Library;
 
-use crate::{MirrorArgs, WorldArgs};
+use crate::{LibraryArgs, MirrorArgs, WorldArgs};
 
 #[derive(clap::Args)]
 pub struct Args {
@@ -19,10 +18,8 @@ pub struct Args {
     /// Original world: diff the cell against its true state's library signature
     #[arg(long)]
     original: Option<PathBuf>,
-    #[arg(long, default_value = "work/cache/debug")]
-    library_mirror: PathBuf,
-    #[arg(long, default_value = "work/worlds/debug/world")]
-    library_world: PathBuf,
+    #[command(flatten)]
+    library: LibraryArgs,
     #[command(flatten)]
     world_args: WorldArgs,
 }
@@ -31,8 +28,7 @@ pub fn run(a: Args) -> Result<()> {
     let v: Vec<i32> = a.cell.split(',').map(str::parse).collect::<Result<_, _>>()?;
     let [x, y, z] = v[..] else { bail!("cell must be x,y,z") };
     let registry = a.world_args.registry()?.context("needs the block registry")?;
-    let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
-    let lib = Library::build(&lib_map, &a.world_args.open(&a.library_world, &Some(registry.clone()))?, &registry)?;
+    let lib = a.library.library(&registry)?;
 
     let map = a.mirror.open()?;
     let names = texture_ids(&bmr_prbm::parse_texture_names(&map.textures_json()?)?);

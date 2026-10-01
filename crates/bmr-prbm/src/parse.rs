@@ -58,7 +58,7 @@ fn read_attribute(r: &mut Reader, vertices: usize) -> Result<Attribute> {
     let n = vertices * cardinality;
     r.align4();
     let values = match flags & 0x0f {
-        1 => Values::F32(r.bytes(n * 4)?.chunks_exact(4).map(|b| f32::from_le_bytes(b.try_into().unwrap())).collect()),
+        1 => Values::F32(r.bytes(n * 4)?.as_chunks::<4>().0.iter().map(|&b| f32::from_le_bytes(b)).collect()),
         3 => Values::I8(r.bytes(n)?.iter().map(|&b| b as i8).collect()),
         7 => Values::U8(r.bytes(n)?.to_vec()),
         e => bail!("unsupported encoding {e}"),
@@ -111,7 +111,7 @@ impl Attribute {
 }
 
 fn chunk<T: Copy, const N: usize>(v: &[T]) -> Vec<[T; N]> {
-    v.chunks_exact(N).map(|c| c.try_into().unwrap()).collect()
+    v.as_chunks::<N>().0.to_vec()
 }
 
 fn flat<T: Copy>(v: Vec<[T; 1]>) -> Vec<T> {

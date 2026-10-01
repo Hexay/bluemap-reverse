@@ -3,7 +3,7 @@
 Goal: given only a BlueMap web URL, reconstruct the Minecraft Java world **as close to the original as possible**.
 Measured by scoring against worlds we own (render → serve → reverse → diff).
 
-Evidence for every claim here lives in `research/01..04`. This file is decisions + order of work.
+Evidence for every claim here lives in `docs/research/01..04`. This file is decisions + order of work.
 
 ## Pinned versions
 

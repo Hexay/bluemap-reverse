@@ -1,7 +1,7 @@
 """Benchmark a command: N runs → median/min/max of wall time, process CPU time (user+kernel) and peak
 working set. CPU time is the number to trust on a busy machine; wall time is reported for completeness.
 If the command writes `--timings {timings}` JSON, per-stage medians are reported too.
-Appends a summary line to results/bench.jsonl.
+Appends a summary line to docs/results/bench.jsonl.
 
 Usage: py -3 tools/bench.py <label> [-n 3] [--clean DIR] -- <command...>
   {timings} in the command is replaced by a temp JSON path.
@@ -21,7 +21,7 @@ import time
 from ctypes import wintypes
 from pathlib import Path
 
-from paths import ROOT
+from paths import RESULTS, ROOT
 
 
 class ProcessMemoryCounters(ctypes.Structure):
@@ -104,8 +104,8 @@ def main() -> None:
     print(f"{args.label}: wall {line['wall_s']['median']}s  cpu {line['cpu_s']['median']}s  peak {line['peak_mb']['median']:.0f} MB (median of {args.n})")
     for s, v in stages.items():
         print(f"  {s:<26} {v['median']:>8.3f}s  [{v['min']:.3f} .. {v['max']:.3f}]")
-    (ROOT / "results").mkdir(exist_ok=True)
-    with open(ROOT / "results" / "bench.jsonl", "a") as f:
+    RESULTS.mkdir(exist_ok=True)
+    with open(RESULTS / "bench.jsonl", "a") as f:
         f.write(json.dumps(line) + "\n")
 
 

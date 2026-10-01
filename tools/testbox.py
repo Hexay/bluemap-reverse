@@ -14,7 +14,7 @@ from paths import ROOT
 
 HOST = "testbox"
 REMOTE = "bluemap_reverse"
-SKIP_DIRS = {".git", "target", "work", "__pycache__", "research_notes", "reports"}
+SKIP_DIRS = {".git", "target", "work", "__pycache__", "research"}
 
 
 def sync() -> None:

@@ -1,4 +1,4 @@
-//! Webapp `settings.json` and per-map `maps/<id>/settings.json` (research/01 §1).
+//! Webapp `settings.json` and per-map `maps/<id>/settings.json` (docs/research/01 §1).
 
 use serde::Deserialize;
 

@@ -1,4 +1,4 @@
-//! `textures.json`: index = PRBM material index (research/01 §2.4).
+//! `textures.json`: index = PRBM material index (docs/research/01 §2.4).
 
 use std::io::Cursor;
 

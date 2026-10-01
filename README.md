@@ -1,110 +1,200 @@
-# bluemap-reverse
+<div align="center">
 
-Reconstruct a Minecraft Java world from a BlueMap web map (the 3D browser viewer) — as close to the original as
-possible: one command turns a site into a world zip (every dimension) or a WorldEdit schematic.
-Rust (reverser) + Python stdlib (test tooling).
+# orereversal
 
-## What you get
+**Turn a BlueMap web map back into a playable Minecraft Java world.**
 
-Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27; `results/history.jsonl`):
+Point it at a BlueMap site and get a world zip with every dimension, or a WorldEdit schematic.
+No server, no Java, no BlueMap install, just one binary.
 
-| Test world | Blocks BlueMap drew | … counting look-alikes | All blocks | Biomes |
-|---|---|---|---|---|
+[![CI](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml/badge.svg)](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+[![Rust 2024](https://img.shields.io/badge/rust-2024%20edition-orange?logo=rust)](https://www.rust-lang.org/)
+[![Minecraft 1.18+](https://img.shields.io/badge/minecraft-1.18%2B-62b47a)](#supported-versions)
+[![BlueMap 5.27](https://img.shields.io/badge/bluemap-5.27-2c6fbb)](https://bluemap.bluecolored.de/)
+
+[Install](#installation) · [Quick start](#quick-start) · [Accuracy](#accuracy) · [How it works](#how-it-works) ·
+[Limitations](#limitations) · [Building](#building-from-source) · [Docs](#documentation)
+
+</div>
+
+---
+
+```console
+$ bmr pull https://map.example.com/ -o world.zip
+```
+
+Extract `world.zip` into `.minecraft/saves/` and open it.
+
+## Features
+
+- **One command.** `pull` mirrors the site, picks the matching data pack, reconstructs every map and zips
+  the result. Downloads are cached and resumable, so re-running costs nothing.
+- **Block-accurate.** Each drawn face is matched against BlueMap's own render of every block state. Texture
+  orientation, light, tints and game rules (stair corners, fence connections, redstone power, waterlogging)
+  settle the remaining details.
+- **All dimensions.** Overworld, Nether and End maps go into one world, detected from the map id or BlueMap's
+  default sky colour.
+- **Biomes.** Recovered from the grass, foliage and water tints BlueMap drew (overworld), from what grows there
+  (Nether) and from the island layout (End).
+- **Hidden blocks.** Underground and enclosed blocks are filled from evidence and priors. If you know the world
+  seed, a same-seed regeneration fills them instead (`--regen`).
+- **Seed recovery.** Detects structures in the reconstructed world and cracks the world seed from their start
+  chunks ([docs/seed.md](docs/seed.md)).
+- **Schematics.** Cuts a Sponge v3 `.schem` for WorldEdit/FAWE out of any world.
+
+## Installation
+
+Download the archive for your platform from the [latest release][latest] (Windows, Linux, macOS on Intel or
+Apple silicon), extract it and run `bmr` from that folder. The bundled `packs/` folder covers the
+[supported versions](#supported-versions) offline; other packs download on demand.
+
+To build it yourself, see [Building from source](#building-from-source).
+
+## Quick start
+
+```sh
+bmr pull https://map.example.com/ -o world.zip            # mirror + check + reconstruct + zip
+bmr pull https://map.example.com/ --map world_nether      # only one of the site's maps
+bmr pull https://map.example.com/ --schem build.schem     # also a schematic (overworld, else the first map)
+bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
+```
+
+### Packs
+
+A pack (~0.3 MB) holds what reconstruction needs for one Minecraft + BlueMap version: block signatures, biome
+tints, the block registry and an empty world template. `pull` fingerprints the site's texture list, picks the
+matching pack from `./packs`, `packs/` next to the binary or the [online index][packs-release], and downloads it
+if needed.
+
+```sh
+bmr pack list                    # installed and available packs
+bmr pack fetch <mc-version|all>  # download ahead of time
+bmr pull … --offline             # never touch the index
+```
+
+`pull` compares textures and BlueMap version and explains mismatches (another Minecraft version, mods, resource
+packs). It refuses a clearly wrong pack unless you pass `--force`.
+
+### Options worth knowing
+
+| Option | Default | Purpose |
+|---|---|---|
+| `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
+| `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
+| `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |
+| `--offline` | off | Use installed packs only. |
+| `--force` | off | Use a pack even when it doesn't fit the site. |
+
+Run `bmr <command> --help` for the full list.
+
+## Accuracy
+
+Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27). Full history in
+[`docs/results/history.jsonl`](docs/results/history.jsonl).
+
+| Test world | Drawn blocks | Drawn, look-alikes allowed | All blocks | Biomes |
+|---|--:|--:|--:|--:|
 | Superflat with builds | 99.86% | 100% | 99.92% | 100% |
 | Vanilla terrain, no seed | 98.94% | 99.99% | 74.4% | 95.7% |
-| Vanilla terrain, with the seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
-| Blocks among neighbours (`context`: stairs, fences, redstone, doors, a jumble of every block) | 99.44% | 99.98% | 97.5% | 99.8% |
+| Vanilla terrain, with seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
+| Blocks among neighbours¹ | 99.44% | 99.98% | 97.5% | 99.8% |
 | Nether | 99.99% | 99.99% | 82.1% | 73.6% |
 | End | 100% | 100% | 97.6% | 100% |
 
-- **Drawn blocks** are matched against signatures learned from BlueMap's own render of every block state,
-  with texture orientation (door hinges, rotations), light, tints (redstone power) and game rules (stair
-  corners, connections, note block instruments, redstone `powered`, waterlogging) settling the details.
+¹ The `context` fixture: stairs, fences, redstone, doors and a jumble of every block.
+
+- **Drawn blocks** are those BlueMap rendered in at least one tile.
 - **Look-alikes** render identically, so no tile can tell them apart: waxed vs unwaxed copper, infested vs
-  plain stone, double slab vs its full block, invisible or random properties (note pitch, crop/kelp age).
-- **Hidden blocks** (underground, inside builds, the nether roof BlueMap masks out) are filled from evidence
-  and priors; with the world seed they come from a same-seed regeneration instead. Block entity contents
-  (chests, signs) and entities are not in the tiles at all.
-- **Biomes** come from the grass, foliage and water tints BlueMap drew (overworld), what grows there (nether)
-  and the island layout (end).
+  plain stone, a double slab vs its full block, invisible or random properties (note pitch, crop age).
+- **All blocks** includes everything BlueMap never drew. Without the seed that part is an educated guess.
 
-## Use it
+## How it works
 
-Needs only `bmr` — no Java, server or BlueMap. `pull` picks the pack (~0.3 MB, one per Minecraft + BlueMap
-version: block signatures, biome tints, block registry, an empty world template) whose texture list matches the site (a Minecraft-version fingerprint), among installed packs
-(`./packs`, `packs/` next to bmr) and the online pack index, and downloads it if needed (`--offline` to skip;
-`bmr pack list`, `bmr pack fetch <mc-version|all>`).
+1. **Mirror.** Download the site's settings, textures and hires/lowres tiles into `work/cache/<site>`.
+2. **Decode.** Parse BlueMap's PRBM tile meshes into faces with textures, tints, light and positions.
+3. **Invert.** Match each block's faces against signatures learned from BlueMap's render of every block state,
+   then apply game rules to pick between candidates.
+4. **Fill.** Infer biomes from tints and fill unrendered volume from evidence, priors or a seeded regeneration.
+5. **Write.** Emit Anvil region files for each dimension, then zip the world or cut a schematic.
+
+The research behind each step lives in [`docs/research/`](docs/research).
+
+## Limitations
+
+- Only what BlueMap renders can be recovered exactly. Chest contents, sign text, other block entity data and
+  entities aren't in the tiles at all.
+- Hidden areas (caves under BlueMap's cave cutoff, the Nether roof, sealed interiors) are approximations unless
+  you have the seed.
+- Look-alike blocks (see [Accuracy](#accuracy)) can't be told apart, so one of the group is picked.
+- Modded blocks and resource packs change textures; the pack check will flag them and reconstruction quality
+  drops.
+
+## Supported versions
+
+Prebuilt packs, all for BlueMap 5.27:
+
+| Minecraft | Pack |
+|---|---|
+| 26.3 | `bmr-mc26.3-bluemap5.27.pack` |
+| 1.21.11 | `bmr-mc1.21.11-bluemap5.27.pack` |
+| 1.21.8 | `bmr-mc1.21.8-bluemap5.27.pack` |
+| 1.21.4 | `bmr-mc1.21.4-bluemap5.27.pack` |
+
+Packs for any other 1.18+ version can be built unattended in about two minutes
+([docs/development.md](docs/development.md#packs)).
+
+## Building from source
+
+Requires a recent stable Rust toolchain (2024 edition) and a C compiler (MSVC, GCC or Clang) for the vendored
+[cubiomes](https://github.com/Cubitect/cubiomes).
+
+```sh
+git clone https://github.com/Hexay/bluemap-reverse
+cargo build --release
+# binary: target/release/bmr
 ```
-bmr pull https://map.example.com/ -o world.zip           # mirror + check + reconstruct + zip; extract into saves/
-bmr pull https://map.example.com/ --map world_nether      # only one of the site's maps
-bmr pull … --schem build.schem                             # also a WorldEdit schematic (overworld, else first map)
-bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
-```
-- Every map of the site goes into its dimension of one world (overworld, nether, end: from the map id,
-  else BlueMap's default sky colour). Two maps of one dimension are separate worlds: pick one with `--map`.
-  Map settings a site does not publish are assumed to be BlueMap's defaults for the dimension (nether roof
-  y 90..127 hidden, caves below y 55 hidden in the overworld); override with `--mask-y`, `--cave-y`.
-- Re-running is cheap: downloads are cached and resumed (`work/cache/<site>`), nothing is fetched twice.
-- Be gentle: defaults are 4 parallel downloads with a 25 ms pause each (`--concurrency`, `--delay-ms`).
-- The pack must fit the site: `pull` compares textures and BlueMap version and explains mismatches (other
-  Minecraft version, mods, resource packs); it refuses clearly unfitting packs unless `--force`.
-- Only reverse maps you own or have permission for.
 
-## Development
+The test tooling under `tools/` is plain Python 3 (stdlib only). It downloads its own JDK, Minecraft server and
+BlueMap to build fixture worlds and score reconstructions; see [docs/development.md](docs/development.md).
 
-New Minecraft/BlueMap version (1.18+), unattended, ~2 min: `py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27]`
-→ `packs/bmr-mc<mc>-bluemap<bm>.pack` (prints time per stage). Prove it end to end: `py -3 tools/check_version.py --mc 1.21.11`
-(fixture world in that version → BlueMap → `bmr pull` → score → load in that version's server).
-Publish: `bmr pack index packs` writes `packs/index.json`; upload it with the packs to the GitHub release
-`packs` (the default `--pack-index`). `py -3 tools/check_index.py` tests index → download → pull locally.
-```
-bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
-bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender
-bmr check-heights                       # hires top faces vs lowres heightmap (decode sanity check)
-bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered columns; no recon = all-air baseline
-                                        # --pack <p>: also rendered accuracy counting look-alike states as correct
-bmr pack lookalikes <pack> out.json     # groups of states BlueMap draws identically (unrecoverable from tiles)
-bmr probe <world> x,y,z ...             # print block states + biome
-bmr reverse --mirror <dir> <out_world>  # reconstruct (needs work/cache/debug + work/worlds/debug, see below)
-bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
-bmr reverse … --zip out.zip             # also package the world folder (extracts to <folder>/, drop into saves/)
-bmr schem <world> out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
-                                        # Sponge v3 .schem for WorldEdit/FAWE; trims to non-air by default
-py -3 tools/check_schem.py out.schem    # independent spec validator (own NBT parser)
-bmr structures <world> -o obs.json     # structures in a reconstructed world → seed observations
-bmr seed obs.json [--max-misses N]      # world seed from structure start chunks (docs/seed.md)
-```
-Library prerequisites: `py -3 tools/make_world.py debug && py -3 tools/mirror_fixture.py debug`, plus
-`template-void`. Any fixture: `py -3 tools/make_world.py <f> && py -3 tools/mirror_fixture.py <f>`, then
-`py -3 tools/reverse_fixture.py <f> [--regen work/worlds/regen-<f>/world]` (regen: `tools/regen_world.py <f> --seed S`).
-Block-state coverage: `debug` (every state, isolated) and `context` (states among neighbours; its commands.txt is
-generated by `py -3 tools/gen_context.py`) — reverse both after matcher changes and compare `rendered_alike`.
-Dimensions: `nether` and `end` fixtures (a fixture's `dimension`, rendered with BlueMap's default map for it);
-`py -3 tools/check_dimensions.py` pulls a three-map site into one world and scores each dimension.
-Biomes: the `biomes` fixture (one patch per overworld biome, `py -3 tools/gen_biomes.py`, commands generated per
-version) is where packs learn biome tints; `bmr reverse` learns them from work/cache/biomes directly.
-Tools run `$BMR_EXE` if set (e.g. a build in another `--target-dir` while another session uses target/release).
-Iterate with debug builds (`cargo build`, binary `target/debug/bmr.exe`); deps are optimised in the dev profile.
+## Documentation
 
-## Test loop
+| Document | Contents |
+|---|---|
+| [docs/plan.md](docs/plan.md) | Goal, architecture, phases, scoring, open questions. **Start here.** |
+| [docs/development.md](docs/development.md) | Test loop, fixtures, full command reference, building packs. |
+| [docs/seed.md](docs/seed.md) | Seed recovery pipeline. |
+| [docs/performance.md](docs/performance.md) | Benchmarking, profiling and performance decisions. |
+| [docs/research/01-bluemap-web-format.md](docs/research/01-bluemap-web-format.md) | What a BlueMap site exposes: URLs, PRBM, tiles, textures, culling. |
+| [docs/research/02-model-inversion.md](docs/research/02-model-inversion.md) | How BlueMap turns block states into meshes, and how to invert it. |
+| [docs/research/03-rust-and-tooling.md](docs/research/03-rust-and-tooling.md) | Crates, BlueMap CLI usage, test-world generation, version pins. |
+| [docs/research/04-filling-hidden-data.md](docs/research/04-filling-hidden-data.md) | Recovering what tiles don't contain: seeds, regen, biome inference. |
+| [docs/research/seed-recovery.md](docs/research/seed-recovery.md) | Seed recovery from maps: structure cracking, upper bits, sources. |
+| [docs/chat-log.md](docs/chat-log.md) | The conversation that started the project. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Reporting problems, making changes, releasing. |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each release. |
 
-```
-py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / BlueMap 5.27, make world, render, serve
-```
-- `tools/setup.py` → `work/downloads/`; `tools/make_world.py <fixture>` → `work/worlds/<fixture>/world`;
-  `tools/render_serve.py <fixture> [--no-render|--no-serve|--force-render]` → `work/bluemap/<fixture>/`, http://127.0.0.1:8100/
-- Fixtures: `fixtures/<name>/fixture.json` (server.properties overrides, area to force-load, optional `bluemap` map-config
-  overrides) + `commands.txt` (console commands run after the area loads).
-- `work/` is git-ignored.
+## Responsible use
 
-## Docs
+Only reconstruct maps you own or have permission to reverse. The defaults download gently; keep them that way
+on other people's servers.
 
-- `docs/plan.md` — goal, architecture, phases, scoring, open questions. **Start here.**
-- `docs/chat-log.md` — the conversation that started the project.
-- `docs/performance.md` — benchmarking/profiling tools, method, and the performance design decisions.
-- `research/01-bluemap-web-format.md` — what a BlueMap site exposes: URL layout, PRBM format, tiles, textures.json, lowres PNGs, what's culled.
-- `research/02-model-inversion.md` — how BlueMap turns block states into meshes and how to invert it.
-- `research/03-rust-and-tooling.md` — crates, BlueMap CLI usage, test-world generation, version pins.
-- `research/04-filling-hidden-data.md` — recovering what tiles don't contain: seed cracking, regen+merge, light/AO/biome inference.
+## Acknowledgements
 
-## Only use on maps you own or have permission to reverse.
+- [BlueMap](https://github.com/BlueMap-Minecraft/BlueMap), whose renderer this project inverts.
+- [cubiomes](https://github.com/Cubitect/cubiomes) (MIT), vendored from the
+  [xpple fork](https://github.com/xpple/cubiomes) for biome checks during seed recovery.
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+- MIT license ([LICENSE-MIT](LICENSE-MIT))
+
+at your option. The vendored cubiomes sources keep their own MIT license
+([crates/bmr-cubiomes/vendor/LICENSE](crates/bmr-cubiomes/vendor/LICENSE)).
+
+[packs-release]: https://github.com/Hexay/bluemap-reverse/releases/tag/packs
+[latest]: https://github.com/Hexay/bluemap-reverse/releases/latest

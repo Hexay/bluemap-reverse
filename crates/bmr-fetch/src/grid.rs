@@ -1,4 +1,4 @@
-//! Tile grids and BlueMap's digit-split tile paths (research/01 §1, §3, §5).
+//! Tile grids and BlueMap's digit-split tile paths (docs/research/01 §1, §3, §5).
 
 pub type Tile = (i32, i32);
 

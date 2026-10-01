@@ -1,12 +1,12 @@
 # Performance
 
-Numbers live in `results/bench.jsonl` (one line per benchmark run); this file is method + decisions.
+Numbers live in `docs/results/bench.jsonl` (one line per benchmark run); this file is method + decisions.
 
 ## Tools
 
 | Command | What |
 |---|---|
-| `py -3 tools/bench.py <label> -n 5 --clean work/out/bench -- target/release/bmr.exe reverse … --timings {timings}` | median wall / **CPU** / peak memory + per-stage medians → `results/bench.jsonl` |
+| `py -3 tools/bench.py <label> -n 5 --clean work/out/bench -- target/release/bmr.exe reverse … --timings {timings}` | median wall / **CPU** / peak memory + per-stage medians → `docs/results/bench.jsonl` |
 | `py -3 tools/profile.py <name> --build --clean work/out/prof -- target/profiling/bmr.exe reverse …` | samply sampling profile (UAC prompt), CPU-weighted self/inclusive top functions; open `work/prof/<name>.json.gz` in profiler.firefox.com for flame graphs |
 | `py -3 tools/check_equiv.py [--update]` | output guard: every optimisation must keep both reference reconstructions bit-identical (regen path + prior path) |
 | `bmr reverse … ` | prints per-stage time and resident memory after each stage |

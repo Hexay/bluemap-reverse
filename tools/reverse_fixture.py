@@ -1,5 +1,5 @@
 """Reverse a mirrored fixture and score it against the original world.
-Appends a one-line summary to results/history.jsonl (committed) so every change shows up as better/worse.
+Appends a one-line summary to docs/results/history.jsonl (committed) so every change shows up as better/worse.
 
 Usage: py -3 tools/reverse_fixture.py <fixture> [extra bmr reverse args...]
 """
@@ -10,9 +10,7 @@ import sys
 import time
 
 from mirror_fixture import bmr_exe
-from paths import DEFAULT, FIXTURES, ROOT, WORK, WORLDS
-
-RESULTS = ROOT / "results"
+from paths import DEFAULT, FIXTURES, RESULTS, ROOT, WORK, WORLDS
 
 
 def pct(acc: dict) -> float:

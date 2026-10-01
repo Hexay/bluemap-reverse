@@ -1,4 +1,4 @@
-//! Minimal safe binding to cubiomes (xpple fork, vendored): overworld biomes and structure biome viability.
+//! Minimal safe binding to cubiomes (xpple fork, vendored): overworld structure biome viability.
 
 use std::ffi::{CString, c_char, c_int, c_void};
 use std::ptr::NonNull;
@@ -10,7 +10,6 @@ unsafe extern "C" {
     fn bmr_structure_type(set: *const c_char) -> c_int;
     fn str2mc(s: *const c_char) -> c_int;
     fn isViableStructurePos(structure_type: c_int, g: *mut c_void, x: c_int, z: c_int, flags: u32) -> c_int;
-    fn getBiomeAt(g: *const c_void, scale: c_int, x: c_int, y: c_int, z: c_int) -> c_int;
 }
 
 /// cubiomes' 1.18+ versions (each covers its patch range); picks the newest at or below the target.
@@ -69,11 +68,6 @@ impl Generator {
     /// Whether the biomes at a start chunk allow the structure (cubiomes' approximation of vanilla's check).
     pub fn is_viable(&mut self, structure: StructureType, chunk: (i32, i32)) -> bool {
         unsafe { isViableStructurePos(structure.0, self.0.as_ptr(), chunk.0 * 16, chunk.1 * 16, 0) != 0 }
-    }
-
-    /// Biome id at 1:`scale` coordinates (scale 1 = block, 4 = biome cell).
-    pub fn biome_at(&self, scale: i32, x: i32, y: i32, z: i32) -> i32 {
-        unsafe { getBiomeAt(self.0.as_ptr(), scale, x, y, z) }
     }
 }
 

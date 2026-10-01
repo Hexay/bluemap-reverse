@@ -69,7 +69,7 @@ pub fn per_region(map: &LocalMap, halo: i32) -> Vec<Window> {
                 .copied()
                 .filter(|&t| {
                     let [tx, tz] = map.hires_origin(t);
-                    tx <= x1 && tx + w - 1 >= x0 && tz <= z1 && tz + h - 1 >= z0
+                    tx <= x1 && tx + w > x0 && tz <= z1 && tz + h > z0
                 })
                 .collect();
             let chunk_area = ((x0.div_euclid(16), z0.div_euclid(16)), (x1.div_euclid(16), z1.div_euclid(16)));

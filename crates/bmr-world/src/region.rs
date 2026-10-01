@@ -12,9 +12,11 @@ use rayon::prelude::*;
 
 const SECTOR: usize = 4096;
 
-/// Decompressed chunk NBT keyed by local (x, z) in 0..32, for present slots where `keep` holds
-/// (only those are decompressed).
-pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<Vec<((u8, u8), Vec<u8>)>> {
+/// Chunk NBT keyed by local (x, z) in 0..32.
+pub type RegionChunks = Vec<((u8, u8), Vec<u8>)>;
+
+/// Decompressed chunks for present slots where `keep` holds (only those are decompressed).
+pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<RegionChunks> {
     let data = std::fs::read(path).with_context(|| path.display().to_string())?;
     if data.is_empty() {
         return Ok(Vec::new());

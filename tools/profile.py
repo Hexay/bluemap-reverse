@@ -155,7 +155,7 @@ def demangle_v0(s: str) -> str:
     idents, i = [], 1
     while i < len(s):
         m = re.match(r"(\d+)_?", s[i:])
-        if not m or s[i - 1:i] in ("C", "s") and False:
+        if not m:
             i += 1
             continue
         n, start = int(m.group(1)), i + m.end()

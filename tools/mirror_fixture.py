@@ -10,6 +10,8 @@ import subprocess
 import sys
 import time
 import urllib.request
+import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from paths import DEFAULT, EXE, ROOT, WEB_HOST, WEB_PORT, Toolchain
@@ -37,21 +39,53 @@ def wait_until_serving(timeout: float = 120) -> None:
     sys.exit(f"BlueMap webserver did not come up on {URL}")
 
 
-def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False) -> int:
-    """Render + serve + fetch; returns bmr's exit code. Output: tc.cache / fixture."""
-    base = configure(fixture, tc)
-    render = ["-r", "-f"] if force_render else ["-r"]
-    if bluemap(base, *render, tc=tc).wait():
-        sys.exit("render failed")
-    out = tc.cache / fixture
-    shutil.rmtree(out, ignore_errors=True)
+@contextmanager
+def serving(base: Path, tc: Toolchain = DEFAULT):
+    """BlueMap's webserver for the BlueMap dir `base`, up for the duration of the `with` block."""
     server = bluemap(base, "-w", tc=tc)
     try:
         wait_until_serving()
-        return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8"], cwd=ROOT)
+        yield
     finally:
         server.terminate()
         server.wait(30)
+
+
+def render(fixture: str, tc: Toolchain = DEFAULT, force: bool = False) -> Path:
+    """Configure + render `fixture`; returns its BlueMap dir. Exits on a failed render."""
+    base = configure(fixture, tc)
+    if bluemap(base, *(["-r", "-f"] if force else ["-r"]), tc=tc).wait():
+        sys.exit("render failed")
+    return base
+
+
+def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False) -> int:
+    """Render + serve + fetch; returns bmr's exit code. Output: tc.cache / fixture."""
+    base = render(fixture, tc, force_render)
+    out = tc.cache / fixture
+    shutil.rmtree(out, ignore_errors=True)
+    with serving(base, tc):
+        return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8"], cwd=ROOT)
+
+
+def pull_fixture(fixture: str, tc: Toolchain, out_dir: Path) -> tuple[Path, str]:
+    """Render + serve `fixture`, `bmr pull --offline` it into a fresh `out_dir` (mirror in out_dir/cache)
+    and unzip it. Prints the pull's output tail, exits on a failed pull. Returns (pulled world, pull stdout)."""
+    shutil.rmtree(out_dir, ignore_errors=True)
+    out_dir.mkdir(parents=True)
+    zip_path = out_dir / "pulled.zip"
+    base = render(fixture, tc)
+    with serving(base, tc):
+        pull = subprocess.run(
+            [bmr_exe(), "pull", URL, "-o", zip_path, "--cache", out_dir / "cache", "--offline"],
+            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+    print(pull.stdout[-3000:])
+    if pull.returncode:
+        sys.exit(f"pull failed: {pull.stderr[-2000:]}")
+    with zipfile.ZipFile(zip_path) as z:
+        z.extractall(out_dir / "unzipped")
+    return out_dir / "unzipped" / "world", pull.stdout
 
 
 def main() -> None:

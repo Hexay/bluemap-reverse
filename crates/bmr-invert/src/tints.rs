@@ -56,10 +56,6 @@ impl TintSum {
     pub fn means(&self) -> [Option<[u8; 3]>; CHANNELS] {
         std::array::from_fn(|c| (self.n[c] > 0).then(|| self.sum[c].map(|s| (s / self.n[c] as u64) as u8)))
     }
-
-    pub fn is_empty(&self) -> bool {
-        self.n.iter().all(|&n| n == 0)
-    }
 }
 
 /// The tint BlueMap draws for one biome (learned from its render of the `biomes` fixture).

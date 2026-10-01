@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 
-from paths import ROOT, WORK
+from paths import EXE, ROOT, WORK
 
 CASES = {
     "vanilla-regen": ["--mirror", "work/cache/vanilla", "--regen", "work/worlds/regen-vanilla/world"],
@@ -46,7 +46,7 @@ def run_case(bmr: str, name: str, args: list[str], update: bool) -> bool:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--update", action="store_true", help="store this build's outputs as the references")
-    ap.add_argument("--bin", default="target/release/bmr.exe")
+    ap.add_argument("--bin", default=f"target/release/bmr{EXE}")
     args = ap.parse_args()
     bmr = str(ROOT / args.bin)
     results = [run_case(bmr, name, case, args.update) for name, case in CASES.items()]

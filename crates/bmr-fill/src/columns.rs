@@ -79,7 +79,7 @@ pub fn evidence_by_column(ev: &Evidence) -> EvidenceByColumn {
     for ce in by_col.values_mut() {
         ce.solid.sort_unstable_by(|a, b| b.cmp(a));
         ce.open.sort_unstable_by(|a, b| b.cmp(a));
-        ce.liquid.sort_unstable_by(|a, b| b.0.cmp(&a.0));
+        ce.liquid.sort_unstable_by_key(|l| std::cmp::Reverse(l.0));
     }
     by_col
 }
@@ -98,8 +98,7 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
             if y < cursor {
                 let parts = split_at_mask(y + 1, cursor, p.mask);
                 // rock just under the mask carries on into it; open space goes on up to the roof's underside
-                let rock_under = parts.iter().find(|(_, hi)| p.mask.is_some_and(|(mlo, _)| *hi == mlo - 1)).map_or(
-                    true,
+                let rock_under = parts.iter().find(|(_, hi)| p.mask.is_some_and(|(mlo, _)| *hi == mlo - 1)).is_none_or(
                     |&(lo, hi)| classify(ce, lo, hi) == Fill::Solid,
                 );
                 for (ylo, yhi) in parts {

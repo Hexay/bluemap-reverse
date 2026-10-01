@@ -27,7 +27,7 @@ pub fn parse(buf: &[u8]) -> Result<Tile> {
     ensure!(flags & 0b1110_0000 == 0, "indexed or big-endian PRBM not supported (flags {flags:#010b})");
     let attr_count = flags & 0x1f;
     let vertices = r.u24()? as usize;
-    ensure!(vertices % 3 == 0, "vertex count {vertices} not a multiple of 3");
+    ensure!(vertices.is_multiple_of(3),"vertex count {vertices} not a multiple of 3");
     r.u24()?;
 
     let mut attrs = HashMap::new();
@@ -123,7 +123,7 @@ mod tests {
     use super::*;
 
     fn pad(b: &mut Vec<u8>) {
-        while b.len() % 4 != 0 {
+        while !b.len().is_multiple_of(4) {
             b.push(0);
         }
     }

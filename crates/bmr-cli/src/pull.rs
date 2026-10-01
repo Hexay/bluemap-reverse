@@ -15,6 +15,7 @@ use crate::fetch::site_slug;
 use crate::pack_source::{IndexArgs, select_pack};
 use crate::reconstruct::{Inputs, reconstruct, report};
 use crate::reverse::OptionArgs;
+use crate::schem::world_extent;
 
 #[derive(clap::Args)]
 pub struct Args {
@@ -132,8 +133,8 @@ pub fn run(a: Args) -> Result<()> {
         t.accumulate(wt);
         let unmatched_pct = 100.0 * totals.unmatched as f64 / totals.cells.max(1) as f64;
         println!(
-            "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks",
-            totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks
+            "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks{}",
+            totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks, totals.overlap_note()
         );
         if unmatched_pct > 1.0 {
             println!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
@@ -151,8 +152,7 @@ pub fn run(a: Args) -> Result<()> {
         let m = &maps[0];
         let p = a.opts.options(&m.dimension)?.profile;
         let world = bmr_world::World::open(&world_dir, &m.dimension, Some(pack.registry.clone()))?;
-        let area = bmr_world::Area { min: [i32::MIN / 4, p.min_y, i32::MIN / 4], max: [i32::MAX / 4, p.max_y, i32::MAX / 4] };
-        let extent = region_extent(&world, area)?;
+        let extent = world_extent(&world, [p.min_y, p.max_y])?;
         let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &m.id, schem))?;
         let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
         println!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
@@ -163,14 +163,6 @@ pub fn run(a: Args) -> Result<()> {
         report(&t, a.timings.as_deref())?;
     }
     Ok(())
-}
-
-/// Block box of the world's region files, clamped to `area`'s heights.
-fn region_extent(world: &bmr_world::World, area: bmr_world::Area) -> Result<bmr_world::Area> {
-    let r = world.regions()?;
-    let (x0, x1) = (r.iter().map(|r| r.0).min().context("no regions")?, r.iter().map(|r| r.0).max().unwrap());
-    let (z0, z1) = (r.iter().map(|r| r.1).min().unwrap(), r.iter().map(|r| r.1).max().unwrap());
-    Ok(bmr_world::Area { min: [x0 * 512, area.min[1], z0 * 512], max: [x1 * 512 + 511, area.max[1], z1 * 512 + 511] })
 }
 
 fn size_mb(p: &Path) -> f64 {

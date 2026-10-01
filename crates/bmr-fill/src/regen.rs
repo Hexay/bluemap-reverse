@@ -6,6 +6,7 @@
 //!   not get regen dirt back), liquid gap running to the world floor → regen (real deep ocean floors,
 //!   dark caves below them), liquid only where regen is air above the cave cut-off;
 //!   air gap → regen below the cave cut-off (dark, may simply not be drawn), air above it.
+//!
 //! Observed blocks that render identically to the regen block adopt the regen state (kelp age, leaves
 //! distance…): see `adopt_invisible`.
 

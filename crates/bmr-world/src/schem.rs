@@ -16,7 +16,7 @@ use rustc_hash::FxHashMap;
 use serde::Serialize;
 
 use crate::block_entities::block_entity_type;
-use crate::chunk::Chunk;
+use crate::chunk::{BlockState, Chunk};
 use crate::world::{ChunkPos, World};
 
 /// Inclusive block box.
@@ -112,7 +112,7 @@ pub fn export_schem(world: &World, area: Area, trim: bool, name: &str, path: &Pa
     for chunk in chunks.values() {
         for s in &chunk.sections {
             // section palette → schematic palette once, not per cell
-            let ids: Vec<u32> = s.palette.iter().map(|b| intern(&mut block_palette, &b.to_string())).collect();
+            let ids: Vec<u32> = s.palette.iter().map(|b| block_id(&mut block_palette, b)).collect();
             let biome_ids: Vec<u32> = s.biome_palette.iter().map(|b| intern(&mut biome_palette, b)).collect();
             let be: Vec<Option<&str>> = s.palette.iter().map(|b| block_entity_type(&b.name)).collect();
             for ly in 0..16 {
@@ -210,6 +210,11 @@ fn non_air_bounds(chunks: &FxHashMap<ChunkPos, Chunk>, area: &Area) -> Option<Ar
     (lo[0] <= hi[0]).then_some(Area { min: lo, max: hi })
 }
 
+/// Schematic palette id; every air variant is `minecraft:air` (0), so `non_air` agrees with trimming.
+fn block_id(palette: &mut FxHashMap<String, u32>, b: &BlockState) -> u32 {
+    if b.is_air() { 0 } else { intern(palette, &b.to_string()) }
+}
+
 fn intern(palette: &mut FxHashMap<String, u32>, key: &str) -> u32 {
     if let Some(&i) = palette.get(key) {
         return i;
@@ -291,5 +296,16 @@ mod tests {
         let b = varints(&[0, 127, 128, 300]);
         let bytes: Vec<u8> = b.iter().map(|&x| x as u8).collect();
         assert_eq!(bytes, vec![0x00, 0x7f, 0x80, 0x01, 0xac, 0x02]);
+    }
+
+    #[test]
+    fn air_variants_share_id_zero() {
+        let mut palette = FxHashMap::default();
+        palette.insert("minecraft:air".to_owned(), 0);
+        let id = |p: &mut FxHashMap<String, u32>, n: &str| block_id(p, &BlockState::new(n.into(), Vec::new()));
+        assert_eq!(id(&mut palette, "minecraft:cave_air"), 0);
+        assert_eq!(id(&mut palette, "minecraft:void_air"), 0);
+        assert_eq!(id(&mut palette, "minecraft:stone"), 1);
+        assert_eq!(palette.len(), 2);
     }
 }

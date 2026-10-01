@@ -7,14 +7,13 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use bmr_pack::{Index, Pack, Source};
 
-use crate::WorldArgs;
-use crate::copy_world::DEFAULT_TEMPLATE;
+use crate::{LibraryArgs, WorldArgs};
 use crate::pack_source::{IndexArgs, candidates, download, fetch_index, find_packs};
 
 #[derive(clap::Subcommand)]
 pub enum Cmd {
     /// Build a pack from work/cache/debug + work/worlds/debug + the void template
-    Build(BuildArgs),
+    Build(Box<BuildArgs>),
     /// Show a pack's versions and size breakdown
     Info { pack: PathBuf },
     /// Write the groups of states that render identically (indistinguishable from tiles) as JSON
@@ -41,25 +40,15 @@ pub struct BuildArgs {
     out: Option<PathBuf>,
     #[arg(long, default_value = "26.3")]
     mc_version: String,
-    #[arg(long, default_value = "work/cache/debug")]
-    library_mirror: PathBuf,
-    #[arg(long, default_value = "work/worlds/debug/world")]
-    library_world: PathBuf,
-    #[arg(long, default_value = DEFAULT_TEMPLATE)]
-    template: PathBuf,
-    /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py) for the biome tint table; skipped
-    /// with a warning when missing
-    #[arg(long, default_value = "work/cache/biomes")]
-    biome_mirror: PathBuf,
-    #[arg(long, default_value = "work/worlds/biomes/world")]
-    biome_world: PathBuf,
+    #[command(flatten)]
+    library: LibraryArgs,
     #[command(flatten)]
     world_args: WorldArgs,
 }
 
 pub fn run(cmd: Cmd) -> Result<()> {
     match cmd {
-        Cmd::Build(a) => build(a),
+        Cmd::Build(a) => build(*a),
         Cmd::Info { pack } => info(&pack),
         Cmd::Lookalikes { pack, out } => lookalikes(&pack, &out),
         Cmd::Index { dir } => index(&dir),
@@ -71,16 +60,9 @@ pub fn run(cmd: Cmd) -> Result<()> {
 fn build(a: BuildArgs) -> Result<()> {
     let t = Instant::now();
     let registry = a.world_args.registry()?.context("pack build needs the block registry (tools/setup.py)")?;
-    let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
-    let lib_world = a.world_args.open(&a.library_world, &Some(registry.clone()))?;
-    let biomes = match (bmr_fetch::LocalMap::open(&a.biome_mirror, None), a.world_args.open(&a.biome_world, &Some(registry.clone()))) {
-        (Ok(m), Ok(w)) => Some((m, w)),
-        (m, w) => {
-            eprintln!("warning: no biome tint table ({}); reconstructions keep plains", m.err().or(w.err()).map_or(String::new(), |e| e.to_string()));
-            None
-        }
-    };
-    let pack = Pack::build(&lib_map, &lib_world, registry, &a.template, &a.mc_version, biomes.as_ref().map(|(m, w)| (m, w)))?;
+    let (lib_map, lib_world) = a.library.library_sources(&registry)?;
+    let biomes = a.library.biomes_or_warn(&registry);
+    let pack = Pack::build(&lib_map, &lib_world, registry, &a.library.template, &a.mc_version, biomes.as_ref().map(|(m, w)| (m, w)))?;
     let out = a.out.unwrap_or_else(|| {
         PathBuf::from("packs").join(format!("bmr-mc{}-bluemap{}.pack", pack.meta.mc_version, pack.meta.bluemap_version))
     });

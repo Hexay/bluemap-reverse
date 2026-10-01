@@ -10,4 +10,6 @@ bmr-cubiomes.workspace = true
 bmr-world.workspace = true
 rayon.workspace = true
 serde.workspace = true
+
+[dev-dependencies]
 serde_json.workspace = true

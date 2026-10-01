@@ -9,9 +9,8 @@ use bmr_invert::Library;
 use bmr_fill::Profile;
 use bmr_invert::timings::Timings;
 
-use crate::copy_world::DEFAULT_TEMPLATE;
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
-use crate::{MirrorArgs, WorldArgs};
+use crate::{LibraryArgs, MirrorArgs, WorldArgs};
 
 #[derive(clap::Args)]
 pub struct Args {
@@ -19,20 +18,8 @@ pub struct Args {
     mirror: MirrorArgs,
     /// Output world dir (must not exist)
     out: PathBuf,
-    /// Mirror of BlueMap's render of the debug world (signature source)
-    #[arg(long, default_value = "work/cache/debug")]
-    library_mirror: PathBuf,
-    /// The debug world itself (ground-truth states for the library)
-    #[arg(long, default_value = "work/worlds/debug/world")]
-    library_world: PathBuf,
-    #[arg(long, default_value = DEFAULT_TEMPLATE)]
-    template: PathBuf,
-    /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py): biome tints; overworld biomes stay
-    /// plains without them
-    #[arg(long, default_value = "work/cache/biomes")]
-    biome_mirror: PathBuf,
-    #[arg(long, default_value = "work/worlds/biomes/world")]
-    biome_world: PathBuf,
+    #[command(flatten)]
+    library: LibraryArgs,
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for unseen cells + biomes
     #[arg(long)]
     regen: Option<PathBuf>,
@@ -102,27 +89,19 @@ pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
     let registry = t.time("registry", || a.world_args.registry())?.context("reverse needs the block registry")?;
-    // the debug world lives in the overworld whatever dimension is being reversed
-    let lib_world = bmr_world::World::open(&a.library_world, "minecraft:overworld", Some(registry.clone()))?;
+    let (lib_map, lib_world) = a.library.library_sources(&registry)?;
     let style = lib_world.palette_style()?.context("library world has no palettes")?;
-    let lib = t.time("library", || -> Result<Library> {
-        let lib_map = bmr_fetch::LocalMap::open(&a.library_mirror, None)?;
-        Library::build(&lib_map, &lib_world, &registry)
-    })?;
+    let lib = t.time("library", || Library::build(&lib_map, &lib_world, &registry))?;
     t.extend("library", lib.stats.timings.clone());
     println!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
-    let biome_tints = t.time("biome_tints", || -> Result<_> {
-        let map = bmr_fetch::LocalMap::open(&a.biome_mirror, None);
-        let world = bmr_world::World::open(&a.biome_world, "minecraft:overworld", Some(registry.clone()));
-        Ok(match (map, world) {
-            (Ok(m), Ok(w)) => bmr_invert::tints::learn(&m, &w)?,
-            _ => Vec::new(),
-        })
+    let biome_tints = t.time("biome_tints", || match a.library.biomes_or_warn(&registry) {
+        Some((m, w)) => bmr_invert::tints::learn(&m, &w),
+        None => Ok(Vec::new()),
     })?;
 
     let map = a.mirror.open()?;
     let regen = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
-    let template = bmr_world::read_template(&a.template)?;
+    let template = bmr_world::read_template(&a.library.template)?;
     let opts = a.opts.options(&a.world_args.dimension)?;
     let inputs = Inputs {
         map: &map,
@@ -140,8 +119,9 @@ pub fn run(a: Args) -> Result<()> {
     let (totals, wt) = reconstruct(&inputs)?;
     t.accumulate(wt);
     println!(
-        "cells {} (unmatched {}), unseen solid {}, unseen liquid {}, adopted from regen {} → {} chunks in {}",
-        totals.cells, totals.unmatched, totals.solid, totals.liquid, totals.adopted, totals.chunks, a.out.display()
+        "cells {} (unmatched {}), unseen solid {}, unseen liquid {}, adopted from regen {} → {} chunks in {}{}",
+        totals.cells, totals.unmatched, totals.solid, totals.liquid, totals.adopted, totals.chunks, a.out.display(),
+        totals.overlap_note()
     );
     if let Some(zip) = &a.zip {
         let files = t.time("zip", || bmr_world::zip_world(&a.out, zip))?;

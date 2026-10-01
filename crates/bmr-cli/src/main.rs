@@ -19,7 +19,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
+use bmr_fetch::LocalMap;
+use bmr_world::{BlockRegistry, World};
 use clap::{Parser, Subcommand};
+
+use crate::copy_world::DEFAULT_TEMPLATE;
 
 #[derive(Parser)]
 #[command(name = "bmr", about = "Reconstruct a Minecraft world from a BlueMap web map")]
@@ -99,6 +103,49 @@ impl WorldArgs {
 
     fn open(&self, root: &std::path::Path, registry: &Option<Arc<bmr_world::BlockRegistry>>) -> Result<bmr_world::World> {
         bmr_world::World::open(root, &self.dimension, registry.clone())
+    }
+}
+
+/// Debug-world library sources, template and biome fixture, shared by commands that build the library from
+/// local files (`reverse`, `pack build`, `explain`).
+#[derive(clap::Args)]
+struct LibraryArgs {
+    /// Mirror of BlueMap's render of the debug world (signature source)
+    #[arg(long, default_value = "work/cache/debug")]
+    library_mirror: PathBuf,
+    /// The debug world itself (ground-truth states for the library)
+    #[arg(long, default_value = "work/worlds/debug/world")]
+    library_world: PathBuf,
+    #[arg(long, default_value = DEFAULT_TEMPLATE)]
+    template: PathBuf,
+    /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py) for the biome tint table; overworld
+    /// biomes stay plains without it
+    #[arg(long, default_value = "work/cache/biomes")]
+    biome_mirror: PathBuf,
+    #[arg(long, default_value = "work/worlds/biomes/world")]
+    biome_world: PathBuf,
+}
+
+/// The debug and biome fixtures live in the overworld whatever dimension is being reversed.
+const FIXTURE_DIMENSION: &str = "minecraft:overworld";
+
+impl LibraryArgs {
+    /// The debug world's mirror and the world itself.
+    fn library_sources(&self, registry: &Arc<BlockRegistry>) -> Result<(LocalMap, World)> {
+        let map = LocalMap::open(&self.library_mirror, None)?;
+        Ok((map, World::open(&self.library_world, FIXTURE_DIMENSION, Some(registry.clone()))?))
+    }
+
+    fn library(&self, registry: &Arc<BlockRegistry>) -> Result<bmr_invert::Library> {
+        let (map, world) = self.library_sources(registry)?;
+        bmr_invert::Library::build(&map, &world, registry)
+    }
+
+    /// The biome fixture's mirror and world, or `None` with a warning when either is missing.
+    fn biomes_or_warn(&self, registry: &Arc<BlockRegistry>) -> Option<(LocalMap, World)> {
+        let opened = LocalMap::open(&self.biome_mirror, None)
+            .and_then(|m| Ok((m, World::open(&self.biome_world, FIXTURE_DIMENSION, Some(registry.clone()))?)));
+        opened.map_err(|e| eprintln!("warning: no biome tint table ({e}); overworld biomes stay plains")).ok()
     }
 }
 

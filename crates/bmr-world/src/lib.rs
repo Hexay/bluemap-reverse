@@ -14,7 +14,7 @@ mod world;
 mod world_write;
 
 pub use block_entities::block_entity_type;
-pub use chunk::{BlockState, Chunk, PaletteStyle, Section, is_air_name};
+pub use chunk::{BlockState, Chunk, PaletteStyle, Section};
 pub use package::zip_world;
 pub use registry::{BlockInfo, BlockRegistry};
 pub use schem::{Area, SchemStats, export_schem, read_schem};

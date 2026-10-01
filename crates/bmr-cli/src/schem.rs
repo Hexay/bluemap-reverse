@@ -39,7 +39,7 @@ pub fn run(a: Args) -> Result<()> {
     let world = a.world_args.open(&a.world, &registry)?;
     let area = match a.area[..] {
         [x0, z0, x1, z1] => Area { min: [x0.min(x1), a.y[0], z0.min(z1)], max: [x0.max(x1), a.y[1], z0.max(z1)] },
-        [] => world_extent(&world, &a.y)?,
+        [] => world_extent(&world, [a.y[0], a.y[1]])?,
         _ => bail!("--area takes x0,z0,x1,z1"),
     };
     let name = a.name.clone().unwrap_or_else(|| a.out.file_stem().map_or("bmr".into(), |s| s.to_string_lossy().into_owned()));
@@ -57,8 +57,8 @@ pub fn run(a: Args) -> Result<()> {
     Ok(())
 }
 
-/// Box covering every region file (trimming then shrinks it to the actual blocks).
-fn world_extent(world: &World, y: &[i32]) -> Result<Area> {
+/// Box covering every region file between heights `y` (trimming then shrinks it to the actual blocks).
+pub fn world_extent(world: &World, y: [i32; 2]) -> Result<Area> {
     let regions = world.regions()?;
     ensure!(!regions.is_empty(), "world has no region files");
     let (rx0, rx1) = (regions.iter().map(|r| r.0).min().unwrap(), regions.iter().map(|r| r.0).max().unwrap());
@@ -83,7 +83,7 @@ fn verify(world: &World, area: &Area, path: &std::path::Path) -> Result<()> {
             .and_then(|c| c.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
             .filter(|b| !b.is_air())
             .map_or_else(|| "minecraft:air".to_owned(), ToString::to_string);
-        if *got != want && !(got == "minecraft:air" && want.ends_with("air")) {
+        if *got != want {
             mismatches += 1;
         }
     }

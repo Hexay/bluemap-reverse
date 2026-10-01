@@ -5,15 +5,12 @@ world. Scores each dimension against the original and loads the output in the se
 Usage: py -3 tools/check_dimensions.py
 """
 import json
-import shutil
 import subprocess
 import sys
-import zipfile
 
 from make_world import load_fixture, make_world
-from mirror_fixture import bmr_exe, wait_until_serving
-from paths import DEFAULT, ROOT, WEB_HOST, WEB_PORT
-from render_serve import bluemap, configure
+from mirror_fixture import bmr_exe, pull_fixture
+from paths import DEFAULT, ROOT
 from resave_world import resave
 
 FIXTURE = "dimensions"
@@ -25,29 +22,7 @@ def main() -> None:
     make_world(FIXTURE, False, tc)
     original = tc.worlds / FIXTURE / "world"
     out_dir = tc.work / "out" / "check-dimensions"
-    shutil.rmtree(out_dir, ignore_errors=True)
-    out_dir.mkdir(parents=True)
-    zip_path = out_dir / "pulled.zip"
-    base = configure(FIXTURE, tc)
-    if bluemap(base, "-r", tc=tc).wait():
-        sys.exit("render failed")
-    server = bluemap(base, "-w", tc=tc)
-    try:
-        wait_until_serving()
-        pull = subprocess.run(
-            [bmr_exe(), "pull", f"http://{WEB_HOST}:{WEB_PORT}/", "-o", zip_path, "--cache", out_dir / "cache", "--offline"],
-            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        )
-    finally:
-        server.terminate()
-        server.wait(30)
-    print(pull.stdout[-3000:])
-    if pull.returncode:
-        sys.exit(f"pull failed: {pull.stderr[-2000:]}")
-
-    with zipfile.ZipFile(zip_path) as z:
-        z.extractall(out_dir / "unzipped")
-    pulled = out_dir / "unzipped" / "world"
+    pulled, _ = pull_fixture(FIXTURE, tc, out_dir)
     ok = True
     for map_id, dim in MAPS.items():
         report = out_dir / f"score-{map_id}.json"

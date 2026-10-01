@@ -61,7 +61,7 @@ def main() -> None:
     args = ap.parse_args()
 
     out = ROOT / "fixtures" / "seed" / f"{args.name}.json"
-    old = json.loads(out.read_text()) if args.merge else None
+    old = json.loads(out.read_text()) if args.merge and out.exists() else None
     if old:
         args.seed = old["text_seed"] or old["seed"]
     elif out.exists() and not args.force:

@@ -62,9 +62,12 @@ pub fn run(a: Args) -> Result<()> {
         map.as_ref().map(|m| (m.tiles(0).into_iter().collect(), m.settings.hires_grid()));
     let rendered = map.as_ref().map(bmr_invert::rendered_cells).transpose()?;
     anyhow::ensure!(a.rect.is_empty() || a.rect.len() == 4, "--rect takes x0,z0,x1,z1");
-    let rect = a.rect.clone();
+    let rect = match a.rect[..] {
+        [x0, z0, x1, z1] => Some([x0.min(x1), z0.min(z1), x0.max(x1), z0.max(z1)]),
+        _ => None,
+    };
     let filter = move |x: i32, z: i32| {
-        let in_rect = rect.is_empty() || (rect[0] <= x && x <= rect[2] && rect[1] <= z && z <= rect[3]);
+        let in_rect = rect.is_none_or(|r| r[0] <= x && x <= r[2] && r[1] <= z && z <= r[3]);
         in_rect && tiles.as_ref().is_none_or(|(tiles, grid)| tiles.contains(&grid.tile_of(x, z)))
     };
 

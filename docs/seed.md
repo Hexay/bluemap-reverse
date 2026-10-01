@@ -1,7 +1,7 @@
 # Seed recovery
 
 Goal: the world seed from what a map shows, so `--regen` can fill everything the tiles don't (see
-`reports/Minecraft seed recovery from maps.md` for the research and sources).
+`research/seed-recovery.md` for the research and sources).
 
 ## Use
 
@@ -30,7 +30,7 @@ Observations: `{"mc": "26.3", "structures": [{"set": "shipwrecks", "chunks": [[x
 
 - **Detection** (`detect/rules.rs`): per structure type, marker blocks (prismarine, netherrack, worked wood
   underwater, wool-stair tents, …) are clustered; the cluster bbox must fit the type's shape, and the start chunk's
-  corner sits at a known offset from it (`research_notes/.../structure_start_rules.md`). Offsets are snapped to
+  corner sits at a known offset from it (`research/seed-recovery/structure_start_rules.md`). Offsets are snapped to
   multiples of 16 within a small tolerance, which usually leaves one chunk; ambiguous ones keep all candidates.
   Ocean-ruin satellites (small ruins near a big one or each other) never sit on the start chunk and are dropped.
 - **Lower 48**: each `random_spread` region draws its candidate chunk from `Random(seed + rx·341873128712 +

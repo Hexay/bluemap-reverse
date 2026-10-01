@@ -1,5 +1,5 @@
 //! Per-structure detection rules: marker blocks, cluster shape, and where the start chunk's corner (X0, Z0) sits
-//! relative to the cluster's bbox. Placement facts: research_notes/.../structure_start_rules.md.
+//! relative to the cluster's bbox. Placement facts: docs/research/seed-recovery/structure_start_rules.md.
 
 use super::cluster::Bbox;
 use super::{portal, village};

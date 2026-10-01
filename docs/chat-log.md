@@ -35,4 +35,4 @@ Test-loop refinements:
 
 **User:** The goal is to get as close as we can to an original. Created `C:\Users\hexay\bluemap_reverse` — put this chat, documentation, further research and planning there.
 
-→ Research delegated to `research/01..04-*.md`; synthesized plan in `docs/plan.md`.
+→ Research delegated to `docs/research/01..04-*.md`; synthesized plan in `docs/plan.md`.

@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-01
+
 First public release.
 
 ### Added
@@ -31,4 +33,5 @@ First public release.
 - Test tooling: fixture worlds rendered by a real server and BlueMap, pack builder and version checks.
 - Release binaries for Windows, Linux and macOS, with the packs bundled.
 
-[Unreleased]: https://github.com/Hexay/bluemap-reverse/commits/master
+[Unreleased]: https://github.com/Hexay/bluemap-reverse/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Hexay/bluemap-reverse/releases/tag/v0.1.0

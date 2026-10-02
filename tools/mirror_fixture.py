@@ -78,7 +78,7 @@ def pull_fixture(fixture: str, tc: Toolchain, out_dir: Path) -> tuple[Path, Path
     base = render(fixture, tc)
     with serving(base, tc):
         pull = subprocess.run(
-            [bmr_exe(), "pull", URL, "-o", zip_path, "--cache-dir", out_dir, "--offline"],
+            [bmr_exe(), "pull", URL, "-o", zip_path, "--data-dir", out_dir, "--offline"],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
     print(pull.stdout[-3000:])

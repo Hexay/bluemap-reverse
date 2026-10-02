@@ -63,7 +63,7 @@ bmr schem <world> -o part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic 
 
 Downloads (site mirrors, packs) are kept in a per-user data dir: `%LOCALAPPDATA%\bluemap-reverse` on Windows,
 `~/Library/Application Support/bluemap-reverse` on macOS, `~/.local/share/bluemap-reverse` (or
-`$XDG_DATA_HOME`) elsewhere. Set `BMR_HOME` or pass `--cache-dir <dir>` to put it somewhere else.
+`$XDG_DATA_HOME`) elsewhere. Set `BMR_HOME` or pass `--data-dir <dir>` to put it somewhere else.
 
 ### Packs
 
@@ -88,7 +88,7 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 | `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
 | `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |
-| `--cache-dir <dir>` | `$BMR_HOME` or the data dir | Where mirrors (`<dir>/cache`) and downloaded packs (`<dir>/packs`) go. |
+| `--data-dir <dir>` | `$BMR_HOME` or the data dir | Where mirrors (`<dir>/cache`) and downloaded packs (`<dir>/packs`) go. |
 | `-q`, `--quiet` | off | Only results, warnings and errors. |
 | `--offline` | off | Use installed packs only. |
 | `--force` | off | Use a pack even when it doesn't fit the site. |

@@ -29,7 +29,7 @@ use clap::{Parser, Subcommand};
 use crate::copy_world::DEFAULT_TEMPLATE;
 
 const EXIT_CODES: &str = "Exit codes: 0 success, 1 error, 2 usage error, 3 `seed` found no seed.
-Downloads (site mirrors, packs) go to --cache-dir, else $BMR_HOME, else the per-user data dir.";
+Downloads (site mirrors, packs) go to --data-dir, else $BMR_HOME, else the per-user data dir.";
 
 #[derive(Parser)]
 #[command(name = "bmr", version, about = "Reconstruct a Minecraft world from a BlueMap web map", after_help = EXIT_CODES)]

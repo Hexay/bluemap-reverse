@@ -31,7 +31,7 @@ def main() -> None:
     try:
         with serving(configure("superflat", DEFAULT)):
             pull = subprocess.run(
-                [bmr_exe(), "pull", URL, "-o", "out.zip", "--cache-dir", empty,
+                [bmr_exe(), "pull", URL, "-o", "out.zip", "--data-dir", empty,
                  "--pack-index", f"http://{WEB_HOST}:{INDEX_PORT}/index.json"],
                 cwd=empty, capture_output=True, text=True, encoding="utf-8", errors="replace",
             )

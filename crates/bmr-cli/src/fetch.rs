@@ -10,7 +10,7 @@ use crate::ui::{fetch_progress, progress};
 pub struct Args {
     /// Webapp root, e.g. <http://127.0.0.1:8100/>
     url: String,
-    /// Mirror dir [default: DATA/cache/HOST_PORT, see --cache-dir]
+    /// Mirror dir [default: DATA/cache/HOST_PORT, see --data-dir]
     #[arg(short, long)]
     out: Option<PathBuf>,
     /// Only these map ids (comma-separated)

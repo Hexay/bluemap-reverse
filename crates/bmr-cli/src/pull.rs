@@ -161,7 +161,7 @@ pub fn run(a: Args) -> Result<()> {
             totals.overlap_note()
         );
         if unmatched_pct > 1.0 {
-            progress!(
+            println!(
                 "      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above"
             );
         }
@@ -170,9 +170,9 @@ pub fn run(a: Args) -> Result<()> {
     progress!("[4/4] writing output");
     if zip {
         let files = t.time("zip", || bmr_world::zip_world(&world_dir, &out))?;
-        progress!("      {} ({files} files, {:.1} MB) — extract into your saves/ folder", out.display(), size_mb(&out));
+        println!("      {} ({files} files, {:.1} MB) — extract into your saves/ folder", out.display(), size_mb(&out));
     } else {
-        progress!("      world folder {}", out.display());
+        println!("      world folder {}", out.display());
     }
     if let Some(schem) = &a.schem {
         let m = &maps[0];
@@ -181,7 +181,7 @@ pub fn run(a: Args) -> Result<()> {
         let extent = world_extent(&world, [p.min_y, p.max_y])?;
         let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &m.id, schem))?;
         let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
-        progress!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
+        println!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
     }
     t.record("total", total.elapsed());
     progress!("done in {:.1?}", total.elapsed());

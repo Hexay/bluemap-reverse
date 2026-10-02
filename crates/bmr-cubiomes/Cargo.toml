@@ -3,6 +3,10 @@ name = "bmr-cubiomes"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "FFI bindings to the vendored cubiomes biome generator"
 links = "cubiomes"
 
 [build-dependencies]

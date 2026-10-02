@@ -3,6 +3,10 @@ name = "bmr-invert"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Invert BlueMap's renderer: match tile faces to block states via a learned signature library"
 
 [dependencies]
 anyhow.workspace = true

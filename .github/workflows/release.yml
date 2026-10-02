@@ -42,6 +42,7 @@ jobs:
           cp "$bin" "dist/$name/"
           cp packs/*.pack "dist/$name/packs/"
           cp README.md CHANGELOG.md LICENSE-MIT LICENSE-APACHE "dist/$name/"
+          cp crates/bmr-cubiomes/vendor/LICENSE "dist/$name/LICENSE-cubiomes"
           cd dist
           if [ "${{ matrix.archive }}" = zip ]; then
             7z a -bso0 "$name.zip" "$name"

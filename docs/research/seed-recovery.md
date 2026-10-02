@@ -120,7 +120,7 @@ Several pieces must be written. Following the project's layering (not sourced), 
 
 ## Open questions to settle experimentally
 
-Several claims need a fixture before code depends on them. The seeded fixtures already planned for milestone 9 in `docs/plan.md` are the natural harness.
+Several claims need a fixture before code depends on them. The seeded fixtures from milestone 9 in `docs/architecture.md` are the natural harness.
 
 - **Template origins.** Check the template origin and rotation pivot of every visible structure type against a Mojmap decompile and mcmeta NBT sizes. The notes flag these as memory-derived.
 - **BlueMap visibility.** Check whether BlueMap hires tiles contain submerged monuments and shipwrecks, and bedrock faces under nether lava lakes.

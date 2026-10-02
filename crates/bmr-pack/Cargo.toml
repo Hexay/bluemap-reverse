@@ -3,6 +3,10 @@ name = "bmr-pack"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Versioned packs (signature library, registry, template) and fingerprint-based selection"
 
 [dependencies]
 anyhow.workspace = true

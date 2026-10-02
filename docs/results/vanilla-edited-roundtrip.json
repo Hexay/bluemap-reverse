@@ -1,24 +1,24 @@
 {
-  "edge_faces": 729396,
+  "edge_faces": 728872,
   "original_faces": 755572,
-  "reconstructed_faces": 764584,
-  "paired": 755337,
-  "identical": 746497,
+  "reconstructed_faces": 758150,
+  "paired": 755362,
+  "identical": 752711,
   "aspects": {
     "ao": {
-      "faces": 7502,
-      "mean_delta": 46.30374122456234
+      "faces": 1087,
+      "mean_delta": 32.55933762649494
     },
     "blocklight": {
-      "faces": 1441,
-      "mean_delta": 2.2713393476752257
+      "faces": 1450,
+      "mean_delta": 2.2662068965517244
     },
     "sunlight": {
       "faces": 0,
       "mean_delta": 0.0
     },
     "texture": {
-      "faces": 80,
+      "faces": 32,
       "mean_delta": null
     },
     "tint": {
@@ -33,34 +33,30 @@
   "missing": [
     [
       "minecraft:block/water_still",
-      91
+      98
     ],
     [
       "minecraft:block/kelp_plant",
       58
     ],
     [
-      "minecraft:block/stone",
-      44
-    ],
-    [
       "minecraft:block/tall_seagrass_top",
       20
     ],
     [
-      "minecraft:block/diorite",
-      6
+      "minecraft:block/stone",
+      18
     ],
     [
       "minecraft:block/deepslate",
       4
     ],
     [
-      "minecraft:block/kelp",
+      "minecraft:block/diorite",
       4
     ],
     [
-      "minecraft:block/sand",
+      "minecraft:block/kelp",
       4
     ],
     [
@@ -70,64 +66,56 @@
   ],
   "extra": [
     [
-      "minecraft:block/stone",
-      7876
-    ],
-    [
       "minecraft:block/water_flow",
-      520
+      1544
     ],
     [
-      "minecraft:block/andesite",
-      178
-    ],
-    [
-      "minecraft:block/sand",
-      132
+      "minecraft:block/stone",
+      970
     ],
     [
       "minecraft:block/water_still",
-      119
+      126
     ],
     [
-      "minecraft:block/dirt",
-      84
-    ],
-    [
-      "minecraft:block/diorite",
-      82
+      "minecraft:block/andesite",
+      38
     ],
     [
       "minecraft:block/kelp",
-      80
+      32
     ],
     [
-      "minecraft:block/granite",
-      34
+      "minecraft:block/sand",
+      18
     ],
     [
       "minecraft:block/grass_block_side",
-      24
+      14
     ],
     [
       "minecraft:block/grass_block_side_overlay",
-      24
+      14
     ],
     [
-      "minecraft:block/deepslate",
-      22
+      "minecraft:block/diorite",
+      8
     ],
     [
-      "minecraft:block/gravel",
-      20
+      "minecraft:block/grass_block_top",
+      8
     ],
     [
       "minecraft:block/deepslate_top",
-      12
+      6
     ],
     [
-      "minecraft:block/iron_ore",
-      12
+      "minecraft:block/dirt",
+      6
+    ],
+    [
+      "minecraft:block/deepslate",
+      4
     ]
   ],
   "cells": [

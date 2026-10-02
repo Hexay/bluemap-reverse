@@ -1,5 +1,6 @@
 //! Invert BlueMap hires tiles into block states using a signature library learned from the debug world.
 
+pub mod ao;
 #[cfg(test)]
 mod e2e_tests;
 pub mod evidence;

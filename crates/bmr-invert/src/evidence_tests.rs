@@ -25,6 +25,7 @@ impl Scene {
             solid_faces: &self.solid_faces,
             liquid_faces: &self.liquid_faces,
             liquids: &self.liquids,
+            ao: &[],
         };
         collect(lib, &o)
     }

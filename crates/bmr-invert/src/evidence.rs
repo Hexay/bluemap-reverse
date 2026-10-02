@@ -3,10 +3,12 @@
 //! - a liquid face is missing → neighbour is the same liquid or a full block (`liquid`)
 //! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`);
 //!   this overrides `solid` for the same cell
+//! - a full face's AO counts the full blocks around each vertex → unseen cells it pins down (ao.rs)
 
 use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
 
+use crate::ao::{self, AoFace, Known};
 use crate::face::{Cell, CellFaces, DIRS, FaceKey, Liquid, step};
 use crate::library::Library;
 
@@ -26,6 +28,8 @@ pub struct Observed<'a> {
     pub liquid_faces: &'a FxHashMap<Cell, Vec<FaceKey>>,
     /// Cells showing nothing but liquid.
     pub liquids: &'a FxHashMap<Cell, Liquid>,
+    /// Full boundary faces' AO: how many cells around each vertex are full blocks.
+    pub ao: &'a [AoFace],
 }
 
 impl Observed<'_> {
@@ -100,6 +104,21 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
                 ev.liquid.entry(n).or_insert(kind);
             }
         }
+    }
+    let known = |c: Cell| match (o.blocks.get(&c), o.liquids.contains_key(&c)) {
+        (Some(&e), _) if lib.entries[e].full_cube => Known::Occluder,
+        (Some(_), _) | (None, true) => Known::Clear,
+        _ if o.solid_faces.contains_key(&c) => Known::Unsure,
+        _ => Known::Unseen,
+    };
+    for (cell, full) in
+        o.ao.par_iter().flat_map_iter(|f| f.corners().flat_map(|c| ao::decide(&c, known))).collect::<Vec<_>>()
+    {
+        if full {
+            ev.solid.insert(cell)
+        } else {
+            ev.open.insert(cell)
+        };
     }
     // a drawn face proves its neighbour isn't a full block; a missing one may just be an imperfect match.
     // Left in, the tie made the fill's gap vote rock and filled open nether caves solid (render round-trip).

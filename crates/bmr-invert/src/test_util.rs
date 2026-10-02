@@ -105,6 +105,7 @@ pub fn world_side(cell: Cell, d: Cell, tex: &str, color: [u8; 3], blocklight: u8
         texture: Tex::intern(tex),
         color,
         blocklight,
+        ao: [255; 4],
     }
 }
 

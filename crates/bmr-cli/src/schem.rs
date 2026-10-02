@@ -44,14 +44,23 @@ pub fn run(a: Args) -> Result<()> {
         [] => world_extent(&world, [a.y[0], a.y[1]])?,
         _ => bail!("--area takes x0,z0,x1,z1"),
     };
-    let name = a.name.clone().unwrap_or_else(|| a.out.file_stem().map_or("bmr".into(), |s| s.to_string_lossy().into_owned()));
+    let name =
+        a.name.clone().unwrap_or_else(|| a.out.file_stem().map_or("bmr".into(), |s| s.to_string_lossy().into_owned()));
     let t = Instant::now();
     let s = export_schem(&world, area, !a.no_trim, &name, &a.out)?;
     let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
     println!(
         "{} x {} x {} (from {:?}) · {} states · {} non-air · {} block entities · {} KB → {} in {:.1?}",
-        size[0], size[1], size[2], s.area.min, s.palette, s.non_air, s.block_entities,
-        std::fs::metadata(&a.out)?.len() / 1024, a.out.display(), t.elapsed()
+        size[0],
+        size[1],
+        size[2],
+        s.area.min,
+        s.palette,
+        s.non_air,
+        s.block_entities,
+        std::fs::metadata(&a.out)?.len() / 1024,
+        a.out.display(),
+        t.elapsed()
     );
     if a.verify {
         verify(&world, &s.area, &a.out)?;
@@ -75,7 +84,8 @@ fn verify(world: &World, area: &Area, path: &std::path::Path) -> Result<()> {
     let mut chunks = rustc_hash::FxHashMap::default();
     let mut mismatches = 0usize;
     for (i, got) in cells.iter().enumerate() {
-        let (x, z, y) = (area.min[0] + (i % w) as i32, area.min[2] + (i / w % l) as i32, area.min[1] + (i / (w * l)) as i32);
+        let (x, z, y) =
+            (area.min[0] + (i % w) as i32, area.min[2] + (i / w % l) as i32, area.min[1] + (i / (w * l)) as i32);
         let cp = (x.div_euclid(16), z.div_euclid(16));
         if !chunks.contains_key(&cp) {
             chunks.extend(world.read_region((cp.0.div_euclid(32), cp.1.div_euclid(32)))?);

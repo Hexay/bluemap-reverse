@@ -27,7 +27,7 @@ pub fn parse(buf: &[u8]) -> Result<Tile> {
     ensure!(flags & 0b1110_0000 == 0, "indexed or big-endian PRBM not supported (flags {flags:#010b})");
     let attr_count = flags & 0x1f;
     let vertices = r.u24()? as usize;
-    ensure!(vertices.is_multiple_of(3),"vertex count {vertices} not a multiple of 3");
+    ensure!(vertices.is_multiple_of(3), "vertex count {vertices} not a multiple of 3");
     r.u24()?;
 
     let mut attrs = HashMap::new();
@@ -138,7 +138,8 @@ mod tests {
     /// One triangle, byte layout as PRBMWriter.java writes it.
     fn one_triangle() -> Vec<u8> {
         let mut b = vec![1, 0b0000_0111, 3, 0, 0, 0, 0, 0];
-        let pos: Vec<u8> = [0.0f32, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0].iter().flat_map(|f| f.to_le_bytes()).collect();
+        let pos: Vec<u8> =
+            [0.0f32, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0].iter().flat_map(|f| f.to_le_bytes()).collect();
         attr(&mut b, "position", 0x21, &pos);
         attr(&mut b, "normal", 0x63, &[0, 127, 0].repeat(3));
         attr(&mut b, "color", 0x67, &[255, 128, 0].repeat(3));
@@ -169,7 +170,15 @@ mod tests {
     #[test]
     fn empty_tile() {
         let mut b = vec![1, 0b0000_0111, 0, 0, 0, 0, 0, 0];
-        for (name, flags) in [("position", 0x21), ("normal", 0x63), ("color", 0x67), ("uv", 0x11), ("ao", 0x47), ("blocklight", 3), ("sunlight", 3)] {
+        for (name, flags) in [
+            ("position", 0x21),
+            ("normal", 0x63),
+            ("color", 0x67),
+            ("uv", 0x11),
+            ("ao", 0x47),
+            ("blocklight", 3),
+            ("sunlight", 3),
+        ] {
             attr(&mut b, name, flags, &[]);
         }
         pad(&mut b);

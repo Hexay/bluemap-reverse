@@ -47,9 +47,9 @@ impl ChunkBuilder {
     fn sections(&mut self, x: i32, z: i32) -> &mut Vec<IdSection> {
         let (lo, hi) = self.layout.sections;
         let air = self.air;
-        self.chunks.entry((x.div_euclid(16), z.div_euclid(16))).or_insert_with(|| {
-            (lo..=hi).map(|_| IdSection { palette: vec![air], blocks: Vec::new() }).collect()
-        })
+        self.chunks
+            .entry((x.div_euclid(16), z.div_euclid(16)))
+            .or_insert_with(|| (lo..=hi).map(|_| IdSection { palette: vec![air], blocks: Vec::new() }).collect())
     }
 
     /// Make sure the chunk of column (x, z) is written, even if it stays all air (else the game would

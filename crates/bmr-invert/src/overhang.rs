@@ -41,13 +41,19 @@ pub fn credit(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matched: &m
 /// Neighbours that overhang into each other (stacked iron bars trade cap faces) both stay unmatched, so
 /// `credit` never runs for either. For each still-unmatched cell, drop the faces some library state could
 /// have overhung into it from an observed neighbour, and match the rest. Returns the cells now matched.
-pub fn strip_foreign(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>) -> usize {
+pub fn strip_foreign(
+    lib: &Library,
+    cells: &mut FxHashMap<Cell, CellFaces>,
+    matched: &mut FxHashMap<Cell, Matched>,
+) -> usize {
     let stripped: Vec<(Cell, Vec<FaceKey>)> = matched
         .iter()
         .filter(|(_, m)| m.is_none())
         .filter_map(|(&n, _)| {
             let keys = &cells[&n].keys;
-            let foreign = |k: &FaceKey| lib.overhang_from(k).iter().any(|&(dx, dy, dz)| cells.contains_key(&step(n, (-dx, -dy, -dz))));
+            let foreign = |k: &FaceKey| {
+                lib.overhang_from(k).iter().any(|&(dx, dy, dz)| cells.contains_key(&step(n, (-dx, -dy, -dz))))
+            };
             let own: Vec<FaceKey> = keys.iter().copied().filter(|k| !foreign(k)).collect();
             (!own.is_empty() && own.len() < keys.len()).then_some((n, own))
         })

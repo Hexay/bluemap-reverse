@@ -50,12 +50,7 @@ pub fn sample_checks(constraints: &[Constraint], structure_seed: u64) -> Vec<Che
 
 /// World seeds over all 2^16 upper-bit values, best first, keeping those with at most `max_misses` of `checks`
 /// not biome-viable.
-pub fn rank_upper_bits(
-    mc: &str,
-    structure_seed: u64,
-    checks: &[Check],
-    max_misses: usize,
-) -> Result<Vec<Ranked>> {
+pub fn rank_upper_bits(mc: &str, structure_seed: u64, checks: &[Check], max_misses: usize) -> Result<Vec<Ranked>> {
     let version = parse_version(mc).context("bad Minecraft version")?;
     Generator::new(version).with_context(|| format!("cubiomes does not support Minecraft {mc}"))?;
     let mut ranked: Vec<Ranked> = (0..1u64 << 16)

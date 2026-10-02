@@ -114,7 +114,11 @@ impl WorldArgs {
         Ok(Some(Arc::new(bmr_world::BlockRegistry::load(&self.blocks)?)))
     }
 
-    fn open(&self, root: &std::path::Path, registry: &Option<Arc<bmr_world::BlockRegistry>>) -> Result<bmr_world::World> {
+    fn open(
+        &self,
+        root: &std::path::Path,
+        registry: &Option<Arc<bmr_world::BlockRegistry>>,
+    ) -> Result<bmr_world::World> {
         bmr_world::World::open(root, &self.dimension, registry.clone())
     }
 }

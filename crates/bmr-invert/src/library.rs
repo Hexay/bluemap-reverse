@@ -11,7 +11,9 @@ use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
 use bmr_world::{BlockInfo, BlockRegistry, BlockState, World};
 
-use crate::face::{Cell, CellFaces, FaceKey, Liquid, Tex, Uv, WorldFace, normalized, signature_uv, texture_ids, world_faces};
+use crate::face::{
+    Cell, CellFaces, FaceKey, Liquid, Tex, Uv, WorldFace, normalized, signature_uv, texture_ids, world_faces,
+};
 use crate::timings::Timings;
 
 const DEBUG_Y: i32 = 70;
@@ -128,7 +130,17 @@ impl Library {
             let light = cell.light();
             let (sig, uvs) = signature_uv(cell.uvs);
             let full_cube = is_full_cube(&sig);
-            lib.add(Entry { state: state.clone(), sig, uvs, light, liquid, overhang, tint, default_distance, full_cube });
+            lib.add(Entry {
+                state: state.clone(),
+                sig,
+                uvs,
+                light,
+                liquid,
+                overhang,
+                tint,
+                default_distance,
+                full_cube,
+            });
         }
         lib.stats.states = lib.entries.len();
         t.record("index", index_start.elapsed());
@@ -154,7 +166,8 @@ impl Library {
     pub fn from_entries(entries: Vec<Entry>, data_version: i32) -> Self {
         let mut lib = Self::empty(data_version);
         for mut e in entries {
-            (e.sig, e.uvs) = signature_uv(std::mem::take(&mut e.sig).into_iter().zip(std::mem::take(&mut e.uvs)).collect());
+            (e.sig, e.uvs) =
+                signature_uv(std::mem::take(&mut e.sig).into_iter().zip(std::mem::take(&mut e.uvs)).collect());
             lib.stats.overhang_faces += e.overhang.len();
             lib.stats.overhang_states += (!e.overhang.is_empty()) as usize;
             lib.add(e);

@@ -26,10 +26,7 @@ pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Optio
         let map = LocalMap::open(cache, Some(id))?;
         let dimension = dimension.map_or_else(|| guess_dimension(id, map.settings.sky_color), str::to_owned);
         if let Some(other) = out.iter().find(|p: &&Planned| p.dimension == dimension) {
-            bail!(
-                "maps `{}` and `{id}` are both {dimension}, i.e. separate worlds: pick one with --map",
-                other.id
-            );
+            bail!("maps `{}` and `{id}` are both {dimension}, i.e. separate worlds: pick one with --map", other.id);
         }
         out.push(Planned { id: id.to_owned(), map, dimension });
     }

@@ -68,8 +68,22 @@ pub struct BiomeTint {
 
 /// Commonest overworld biomes first: they win ties between biomes that draw the same colours.
 const COMMON: [&str; 16] = [
-    "plains", "forest", "ocean", "deep_ocean", "river", "taiga", "birch_forest", "savanna", "desert", "beach",
-    "dark_forest", "swamp", "jungle", "snowy_plains", "cold_ocean", "lukewarm_ocean",
+    "plains",
+    "forest",
+    "ocean",
+    "deep_ocean",
+    "river",
+    "taiga",
+    "birch_forest",
+    "savanna",
+    "desert",
+    "beach",
+    "dark_forest",
+    "swamp",
+    "jungle",
+    "snowy_plains",
+    "cold_ocean",
+    "lukewarm_ocean",
 ];
 
 /// Learn every biome's tints from BlueMap's render (`map`) of the `biomes` fixture (`world`): each tinted
@@ -83,7 +97,11 @@ pub fn learn(map: &LocalMap, world: &World) -> Result<Vec<BiomeTint>> {
     }
     let biome = |(x, y, z): (i32, i32, i32)| -> Option<&str> {
         let c = chunks.get(&(x.div_euclid(16), z.div_euclid(16)))?;
-        c.section(y.div_euclid(16))?.biome((x.rem_euclid(16) / 4) as usize, (y.rem_euclid(16) / 4) as usize, (z.rem_euclid(16) / 4) as usize)
+        c.section(y.div_euclid(16))?.biome(
+            (x.rem_euclid(16) / 4) as usize,
+            (y.rem_euclid(16) / 4) as usize,
+            (z.rem_euclid(16) / 4) as usize,
+        )
     };
     let mut per_biome: FxHashMap<String, TintSum> = FxHashMap::default();
     for tile in map.tiles(0) {
@@ -99,7 +117,8 @@ pub fn learn(map: &LocalMap, world: &World) -> Result<Vec<BiomeTint>> {
         }
     }
     let rank = |b: &str| COMMON.iter().position(|c| b.trim_start_matches("minecraft:") == *c).unwrap_or(COMMON.len());
-    let mut table: Vec<BiomeTint> = per_biome.into_iter().map(|(biome, s)| BiomeTint { tints: s.means(), biome }).collect();
+    let mut table: Vec<BiomeTint> =
+        per_biome.into_iter().map(|(biome, s)| BiomeTint { tints: s.means(), biome }).collect();
     table.sort_by(|a, b| rank(&a.biome).cmp(&rank(&b.biome)).then_with(|| a.biome.cmp(&b.biome)));
     Ok(table)
 }

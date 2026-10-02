@@ -30,7 +30,13 @@ pub struct ObjStats {
     pub materials: usize,
 }
 
-pub fn write_obj(dir: &Path, stem: &str, tiles: &[PlacedTile], textures: &[Texture], opts: ObjOptions) -> Result<ObjStats> {
+pub fn write_obj(
+    dir: &Path,
+    stem: &str,
+    tiles: &[PlacedTile],
+    textures: &[Texture],
+    opts: ObjOptions,
+) -> Result<ObjStats> {
     fs::create_dir_all(dir.join("textures"))?;
     let mut out = BufWriter::new(File::create(dir.join(format!("{stem}.obj")))?);
     writeln!(out, "mtllib {stem}.mtl")?;

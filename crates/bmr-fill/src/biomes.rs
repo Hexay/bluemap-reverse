@@ -14,8 +14,13 @@ use bmr_world::BlockState;
 
 use crate::profile::{Kind, Profile};
 
-const NETHER: [&str; 5] =
-    ["minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:basalt_deltas"];
+const NETHER: [&str; 5] = [
+    "minecraft:nether_wastes",
+    "minecraft:soul_sand_valley",
+    "minecraft:crimson_forest",
+    "minecraft:warped_forest",
+    "minecraft:basalt_deltas",
+];
 
 /// (block name contains, biome index into NETHER, vote weight). Netherrack underlies every nether biome,
 /// so it only decides where nothing else is seen.
@@ -51,7 +56,12 @@ pub struct Biomes {
 
 impl Biomes {
     /// `tints`: what was seen per 4×4 column; `table`: the pack's biome tints (empty: overworld unknown).
-    pub fn new(blocks: &FxHashMap<Cell, BlockState>, profile: &Profile, tints: &FxHashMap<(i32, i32), TintSum>, table: &[BiomeTint]) -> Self {
+    pub fn new(
+        blocks: &FxHashMap<Cell, BlockState>,
+        profile: &Profile,
+        tints: &FxHashMap<(i32, i32), TintSum>,
+        table: &[BiomeTint],
+    ) -> Self {
         let mut me = Self { kind: profile.kind, cells: FxHashMap::default(), columns: FxHashMap::default() };
         match profile.kind {
             Kind::Nether => me.cells = nether_cells(blocks),
@@ -67,13 +77,19 @@ impl Biomes {
             Kind::Overworld => self.columns.get(&(cx, cz)).map(String::as_str),
             Kind::End => {
                 let (x, z) = (cx as i64 * 4, cz as i64 * 4);
-                Some(if x * x + z * z <= END_ISLAND * END_ISLAND { "minecraft:the_end" } else { "minecraft:end_highlands" })
+                Some(if x * x + z * z <= END_ISLAND * END_ISLAND {
+                    "minecraft:the_end"
+                } else {
+                    "minecraft:end_highlands"
+                })
             }
             // no evidence within a cell: the nearest decided cell straight up or down, else the commonest biome
             Kind::Nether => Some(
                 self.cells
                     .get(&c)
-                    .or_else(|| (1..16).find_map(|d| self.cells.get(&(cx, cy - d, cz)).or(self.cells.get(&(cx, cy + d, cz)))))
+                    .or_else(|| {
+                        (1..16).find_map(|d| self.cells.get(&(cx, cy - d, cz)).or(self.cells.get(&(cx, cy + d, cz))))
+                    })
                     .copied()
                     .unwrap_or(NETHER[0]),
             ),

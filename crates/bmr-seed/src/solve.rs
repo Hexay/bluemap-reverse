@@ -34,7 +34,9 @@ pub fn solve(constraints: &[Constraint], max_misses: usize) -> Result<Solution> 
     }
     let budget = max_misses - infeasible;
     if liftable.len() < 2 {
-        bail!("need at least 2 liftable structures (temples, huts, igloos, outposts, shipwrecks, ocean ruins, villages)");
+        bail!(
+            "need at least 2 liftable structures (temples, huts, igloos, outposts, shipwrecks, ocean ruins, villages)"
+        );
     }
     let low_bits = 17 + liftable.iter().map(|c| c.lift).max().unwrap_or(0);
 
@@ -56,20 +58,22 @@ pub fn solve(constraints: &[Constraint], max_misses: usize) -> Result<Solution> 
         .iter()
         .flat_map(|&low| {
             let feasible = &feasible;
-            (0..high_count).into_par_iter().filter_map(move |high| {
-                let seed = high << low_bits | low;
-                let mut misses = 0;
-                for c in feasible {
-                    if !matches(seed as i64, c) {
-                        misses += 1;
-                        if misses > budget {
-                            return None;
+            (0..high_count)
+                .into_par_iter()
+                .filter_map(move |high| {
+                    let seed = high << low_bits | low;
+                    let mut misses = 0;
+                    for c in feasible {
+                        if !matches(seed as i64, c) {
+                            misses += 1;
+                            if misses > budget {
+                                return None;
+                            }
                         }
                     }
-                }
-                Some(Candidate { structure_seed: seed, matched: feasible.len() - misses })
-            })
-            .collect::<Vec<_>>()
+                    Some(Candidate { structure_seed: seed, matched: feasible.len() - misses })
+                })
+                .collect::<Vec<_>>()
         })
         .collect();
     candidates.sort_by(|a, b| b.matched.cmp(&a.matched).then(a.structure_seed.cmp(&b.structure_seed)));
@@ -138,7 +142,10 @@ mod tests {
         for (i, k) in c.iter_mut().enumerate() {
             // a decoy neighbour chunk per observation, listed before or after the true one
             let p = k.options[0];
-            let decoy = constraints("26.3", &[Observation { set: k.set.name.into(), chunks: vec![[p.chunk.0 + 1, p.chunk.1]] }]);
+            let decoy = constraints(
+                "26.3",
+                &[Observation { set: k.set.name.into(), chunks: vec![[p.chunk.0 + 1, p.chunk.1]] }],
+            );
             if let Some(d) = decoy.unwrap()[0].options.first().copied() {
                 if i % 2 == 0 { k.options.insert(0, d) } else { k.options.push(d) }
             }

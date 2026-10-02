@@ -77,7 +77,8 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
     let dtos = entries
         .iter()
         .map(|e| {
-            let block = *blocks.get(e.state.name.as_str()).with_context(|| format!("{} not in registry", e.state.name))?;
+            let block =
+                *blocks.get(e.state.name.as_str()).with_context(|| format!("{} not in registry", e.state.name))?;
             Ok(EntryDto {
                 block,
                 state: ordinal(&e.state, &registry[block as usize].1)?,
@@ -111,8 +112,11 @@ pub type Decoded = (Vec<Entry>, Vec<(String, BlockInfo)>, Vec<(String, Vec<u8>)>
 /// Entries plus the registry and template, moved out of `body`.
 pub fn decode(body: Body) -> Decoded {
     let textures: Vec<Tex> = body.key_textures.iter().map(|n| Tex::intern(n)).collect();
-    let keys: Vec<FaceKey> =
-        body.keys.iter().map(|k| FaceKey { texture: textures[k.tex as usize], tinted: k.tinted, verts: k.verts }).collect();
+    let keys: Vec<FaceKey> = body
+        .keys
+        .iter()
+        .map(|k| FaceKey { texture: textures[k.tex as usize], tinted: k.tinted, verts: k.verts })
+        .collect();
     let entries = body
         .entries
         .into_iter()
@@ -215,19 +219,30 @@ mod tests {
 
     #[test]
     fn roundtrip_is_lossless() {
-        let stairs_props: Vec<(String, Vec<String>)> = [("facing", ["north", "south"]), ("half", ["top", "bottom"]), ("waterlogged", ["true", "false"])]
-            .iter()
-            .map(|(p, vs)| (p.to_string(), vs.iter().map(|v| v.to_string()).collect()))
-            .collect();
+        let stairs_props: Vec<(String, Vec<String>)> =
+            [("facing", ["north", "south"]), ("half", ["top", "bottom"]), ("waterlogged", ["true", "false"])]
+                .iter()
+                .map(|(p, vs)| (p.to_string(), vs.iter().map(|v| v.to_string()).collect()))
+                .collect();
         let registry = vec![
-            ("minecraft:oak_stairs".to_string(), BlockInfo {
-                properties: stairs_props,
-                default: owned(&[("facing", "north"), ("half", "bottom"), ("waterlogged", "false")]),
-            }),
+            (
+                "minecraft:oak_stairs".to_string(),
+                BlockInfo {
+                    properties: stairs_props,
+                    default: owned(&[("facing", "north"), ("half", "bottom"), ("waterlogged", "false")]),
+                },
+            ),
             ("minecraft:stone".to_string(), BlockInfo { properties: vec![], default: vec![] }),
         ];
-        let key = |t: &str, v: i16| FaceKey { texture: Tex::intern(t), tinted: false, verts: [[0, 0, 0], [v, 0, 0], [v, v, 0], [0, v, 0]] };
-        let stairs = BlockState::new("minecraft:oak_stairs".into(), owned(&[("facing", "south"), ("half", "top"), ("waterlogged", "true")]));
+        let key = |t: &str, v: i16| FaceKey {
+            texture: Tex::intern(t),
+            tinted: false,
+            verts: [[0, 0, 0], [v, 0, 0], [v, v, 0], [0, v, 0]],
+        };
+        let stairs = BlockState::new(
+            "minecraft:oak_stairs".into(),
+            owned(&[("facing", "south"), ("half", "top"), ("waterlogged", "true")]),
+        );
         let stone = BlockState::new("minecraft:stone".into(), vec![]);
         let entry = |state, sig: Vec<FaceKey>, liquid, overhang, tint, default_distance| {
             let uvs = (0..sig.len()).map(|i| [[i as i16, 0], [0, 1], [1, 1], [1, 0]]).collect();
@@ -235,7 +250,14 @@ mod tests {
         };
         let entries = vec![
             entry(stone.clone(), vec![key("block/stone", 64)], None, vec![], None, 0),
-            entry(stairs, vec![key("block/oak_planks", 32), key("block/stone", 64)], Some(Liquid::Water), vec![((0, 1, 0), key("block/oak_planks", 16))], Some([1, 2, 3]), 3),
+            entry(
+                stairs,
+                vec![key("block/oak_planks", 32), key("block/stone", 64)],
+                Some(Liquid::Water),
+                vec![((0, 1, 0), key("block/oak_planks", 16))],
+                Some([1, 2, 3]),
+                3,
+            ),
             entry(stone, vec![key("block/stone", 64)], None, vec![], None, 0),
         ];
         let body = encode(&entries, registry, vec![]).unwrap();

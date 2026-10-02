@@ -22,7 +22,8 @@ pub fn estimate_floors(liquid_gaps: &[&Gap]) -> FxHashMap<Column, i32> {
         .map(|g| {
             let dark_limit = g.yhi - DARK_DEPTH;
             let nearest = (1..=SEARCH_RADIUS).find_map(|r| {
-                let found: Vec<i32> = ring(r).filter_map(|(dx, dz)| floors.get(&(g.column.0 + dx, g.column.1 + dz)).copied()).collect();
+                let found: Vec<i32> =
+                    ring(r).filter_map(|(dx, dz)| floors.get(&(g.column.0 + dx, g.column.1 + dz)).copied()).collect();
                 (!found.is_empty()).then(|| found.iter().sum::<i32>() / found.len() as i32)
             });
             let floor = nearest.map_or(dark_limit, |f| f.min(dark_limit)).max(g.ylo);

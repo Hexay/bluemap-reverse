@@ -10,10 +10,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn tile_of(&self, x: i32, z: i32) -> Tile {
-        (
-            (x - self.offset[0]).div_euclid(self.size[0]),
-            (z - self.offset[1]).div_euclid(self.size[1]),
-        )
+        ((x - self.offset[0]).div_euclid(self.size[0]), (z - self.offset[1]).div_euclid(self.size[1]))
     }
 
     pub fn tile_min(&self, (tx, tz): Tile) -> (i32, i32) {

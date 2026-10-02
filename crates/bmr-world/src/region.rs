@@ -56,7 +56,8 @@ pub fn write_region(path: &Path, chunks: &[((u8, u8), Vec<u8>)]) -> Result<()> {
         ensure!(sectors < 256, "chunk {lx},{lz} too large ({len} bytes)");
         let offset_sectors = 2 + body.len() / SECTOR;
         let slot = *lz as usize * 32 + *lx as usize;
-        header[slot * 4..slot * 4 + 4].copy_from_slice(&(((offset_sectors as u32) << 8) | sectors as u32).to_be_bytes());
+        header[slot * 4..slot * 4 + 4]
+            .copy_from_slice(&(((offset_sectors as u32) << 8) | sectors as u32).to_be_bytes());
         header[SECTOR + slot * 4..SECTOR + slot * 4 + 4].copy_from_slice(&now.to_be_bytes());
         body.extend((len as u32).to_be_bytes());
         body.push(2);

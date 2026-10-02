@@ -45,7 +45,9 @@ fn platform_data_dir() -> Option<PathBuf> {
         env_path("HOME").map(|h| h.join("Library/Application Support"))
     } else {
         // the XDG spec says to ignore relative values
-        env_path("XDG_DATA_HOME").filter(|p| p.is_absolute()).or_else(|| env_path("HOME").map(|h| h.join(".local/share")))
+        env_path("XDG_DATA_HOME")
+            .filter(|p| p.is_absolute())
+            .or_else(|| env_path("HOME").map(|h| h.join(".local/share")))
     }
 }
 

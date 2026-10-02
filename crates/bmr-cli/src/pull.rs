@@ -69,11 +69,20 @@ pub fn run(a: Args) -> Result<()> {
     let ids: Vec<String> = summaries.iter().map(|s| s.id.clone()).collect();
     let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_deref())?;
     for m in &maps {
-        progress!("      map `{}` ({}) → {}, {} hires tiles", m.id, m.map.settings.name, m.dimension, m.map.tiles(0).len());
+        progress!(
+            "      map `{}` ({}) → {}, {} hires tiles",
+            m.id,
+            m.map.settings.name,
+            m.dimension,
+            m.map.tiles(0).len()
+        );
     }
     let first = &maps.first().context("the site has no maps")?.map;
 
-    progress!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", first.bluemap_version.as_deref().unwrap_or("?"));
+    progress!(
+        "[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})",
+        first.bluemap_version.as_deref().unwrap_or("?")
+    );
     let site_textures = bmr_prbm::parse_texture_names(&first.textures_json()?)?;
     let site_version = first.bluemap_version.as_deref();
     let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, &data_dir, site_version, &site_textures)?;
@@ -82,7 +91,12 @@ pub fn run(a: Args) -> Result<()> {
     }
     let pack = t.time("pack_load", || Pack::load(&pack_path))?;
     let compat = bmr_pack::check(&pack, site_version, &site_textures);
-    progress!("      pack {} (Minecraft {}, BlueMap {})", pack_path.display(), pack.meta.mc_version, pack.meta.bluemap_version);
+    progress!(
+        "      pack {} (Minecraft {}, BlueMap {})",
+        pack_path.display(),
+        pack.meta.mc_version,
+        pack.meta.bluemap_version
+    );
     let fits = matches!(compat.verdict(), Verdict::Ok);
     for line in compat.explain() {
         // a misfit's explanation is a warning: shown even with --quiet
@@ -93,7 +107,9 @@ pub fn run(a: Args) -> Result<()> {
         }
     }
     match compat.verdict() {
-        Verdict::Fail if !a.force => bail!("this pack does not fit the site (see above); use a matching pack or --force"),
+        Verdict::Fail if !a.force => {
+            bail!("this pack does not fit the site (see above); use a matching pack or --force")
+        }
         Verdict::Fail | Verdict::Warn => println!("      continuing: blocks with unknown textures will be left out"),
         Verdict::Ok => {}
     }
@@ -114,7 +130,11 @@ pub fn run(a: Args) -> Result<()> {
         let p = opts.profile;
         let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
         progress!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
-        let regen = a.regen.as_ref().map(|r| bmr_world::World::open(r, &m.dimension, Some(pack.registry.clone()))).transpose()?;
+        let regen = a
+            .regen
+            .as_ref()
+            .map(|r| bmr_world::World::open(r, &m.dimension, Some(pack.registry.clone())))
+            .transpose()?;
         let inputs = Inputs {
             map: &m.map,
             lib: &pack.library,
@@ -133,10 +153,17 @@ pub fn run(a: Args) -> Result<()> {
         let unmatched_pct = 100.0 * totals.unmatched as f64 / totals.cells.max(1) as f64;
         progress!(
             "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks{}",
-            totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks, totals.overlap_note()
+            totals.cells - totals.unmatched,
+            unmatched_pct,
+            totals.solid,
+            totals.liquid,
+            totals.chunks,
+            totals.overlap_note()
         );
         if unmatched_pct > 1.0 {
-            progress!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
+            progress!(
+                "      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above"
+            );
         }
     }
 

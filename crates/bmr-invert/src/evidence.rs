@@ -51,7 +51,9 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
                         solid.push(n);
                     }
                 }
-                open.extend(observed.iter().filter_map(|k| k.boundary_dir()).map(|d| step(cell, d)).filter(|n| !o.contains(n)));
+                open.extend(
+                    observed.iter().filter_map(|k| k.boundary_dir()).map(|d| step(cell, d)).filter(|n| !o.contains(n)),
+                );
                 (solid, open)
             },
         )

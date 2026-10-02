@@ -17,12 +17,10 @@ pub fn discover(
     mut on_wave: impl FnMut(&Probed) -> Result<()>,
 ) -> Result<()> {
     let resumed: Vec<Tile> = probed.present.iter().flat_map(|&t| neighbours(t)).collect();
-    let mut frontier: BTreeSet<Tile> =
-        seeds.into_iter().chain(resumed).filter(|t| !probed.known(t)).collect();
+    let mut frontier: BTreeSet<Tile> = seeds.into_iter().chain(resumed).filter(|t| !probed.known(t)).collect();
 
     while !frontier.is_empty() {
-        let results: Vec<(Tile, Result<bool>)> =
-            frontier.par_iter().map(|&t| (t, fetch(t))).collect();
+        let results: Vec<(Tile, Result<bool>)> = frontier.par_iter().map(|&t| (t, fetch(t))).collect();
         let mut next = BTreeSet::new();
         let mut first_err = None;
         for (t, r) in results {

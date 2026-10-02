@@ -90,7 +90,8 @@ impl FaceKey {
         self.boundary_dir().is_some() && {
             let q = Q as i16;
             let spans = |a: usize| {
-                let (lo, hi) = (self.verts.iter().map(|v| v[a]).min().unwrap(), self.verts.iter().map(|v| v[a]).max().unwrap());
+                let (lo, hi) =
+                    (self.verts.iter().map(|v| v[a]).min().unwrap(), self.verts.iter().map(|v| v[a]).max().unwrap());
                 lo == 0 && hi == q
             };
             (0..3).filter(|&a| spans(a)).count() >= 2
@@ -144,7 +145,10 @@ impl WorldFace {
         let base = [bx as f32, by as f32, bz as f32];
         let mut corners: [([i16; 3], [i16; 2]); 4] = std::array::from_fn(|i| {
             let v = self.verts[i];
-            (std::array::from_fn(|a| ((v[a] - base[a]) * Q).round() as i16), self.uv[i].map(|c| (c * UV_Q).round() as i16))
+            (
+                std::array::from_fn(|a| ((v[a] - base[a]) * Q).round() as i16),
+                self.uv[i].map(|c| (c * UV_Q).round() as i16),
+            )
         });
         corners.sort();
         let key = FaceKey { texture: self.texture, tinted: self.color != [255, 255, 255], verts: corners.map(|c| c.0) };

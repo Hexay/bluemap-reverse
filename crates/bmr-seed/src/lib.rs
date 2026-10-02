@@ -67,8 +67,11 @@ pub fn crack(mc: &str, observations: &[Observation], max_misses: usize) -> Resul
     let best = solution.candidates.first().map_or(0, |c| c.matched);
     let mut candidates = Vec::new();
     for (i, c) in solution.candidates.iter().enumerate() {
-        let checks =
-            if c.matched == best && i < MAX_STRUCTURE_SEEDS { upper::sample_checks(&constraints, c.structure_seed) } else { Vec::new() };
+        let checks = if c.matched == best && i < MAX_STRUCTURE_SEEDS {
+            upper::sample_checks(&constraints, c.structure_seed)
+        } else {
+            Vec::new()
+        };
         let world_seeds = if checks.is_empty() {
             Vec::new()
         } else {

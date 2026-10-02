@@ -98,9 +98,10 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
             if y < cursor {
                 let parts = split_at_mask(y + 1, cursor, p.mask);
                 // rock just under the mask carries on into it; open space goes on up to the roof's underside
-                let rock_under = parts.iter().find(|(_, hi)| p.mask.is_some_and(|(mlo, _)| *hi == mlo - 1)).is_none_or(
-                    |&(lo, hi)| classify(ce, lo, hi) == Fill::Solid,
-                );
+                let rock_under = parts
+                    .iter()
+                    .find(|(_, hi)| p.mask.is_some_and(|(mlo, _)| *hi == mlo - 1))
+                    .is_none_or(|&(lo, hi)| classify(ce, lo, hi) == Fill::Solid);
                 for (ylo, yhi) in parts {
                     let floored = ylo > p.min_y || y >= p.min_y;
                     let mut push = |ylo: i32, yhi: i32, fill| {

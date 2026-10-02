@@ -13,13 +13,19 @@ use crate::columns::Column;
 
 /// `water`: the water source state in the segments' table. Returns the number of blocks switched to their
 /// waterlogged state.
-pub fn from_water_segments(blocks: &mut FxHashMap<Cell, BlockState>, segments: &[Segment], water: StateId, lib: &Library) -> usize {
+pub fn from_water_segments(
+    blocks: &mut FxHashMap<Cell, BlockState>,
+    segments: &[Segment],
+    water: StateId,
+    lib: &Library,
+) -> usize {
     let mut runs: FxHashMap<Column, Vec<(i32, i32)>> = FxHashMap::default();
     for s in segments.iter().filter(|s| s.state == water) {
         runs.entry(s.column).or_default().push((s.ylo, s.yhi));
     }
     let water = runs;
-    let in_water = |(x, y, z): Cell| water.get(&(x, z)).is_some_and(|runs| runs.iter().any(|&(lo, hi)| (lo..=hi).contains(&y)));
+    let in_water =
+        |(x, y, z): Cell| water.get(&(x, z)).is_some_and(|runs| runs.iter().any(|&(lo, hi)| (lo..=hi).contains(&y)));
     let updates: Vec<(Cell, BlockState)> = blocks
         .iter()
         .filter(|(_, s)| s.properties.iter().any(|(k, v)| k == "waterlogged" && v == "false"))

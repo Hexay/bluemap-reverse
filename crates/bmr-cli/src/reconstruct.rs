@@ -69,7 +69,8 @@ impl Totals {
 
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let textures = bmr_invert::map_textures(inp.map)?;
-    let windows = if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
+    let windows =
+        if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
     let open = if inp.extend { WorldWriter::extend } else { WorldWriter::create };
     let writer = open(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
     let mut table = StateTable::default();
@@ -83,7 +84,14 @@ pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
         wt.time("write", || writer.write_chunks(chunks))?;
         t.accumulate(wt);
         if windows.len() > 1 {
-            progress!("  window {}/{} {:?}: {} tiles, {} columns", i + 1, windows.len(), win.region, win.tiles.len(), win.columns.len());
+            progress!(
+                "  window {}/{} {:?}: {} tiles, {} columns",
+                i + 1,
+                windows.len(),
+                win.region,
+                win.tiles.len(),
+                win.columns.len()
+            );
         }
     }
     Ok((totals, t))
@@ -130,8 +138,9 @@ fn run_window(
         // regen decides each cell on its own; only the prior fill searches neighbouring columns
         let columns = if regen.is_some() { win.columns.clone() } else { win.halo_columns.clone() };
         let bounds = Bounds { columns, profile: o.profile };
-        let filled =
-            t.time("fill", || bmr_fill::complete(&inv, inp.lib, inp.registry, &bounds, regen.as_ref(), inp.biome_tints, table));
+        let filled = t.time("fill", || {
+            bmr_fill::complete(&inv, inp.lib, inp.registry, &bounds, regen.as_ref(), inp.biome_tints, table)
+        });
         totals.solid += filled.stats.solid_cells;
         totals.liquid += filled.stats.liquid_cells;
         totals.adopted += filled.stats.adopted_from_regen;

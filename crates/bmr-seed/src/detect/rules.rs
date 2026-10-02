@@ -48,8 +48,17 @@ pub static RULES: &[Rule] = &[
     Rule {
         set: "ocean_monuments",
         markers: || {
-            names(&["prismarine", "prismarine_bricks", "dark_prismarine", "sea_lantern", "prismarine_slab",
-                "prismarine_brick_slab", "dark_prismarine_slab", "prismarine_stairs", "prismarine_brick_stairs"])
+            names(&[
+                "prismarine",
+                "prismarine_bricks",
+                "dark_prismarine",
+                "sea_lantern",
+                "prismarine_slab",
+                "prismarine_brick_slab",
+                "dark_prismarine_slab",
+                "prismarine_stairs",
+                "prismarine_brick_stairs",
+            ])
         },
         link: 6,
         min_points: 200,
@@ -62,8 +71,14 @@ pub static RULES: &[Rule] = &[
     Rule {
         set: "desert_pyramids",
         markers: || {
-            names(&["orange_terracotta", "blue_terracotta", "cut_sandstone", "chiseled_sandstone", "sandstone_stairs",
-                "sandstone_slab"])
+            names(&[
+                "orange_terracotta",
+                "blue_terracotta",
+                "cut_sandstone",
+                "chiseled_sandstone",
+                "sandstone_stairs",
+                "sandstone_slab",
+            ])
         },
         link: 3,
         min_points: 40,
@@ -74,7 +89,15 @@ pub static RULES: &[Rule] = &[
     },
     Rule {
         set: "jungle_temples",
-        markers: || names(&["mossy_cobblestone", "cobblestone", "cobblestone_stairs", "chiseled_stone_bricks", "cobblestone_wall"]),
+        markers: || {
+            names(&[
+                "mossy_cobblestone",
+                "cobblestone",
+                "cobblestone_stairs",
+                "chiseled_stone_bricks",
+                "cobblestone_wall",
+            ])
+        },
         link: 2,
         min_points: 40,
         per_point: false,
@@ -126,10 +149,24 @@ pub static RULES: &[Rule] = &[
     Rule {
         set: "ocean_ruins",
         markers: || {
-            names(&["cut_sandstone", "chiseled_sandstone", "smooth_sandstone", "sandstone_stairs", "sandstone_slab",
-                "stone_bricks", "cracked_stone_bricks", "mossy_stone_bricks", "chiseled_stone_bricks",
-                "stone_brick_stairs", "stone_brick_slab", "mossy_stone_brick_stairs", "mossy_stone_brick_slab",
-                "suspicious_sand", "suspicious_gravel", "polished_granite"])
+            names(&[
+                "cut_sandstone",
+                "chiseled_sandstone",
+                "smooth_sandstone",
+                "sandstone_stairs",
+                "sandstone_slab",
+                "stone_bricks",
+                "cracked_stone_bricks",
+                "mossy_stone_bricks",
+                "chiseled_stone_bricks",
+                "stone_brick_stairs",
+                "stone_brick_slab",
+                "mossy_stone_brick_stairs",
+                "mossy_stone_brick_slab",
+                "suspicious_sand",
+                "suspicious_gravel",
+                "polished_granite",
+            ])
         },
         link: 3,
         min_points: 12,

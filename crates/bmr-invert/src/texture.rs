@@ -30,8 +30,10 @@ static LIQUIDS: LazyLock<[(Tex, Liquid); 4]> = LazyLock::new(|| {
 
 /// Textures a model picks between by position hash, with identical geometry: a state's library entry
 /// shows only the one its debug-world position drew, so they must compare equal.
-const RANDOM_VARIANTS: [(&str, &str); 2] =
-    [("minecraft:block/fire_1", "minecraft:block/fire_0"), ("minecraft:block/soul_fire_1", "minecraft:block/soul_fire_0")];
+const RANDOM_VARIANTS: [(&str, &str); 2] = [
+    ("minecraft:block/fire_1", "minecraft:block/fire_0"),
+    ("minecraft:block/soul_fire_1", "minecraft:block/soul_fire_0"),
+];
 
 impl Tex {
     pub fn intern(name: &str) -> Tex {

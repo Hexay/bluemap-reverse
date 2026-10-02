@@ -9,12 +9,16 @@ use bmr_world::BlockState;
 
 use crate::rules::{prop, set_prop};
 
-const FACINGS: [(&str, Cell); 4] = [("north", (0, 0, -1)), ("east", (1, 0, 0)), ("south", (0, 0, 1)), ("west", (-1, 0, 0))];
+const FACINGS: [(&str, Cell); 4] =
+    [("north", (0, 0, -1)), ("east", (1, 0, 0)), ("south", (0, 0, 1)), ("west", (-1, 0, 0))];
 
 /// Returns the number of stairs switched to their twin.
 pub fn resolve_corners(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
-    let corners: Vec<Cell> =
-        blocks.iter().filter(|(_, s)| is_stairs(s) && prop(s, "shape").is_some_and(|v| v != "straight")).map(|(c, _)| *c).collect();
+    let corners: Vec<Cell> = blocks
+        .iter()
+        .filter(|(_, s)| is_stairs(s) && prop(s, "shape").is_some_and(|v| v != "straight"))
+        .map(|(c, _)| *c)
+        .collect();
     let mut changed = 0;
     // a neighbour's flip can change what fits, so settle twice
     for _ in 0..2 {
@@ -44,7 +48,9 @@ fn shape(blocks: &FxHashMap<Cell, BlockState>, at: Cell, s: &BlockState) -> &'st
     let (Some(f), Some(half)) = (prop(s, "facing"), prop(s, "half")) else { return "straight" };
     let same_half = |c: Cell| blocks.get(&c).filter(|n| is_stairs(n) && prop(n, "half") == Some(half));
     let can_take = |d: &str| {
-        blocks.get(&step(at, d)).is_none_or(|n| !is_stairs(n) || prop(n, "facing") != Some(f) || prop(n, "half") != Some(half))
+        blocks
+            .get(&step(at, d))
+            .is_none_or(|n| !is_stairs(n) || prop(n, "facing") != Some(f) || prop(n, "half") != Some(half))
     };
     if let Some(d1) = same_half(step(at, f)).and_then(|n| prop(n, "facing"))
         && axis(d1) != axis(f)
@@ -111,7 +117,10 @@ mod tests {
 
     fn stairs(facing: &str, shape: &str) -> BlockState {
         let props = [("facing", facing), ("half", "bottom"), ("shape", shape), ("waterlogged", "false")];
-        BlockState::new("minecraft:oak_stairs".into(), props.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())
+        BlockState::new(
+            "minecraft:oak_stairs".into(),
+            props.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
+        )
     }
 
     #[test]

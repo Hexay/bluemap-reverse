@@ -14,7 +14,8 @@ const TARGETS: [&str; 5] = ["_door", "_trapdoor", "_fence_gate", "_head", "_skul
 /// Returns the number of blocks whose `powered` changed.
 pub fn powered(blocks: &mut FxHashMap<Cell, BlockState>) -> usize {
     let is_target = |s: &BlockState| {
-        prop(s, "powered").is_some() && (s.name == "minecraft:note_block" || TARGETS.iter().any(|t| s.name.ends_with(t)))
+        prop(s, "powered").is_some()
+            && (s.name == "minecraft:note_block" || TARGETS.iter().any(|t| s.name.ends_with(t)))
     };
     let mut on: FxHashMap<Cell, bool> =
         blocks.iter().filter(|(_, s)| is_target(s)).map(|(&c, _)| (c, fed(blocks, c))).collect();
@@ -67,7 +68,9 @@ fn feeds(s: &BlockState, d: Cell) -> bool {
         }
         // output is on the side opposite `facing`
         "repeater" | "comparator" | "observer" => is("powered", "true") && facing.is_some_and(|f| d == neg(f)),
-        "daylight_detector" | "target" | "sculk_sensor" | "calibrated_sculk_sensor" => prop(s, "power").is_some_and(|p| p != "0"),
+        "daylight_detector" | "target" | "sculk_sensor" | "calibrated_sculk_sensor" => {
+            prop(s, "power").is_some_and(|p| p != "0")
+        }
         _ if name.ends_with("_button") || name.ends_with("pressure_plate") => {
             is("powered", "true") || prop(s, "power").is_some_and(|p| p != "0")
         }

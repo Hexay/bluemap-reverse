@@ -46,7 +46,10 @@ pub fn run(a: Args) -> Result<()> {
         let truth: Truth = serde_json::from_slice(&std::fs::read(path)?)?;
         let present: HashSet<[i32; 2]> = scan.chunks.iter().copied().collect();
         let scores = evaluate(&scan.detections, &truth.structures, |c| present.contains(&c));
-        println!("{:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7}", "set", "truth", "found", "correct", "misplaced", "false", "options");
+        println!(
+            "{:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7}",
+            "set", "truth", "found", "correct", "misplaced", "false", "options"
+        );
         for (set, s) in &scores {
             println!(
                 "{set:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7.1}",

@@ -59,7 +59,9 @@ pub fn run(a: Args) -> Result<ExitCode> {
     match (report.world_seed, report.candidates.is_empty()) {
         (Some(seed), _) => println!("seed: {seed}"),
         (None, true) => {
-            println!("no structure seed fits: modded salts, pre-1.18 chunks, or more than {max_misses} wrong observations")
+            println!(
+                "no structure seed fits: modded salts, pre-1.18 chunks, or more than {max_misses} wrong observations"
+            )
         }
         (None, false) => println!("no single world seed: add structures in more biomes"),
     }

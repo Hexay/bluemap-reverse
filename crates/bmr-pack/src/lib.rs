@@ -19,8 +19,8 @@ use bmr_world::{BlockRegistry, PaletteStyle, TemplateFiles, World};
 use lzma_rust2::{XzOptions, XzReader, XzWriter};
 
 pub use compat::{Compat, Verdict, check};
-pub use format::{Header, Meta};
 use format::{Body, FORMAT, MAGIC, decode, encode};
+pub use format::{Header, Meta};
 pub use index::{Index, IndexEntry};
 pub use select::{Candidate, Ranked, Source, indexed, installed, rank};
 
@@ -46,7 +46,8 @@ impl Pack {
         mc_version: &str,
         biomes: Option<(&LocalMap, &World)>,
     ) -> Result<Self> {
-        let biome_tints = biomes.map(|(map, world)| bmr_invert::tints::learn(map, world)).transpose()?.unwrap_or_default();
+        let biome_tints =
+            biomes.map(|(map, world)| bmr_invert::tints::learn(map, world)).transpose()?.unwrap_or_default();
         let library = Library::build(lib_map, lib_world, &registry)?;
         let bluemap_version = lib_map.bluemap_version.clone().context("library mirror has no BlueMap version")?;
         let style = lib_world.palette_style()?.context("debug world has no palettes to learn the format from")?;
@@ -129,7 +130,10 @@ impl Pack {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
         let (header, compressed) = split(&bytes, path)?;
         let mut body = read_body(compressed)?;
-        let biome_tints = std::mem::take(&mut body.biome_tints).into_iter().map(|(biome, tints)| BiomeTint { biome, tints }).collect();
+        let biome_tints = std::mem::take(&mut body.biome_tints)
+            .into_iter()
+            .map(|(biome, tints)| BiomeTint { biome, tints })
+            .collect();
         let (entries, registry, template) = decode(body);
         Ok(Self {
             library: Library::from_entries(entries, header.meta.data_version),

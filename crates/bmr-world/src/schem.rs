@@ -130,7 +130,8 @@ pub fn export_schem(world: &World, area: Area, trim: bool, name: &str, path: &Pa
                         if x < area.min[0] || x > area.max[0] {
                             continue;
                         }
-                        let (rx, ry, rz) = ((x - area.min[0]) as usize, (y - area.min[1]) as usize, (z - area.min[2]) as usize);
+                        let (rx, ry, rz) =
+                            ((x - area.min[0]) as usize, (y - area.min[1]) as usize, (z - area.min[2]) as usize);
                         let i = rx + rz * w + ry * w * l;
                         let p = s.index(((ly * 16 + lz) * 16 + lx) as usize) as usize;
                         blocks[i] = ids[p];
@@ -174,8 +175,12 @@ pub fn export_schem(world: &World, area: Area, trim: bool, name: &str, path: &Pa
 }
 
 fn load_chunks(world: &World, area: &Area) -> Result<FxHashMap<ChunkPos, Chunk>> {
-    let (cx0, cz0, cx1, cz1) =
-        (area.min[0].div_euclid(16), area.min[2].div_euclid(16), area.max[0].div_euclid(16), area.max[2].div_euclid(16));
+    let (cx0, cz0, cx1, cz1) = (
+        area.min[0].div_euclid(16),
+        area.min[2].div_euclid(16),
+        area.max[0].div_euclid(16),
+        area.max[2].div_euclid(16),
+    );
     let inside = |(x, z): ChunkPos| (cx0..=cx1).contains(&x) && (cz0..=cz1).contains(&z);
     let regions: Vec<_> = (cx0.div_euclid(32)..=cx1.div_euclid(32))
         .flat_map(|rx| (cz0.div_euclid(32)..=cz1.div_euclid(32)).map(move |rz| (rx, rz)))

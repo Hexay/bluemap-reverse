@@ -19,15 +19,17 @@ pub struct Args {
     /// Only score columns inside hires tiles of this mirror (the rendered area)
     #[arg(long)]
     mirror: Option<PathBuf>,
+    /// Map id in --mirror (optional when the mirror has one map)
     #[arg(long, requires = "mirror")]
     map: Option<String>,
     /// Only score columns in x0,z0,x1,z1 (inclusive)
     // see schem.rs: num_args breaks "--rect=a,b,c,d"
     #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
     rect: Vec<i32>,
+    /// Confusions to list per section of the report
     #[arg(long, default_value_t = 15)]
     top: usize,
-    /// Print positions of one confusion: "<original>-><reconstructed>" as printed in the report
+    /// Print positions of one confusion: `"<original>-><reconstructed>"` as printed in the report
     #[arg(long)]
     sample: Option<String>,
     /// Also write the report as JSON

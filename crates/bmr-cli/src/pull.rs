@@ -5,23 +5,26 @@
 mod plan;
 
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
 use bmr_invert::timings::Timings;
 use bmr_pack::{Pack, Verdict};
 
-use crate::fetch::site_slug;
+use crate::fetch::DownloadArgs;
 use crate::pack_source::{IndexArgs, select_pack};
+use crate::paths::site_slug;
 use crate::reconstruct::{Inputs, reconstruct, report};
 use crate::reverse::OptionArgs;
 use crate::schem::world_extent;
+use crate::ui::progress;
 
 #[derive(clap::Args)]
 pub struct Args {
-    /// BlueMap web address, e.g. https://map.example.com/
+    /// BlueMap web address, e.g. <https://map.example.com/>
     url: String,
-    /// Output: `*.zip` (a world to drop into saves/) or a folder [default: <site>.zip, <site>-<map>.zip with --map]
+    /// Output: `*.zip` (a world to drop into saves/) or a folder [default: SITE.zip, SITE-MAP.zip with
+    /// --map]
     #[arg(short, long)]
     out: Option<PathBuf>,
     /// Only this map [default: every map, each into its dimension of the one world]
@@ -35,15 +38,8 @@ pub struct Args {
     /// Also export the overworld (else the first map) as a Sponge .schem
     #[arg(long)]
     schem: Option<PathBuf>,
-    /// Download cache (resumable; re-runs download nothing new)
-    #[arg(long)]
-    cache: Option<PathBuf>,
-    /// Parallel downloads
-    #[arg(long, default_value_t = 4)]
-    concurrency: usize,
-    /// Pause before each request per download worker (be gentle with other people's servers)
-    #[arg(long, default_value_t = 25)]
-    delay_ms: u64,
+    #[command(flatten)]
+    download: DownloadArgs,
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for exact underground
     #[arg(long)]
     regen: Option<PathBuf>,
@@ -53,6 +49,7 @@ pub struct Args {
     /// Continue even if the pack does not fit the site
     #[arg(long)]
     force: bool,
+    /// Print per-stage timings and write them as JSON {stage: seconds} here
     #[arg(long)]
     timings: Option<PathBuf>,
     #[command(flatten)]
@@ -63,35 +60,37 @@ pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
     let slug = site_slug(&a.url);
-    let cache = a.cache.clone().unwrap_or_else(|| PathBuf::from("work/cache").join(&slug));
+    let data_dir = a.download.data.data_dir()?;
+    let cache = a.download.data.mirror_dir(&a.url)?;
 
-    println!("[1/4] mirroring {} → {}", a.url, cache.display());
-    let fetch_opts = bmr_fetch::Options {
-        base_url: a.url.clone(),
-        out: cache.clone(),
-        maps: a.map.iter().cloned().collect(),
-        concurrency: a.concurrency,
-        delay: Duration::from_millis(a.delay_ms),
-    };
+    progress!("[1/4] mirroring {} → {}", a.url, cache.display());
+    let fetch_opts = a.download.options(&a.url, cache.clone(), a.map.iter().cloned().collect());
     let summaries = t.time("fetch", || bmr_fetch::mirror(&fetch_opts))?;
     let ids: Vec<String> = summaries.iter().map(|s| s.id.clone()).collect();
     let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_deref())?;
     for m in &maps {
-        println!("      map `{}` ({}) → {}, {} hires tiles", m.id, m.map.settings.name, m.dimension, m.map.tiles(0).len());
+        progress!("      map `{}` ({}) → {}, {} hires tiles", m.id, m.map.settings.name, m.dimension, m.map.tiles(0).len());
     }
     let first = &maps.first().context("the site has no maps")?.map;
 
-    println!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", first.bluemap_version.as_deref().unwrap_or("?"));
+    progress!("[2/4] choosing a pack (texture fingerprint; site runs BlueMap {})", first.bluemap_version.as_deref().unwrap_or("?"));
     let site_textures = bmr_prbm::parse_texture_names(&first.textures_json()?)?;
-    let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, first.bluemap_version.as_deref(), &site_textures)?;
+    let site_version = first.bluemap_version.as_deref();
+    let (pack_path, ranking) = select_pack(a.pack.as_deref(), &a.index, &data_dir, site_version, &site_textures)?;
     for (i, line) in ranking.iter().enumerate() {
-        println!("      {} {line}", if i == 0 { "→" } else { " " });
+        progress!("      {} {line}", if i == 0 { "→" } else { " " });
     }
     let pack = t.time("pack_load", || Pack::load(&pack_path))?;
-    let compat = bmr_pack::check(&pack, first.bluemap_version.as_deref(), &site_textures);
-    println!("      pack {} (Minecraft {}, BlueMap {})", pack_path.display(), pack.meta.mc_version, pack.meta.bluemap_version);
+    let compat = bmr_pack::check(&pack, site_version, &site_textures);
+    progress!("      pack {} (Minecraft {}, BlueMap {})", pack_path.display(), pack.meta.mc_version, pack.meta.bluemap_version);
+    let fits = matches!(compat.verdict(), Verdict::Ok);
     for line in compat.explain() {
-        println!("      {line}");
+        // a misfit's explanation is a warning: shown even with --quiet
+        if fits {
+            progress!("      {line}");
+        } else {
+            println!("      {line}");
+        }
     }
     match compat.verdict() {
         Verdict::Fail if !a.force => bail!("this pack does not fit the site (see above); use a matching pack or --force"),
@@ -114,7 +113,7 @@ pub fn run(a: Args) -> Result<()> {
         let opts = a.opts.options(&m.dimension)?;
         let p = opts.profile;
         let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
-        println!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
+        progress!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
         let regen = a.regen.as_ref().map(|r| bmr_world::World::open(r, &m.dimension, Some(pack.registry.clone()))).transpose()?;
         let inputs = Inputs {
             map: &m.map,
@@ -132,21 +131,21 @@ pub fn run(a: Args) -> Result<()> {
         let (totals, wt) = reconstruct(&inputs)?;
         t.accumulate(wt);
         let unmatched_pct = 100.0 * totals.unmatched as f64 / totals.cells.max(1) as f64;
-        println!(
+        progress!(
             "      {} blocks recognised, {:.2}% unrecognised, {} unseen solid + {} unseen liquid filled, {} chunks{}",
             totals.cells - totals.unmatched, unmatched_pct, totals.solid, totals.liquid, totals.chunks, totals.overlap_note()
         );
         if unmatched_pct > 1.0 {
-            println!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
+            progress!("      note: >1% unrecognised usually means custom models (resource pack/mods) — see the texture sets above");
         }
     }
 
-    println!("[4/4] writing output");
+    progress!("[4/4] writing output");
     if zip {
         let files = t.time("zip", || bmr_world::zip_world(&world_dir, &out))?;
-        println!("      {} ({files} files, {:.1} MB) — extract into your saves/ folder", out.display(), size_mb(&out));
+        progress!("      {} ({files} files, {:.1} MB) — extract into your saves/ folder", out.display(), size_mb(&out));
     } else {
-        println!("      world folder {}", out.display());
+        progress!("      world folder {}", out.display());
     }
     if let Some(schem) = &a.schem {
         let m = &maps[0];
@@ -155,10 +154,10 @@ pub fn run(a: Args) -> Result<()> {
         let extent = world_extent(&world, [p.min_y, p.max_y])?;
         let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &m.id, schem))?;
         let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
-        println!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
+        progress!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));
     }
     t.record("total", total.elapsed());
-    println!("done in {:.1?}", total.elapsed());
+    progress!("done in {:.1?}", total.elapsed());
     if a.timings.is_some() {
         report(&t, a.timings.as_deref())?;
     }

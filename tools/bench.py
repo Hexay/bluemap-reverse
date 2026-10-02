@@ -7,7 +7,7 @@ Usage: py -3 tools/bench.py <label> [-n 3] [--clean DIR] -- <command...>
   {timings} in the command is replaced by a temp JSON path.
 Example:
   py -3 tools/bench.py vanilla-regen -n 3 --clean work/out/bench -- target/release/bmr.exe reverse
-      --mirror work/cache/vanilla work/out/bench/world --regen work/worlds/regen-vanilla/world --timings {timings}
+      --mirror work/cache/vanilla -o work/out/bench/world --regen work/worlds/regen-vanilla/world --timings {timings}
 """
 import argparse
 import ctypes

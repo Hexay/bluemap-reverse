@@ -9,6 +9,8 @@ use flate2::read::GzDecoder;
 use ureq::Agent;
 use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
+use crate::progress::{OnProgress, Progress, emit};
+
 const RETRIES: u32 = 3;
 const MAX_BODY: u64 = 1 << 30;
 
@@ -16,6 +18,7 @@ pub struct Http {
     agent: Agent,
     base: String,
     delay: Duration,
+    progress: Option<OnProgress>,
 }
 
 impl Http {
@@ -33,7 +36,13 @@ impl Http {
             )
             .build()
             .into();
-        Ok(Self { agent, base: format!("{}/", base.trim_end_matches('/')), delay })
+        Ok(Self { agent, base: format!("{}/", base.trim_end_matches('/')), delay, progress: None })
+    }
+
+    /// Reports retries to `progress`.
+    pub fn with_progress(mut self, progress: Option<OnProgress>) -> Self {
+        self.progress = progress;
+        self
     }
 
     /// `None` for 204/404 (BlueMap's "no tile here"). Body is always returned decompressed.
@@ -48,7 +57,7 @@ impl Http {
             match self.try_get(&url) {
                 Ok(v) => return Ok(v),
                 Err(e) if attempt < RETRIES => {
-                    eprintln!("retry {attempt}/{RETRIES} {url}: {e:#}");
+                    emit(self.progress.as_ref(), Progress::Retry { url: &url, attempt, of: RETRIES, error: &e });
                     thread::sleep(Duration::from_millis(500 * attempt as u64));
                 }
                 Err(e) => return Err(e.context(url)),

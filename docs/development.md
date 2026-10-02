@@ -34,23 +34,43 @@ py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / Blu
 
 ## Command reference
 
+Conventions: inputs are positional, outputs are `-o/--out`, the Minecraft version is `--mc`; `-q/--quiet`
+(any command) drops progress lines but keeps results, warnings and errors.
+
 ```
-bmr fetch http://127.0.0.1:8100/        # mirror → work/cache/127.0.0.1_8100 (resumable)
-bmr obj [--shade]                       # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender
-bmr check-heights                       # hires top faces vs lowres heightmap (decode sanity check)
+bmr fetch http://127.0.0.1:8100/ -o work/cache/x   # mirror (resumable) [default -o: <data>/cache/127.0.0.1_8100]
+bmr obj --mirror <dir> [--shade]        # hires tiles → work/obj/<map>/<map>.obj (+mtl, textures) for Blender
 bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered columns; no recon = all-air baseline
                                         # --pack <p>: also rendered accuracy counting look-alike states as correct
-bmr pack lookalikes <pack> out.json     # groups of states BlueMap draws identically (unrecoverable from tiles)
-bmr probe <world> x,y,z ...             # print block states + biome
-bmr reverse --mirror <dir> <out_world>  # reconstruct (needs work/cache/debug + work/worlds/debug, see Fixtures)
+bmr pack build --mc 26.3 [-o <file>]    # pack from the debug/biomes fixtures (tools/build_pack.py drives it)
+bmr pack lookalikes <pack> -o out.json  # groups of states BlueMap draws identically (unrecoverable from tiles)
+bmr reverse --mirror <dir> -o <world>   # reconstruct (needs work/cache/debug + work/worlds/debug, see Fixtures)
 bmr reverse … --zip out.zip             # also package the world folder (extracts to <folder>/, drop into saves/)
 bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
-bmr schem <world> out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
+bmr schem <world> -o out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
                                         # Sponge v3 .schem for WorldEdit/FAWE; trims to non-air by default
 py -3 tools/check_schem.py out.schem    # independent spec validator (own NBT parser)
 bmr structures <world> -o obs.json      # structures in a reconstructed world → seed observations
 bmr seed obs.json [--max-misses N]      # world seed from structure start chunks (see seed.md)
 ```
+
+Hidden from `bmr --help` (still runnable, `bmr <cmd> --help` works):
+
+```
+bmr check-heights --mirror <dir>        # hires top faces vs lowres heightmap (decode sanity check)
+bmr probe <world> x,y,z ...             # print block states + biome
+bmr copy-world <world> -o <out>         # round-trip a world through our reader and writer
+```
+
+- Data dir (`pull`, `fetch`, `pack list|fetch`): `--cache-dir <dir>`, else `$BMR_HOME`, else
+  `%LOCALAPPDATA%\bluemap-reverse` (Windows), `~/Library/Application Support/bluemap-reverse` (macOS),
+  `$XDG_DATA_HOME/bluemap-reverse` or `~/.local/share/bluemap-reverse`. Site mirrors go to `<data>/cache/<site>`,
+  downloaded packs to `<data>/packs`. Packs are looked up in `packs/` next to `bmr` first, then `./packs`, then
+  `<data>/packs`. Tools pass explicit paths, so the dev loop stays in `work/`.
+- Downloads (`fetch`, `pull`): `--concurrency 4`, `--delay-ms 25` by default; `tools/mirror_fixture.py` uses 8
+  and 0 against the local server.
+- Exit codes: 0 success (including `pull` continuing past a pack warning), 1 error, 2 usage error,
+  3 `seed` finished without a single world seed.
 
 ## Packs
 

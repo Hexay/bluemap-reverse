@@ -12,6 +12,7 @@ use crate::discover::discover;
 use crate::grid::{Grid, Tile, tile_file};
 use crate::http::Http;
 use crate::lowres::LowresImage;
+use crate::progress::{OnProgress, Progress, emit};
 use crate::settings::{MapSettings, SiteSettings};
 use crate::store::{Manifest, Store, manifest_rel};
 
@@ -22,6 +23,8 @@ pub struct Options {
     pub maps: Vec<String>,
     pub concurrency: usize,
     pub delay: Duration,
+    /// Receives retries and per-layer probing progress.
+    pub progress: Option<OnProgress>,
 }
 
 #[derive(Debug)]
@@ -32,7 +35,7 @@ pub struct MapSummary {
 }
 
 pub fn mirror(opts: &Options) -> Result<Vec<MapSummary>> {
-    let http = Http::new(&opts.base_url, opts.delay)?;
+    let http = Http::new(&opts.base_url, opts.delay)?.with_progress(opts.progress.clone());
     let store = Store::new(&opts.out);
     let pool = rayon::ThreadPoolBuilder::new().num_threads(opts.concurrency).build()?;
 
@@ -44,7 +47,7 @@ pub fn mirror(opts: &Options) -> Result<Vec<MapSummary>> {
         site.maps.iter().filter(|m| opts.maps.is_empty() || opts.maps.contains(m)).collect();
     pool.install(|| {
         ids.into_iter()
-            .map(|id| MapMirror::new(&http, &store, &site.map_data_root, id)?.run())
+            .map(|id| MapMirror::new(&http, &store, &site.map_data_root, id, opts.progress.as_ref())?.run())
             .collect()
     })
 }
@@ -57,17 +60,18 @@ struct MapMirror<'a> {
     settings: MapSettings,
     manifest_path: PathBuf,
     manifest: Manifest,
+    progress: Option<&'a OnProgress>,
 }
 
 impl<'a> MapMirror<'a> {
-    fn new(http: &'a Http, store: &'a Store, maps_root: &str, id: &str) -> Result<Self> {
+    fn new(http: &'a Http, store: &'a Store, maps_root: &str, id: &str, progress: Option<&'a OnProgress>) -> Result<Self> {
         let root = format!("{maps_root}/{id}");
         let bytes = http.get(&format!("{root}/settings.json"))?.context("map settings.json missing")?;
         store.write(&format!("{root}/settings.json"), &bytes)?;
         let settings = serde_json::from_slice(&bytes).with_context(|| format!("{root}/settings.json"))?;
         let manifest_path = store.path(&manifest_rel(id));
         let manifest = Manifest::load(&manifest_path)?;
-        Ok(Self { http, store, id: id.into(), root, settings, manifest_path, manifest })
+        Ok(Self { http, store, id: id.into(), root, settings, manifest_path, manifest, progress })
     }
 
     fn run(mut self) -> Result<MapSummary> {
@@ -118,9 +122,9 @@ impl<'a> MapMirror<'a> {
                 None => Ok(false),
             }
         };
-        let (manifest, path) = (&mut self.manifest, &self.manifest_path);
+        let (manifest, path, map, progress) = (&mut self.manifest, &self.manifest_path, self.id.as_str(), self.progress);
         let result = discover(&mut probed, seeds, fetch, |p| {
-            eprintln!("  lod {lod}: {} present, {} empty", p.present.len(), p.empty.len());
+            emit(progress, Progress::Layer { map, lod, present: p.present.len(), empty: p.empty.len() });
             Ok(())
         });
         manifest.layers.insert(lod, probed);

@@ -5,6 +5,7 @@ mod fetch;
 mod obj;
 mod pack;
 mod pack_source;
+mod paths;
 mod probe;
 mod pull;
 mod reconstruct;
@@ -13,9 +14,11 @@ mod schem;
 mod score;
 mod seed;
 mod structures;
+mod ui;
 mod window;
 
 use std::path::PathBuf;
+use std::process::ExitCode;
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -25,9 +28,15 @@ use clap::{Parser, Subcommand};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
 
+const EXIT_CODES: &str = "Exit codes: 0 success, 1 error, 2 usage error, 3 `seed` found no seed.
+Downloads (site mirrors, packs) go to --cache-dir, else $BMR_HOME, else the per-user data dir.";
+
 #[derive(Parser)]
-#[command(name = "bmr", about = "Reconstruct a Minecraft world from a BlueMap web map")]
+#[command(name = "bmr", version, about = "Reconstruct a Minecraft world from a BlueMap web map", after_help = EXIT_CODES)]
 struct Cli {
+    /// Print only results, warnings and errors (no progress)
+    #[arg(short, long, global = true)]
+    quiet: bool,
     #[command(subcommand)]
     cmd: Cmd,
 }
@@ -44,12 +53,15 @@ enum Cmd {
     /// Export a mirrored map's hires tiles as OBJ + MTL + textures.
     Obj(obj::Args),
     /// Cross-check hires top faces against the lowres heightmap.
+    #[command(hide = true)]
     CheckHeights(check_heights::Args),
     /// Score a reconstructed world against the original, block by block.
     Score(score::Args),
     /// Print block states (and biome) at world positions.
+    #[command(hide = true)]
     Probe(probe::Args),
     /// Read a world's full chunks and write them back out with our writer (round-trip test).
+    #[command(hide = true)]
     CopyWorld(copy_world::Args),
     /// Reconstruct a world from a mirrored map using the debug-world signature library.
     Reverse(reverse::Args),
@@ -66,7 +78,7 @@ enum Cmd {
 /// Mirror dir + optional map id, shared by commands that read a local mirror.
 #[derive(clap::Args)]
 struct MirrorArgs {
-    /// Mirror dir written by `bmr fetch`, e.g. work/cache/<fixture>
+    /// Mirror dir written by `bmr fetch`, e.g. `work/cache/<fixture>`
     #[arg(long)]
     mirror: PathBuf,
     /// Map id (optional when the mirror has one map)
@@ -83,6 +95,7 @@ impl MirrorArgs {
 /// Dimension + block registry, shared by commands that read Anvil worlds.
 #[derive(clap::Args)]
 struct WorldArgs {
+    /// Dimension to read or write
     #[arg(long, default_value = "minecraft:overworld")]
     dimension: String,
     /// Vanilla blocks.json report (tools/setup.py); needed for 26.3+ palettes
@@ -116,12 +129,14 @@ struct LibraryArgs {
     /// The debug world itself (ground-truth states for the library)
     #[arg(long, default_value = "work/worlds/debug/world")]
     library_world: PathBuf,
+    /// Empty world whose level.dat/data seed the output
     #[arg(long, default_value = DEFAULT_TEMPLATE)]
     template: PathBuf,
     /// Mirror + world of the `biomes` fixture (tools/gen_biomes.py) for the biome tint table; overworld
     /// biomes stay plains without it
     #[arg(long, default_value = "work/cache/biomes")]
     biome_mirror: PathBuf,
+    /// World of the `biomes` fixture (see --biome-mirror)
     #[arg(long, default_value = "work/worlds/biomes/world")]
     biome_world: PathBuf,
 }
@@ -149,8 +164,20 @@ impl LibraryArgs {
     }
 }
 
-fn main() -> Result<()> {
-    match Cli::parse().cmd {
+fn main() -> ExitCode {
+    let cli = Cli::parse();
+    ui::set_quiet(cli.quiet);
+    match run(cli.cmd) {
+        Ok(code) => code,
+        Err(e) => {
+            eprintln!("Error: {e:?}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run(cmd: Cmd) -> Result<ExitCode> {
+    match cmd {
         Cmd::Pull(a) => pull::run(a),
         Cmd::Pack(c) => pack::run(c),
         Cmd::Fetch(a) => fetch::run(a),
@@ -162,7 +189,8 @@ fn main() -> Result<()> {
         Cmd::Reverse(a) => reverse::run(a),
         Cmd::Explain(a) => explain::run(a),
         Cmd::Schem(a) => schem::run(a),
-        Cmd::Seed(a) => seed::run(a),
+        Cmd::Seed(a) => return seed::run(a),
         Cmd::Structures(a) => structures::run(a),
     }
+    .map(|()| ExitCode::SUCCESS)
 }

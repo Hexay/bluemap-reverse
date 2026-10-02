@@ -10,8 +10,8 @@ use crate::MirrorArgs;
 pub struct Args {
     #[command(flatten)]
     mirror: MirrorArgs,
-    /// Output dir [default: work/obj/<map>]
-    #[arg(long)]
+    /// Output dir [default: work/obj/MAP]
+    #[arg(short, long)]
     out: Option<PathBuf>,
     /// Bake AO and light into vertex colours (closer to the web view)
     #[arg(long)]

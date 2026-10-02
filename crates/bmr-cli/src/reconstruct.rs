@@ -15,6 +15,7 @@ use bmr_world::{
     BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateId, StateTable, World, WorldWriter,
 };
 
+use crate::ui::progress;
 use crate::window::{self, Window};
 
 #[derive(Clone)]
@@ -82,7 +83,7 @@ pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
         wt.time("write", || writer.write_chunks(chunks))?;
         t.accumulate(wt);
         if windows.len() > 1 {
-            println!("  window {}/{} {:?}: {} tiles, {} columns", i + 1, windows.len(), win.region, win.tiles.len(), win.columns.len());
+            progress!("  window {}/{} {:?}: {} tiles, {} columns", i + 1, windows.len(), win.region, win.tiles.len(), win.columns.len());
         }
     }
     Ok((totals, t))
@@ -103,7 +104,7 @@ fn run_window(
     totals.cells += inv.stats.cells;
     totals.unmatched += inv.stats.unmatched;
     for (textures, n) in inv.stats.unmatched_textures.iter().take(o.show_unmatched) {
-        println!("  unmatched {n:>6}  {textures}");
+        progress!("  unmatched {n:>6}  {textures}");
     }
     let regen = t.time("regen_load", || -> Result<_> {
         inp.regen.map(|w| bmr_fill::RegenWorld::load(w, table, win.chunk_area)).transpose()

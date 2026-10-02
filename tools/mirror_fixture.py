@@ -65,19 +65,20 @@ def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False) ->
     out = tc.cache / fixture
     shutil.rmtree(out, ignore_errors=True)
     with serving(base, tc):
-        return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8"], cwd=ROOT)
+        return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8", "--delay-ms", "0"], cwd=ROOT)
 
 
-def pull_fixture(fixture: str, tc: Toolchain, out_dir: Path) -> tuple[Path, str]:
-    """Render + serve `fixture`, `bmr pull --offline` it into a fresh `out_dir` (mirror in out_dir/cache)
-    and unzip it. Prints the pull's output tail, exits on a failed pull. Returns (pulled world, pull stdout)."""
+def pull_fixture(fixture: str, tc: Toolchain, out_dir: Path) -> tuple[Path, Path, str]:
+    """Render + serve `fixture`, `bmr pull --offline` it into a fresh `out_dir` (data dir: mirror in
+    out_dir/cache/<site>) and unzip it. Prints the pull's output tail, exits on a failed pull.
+    Returns (pulled world, mirror, pull stdout)."""
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True)
     zip_path = out_dir / "pulled.zip"
     base = render(fixture, tc)
     with serving(base, tc):
         pull = subprocess.run(
-            [bmr_exe(), "pull", URL, "-o", zip_path, "--cache", out_dir / "cache", "--offline"],
+            [bmr_exe(), "pull", URL, "-o", zip_path, "--cache-dir", out_dir, "--offline"],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
     print(pull.stdout[-3000:])
@@ -85,7 +86,8 @@ def pull_fixture(fixture: str, tc: Toolchain, out_dir: Path) -> tuple[Path, str]
         sys.exit(f"pull failed: {pull.stderr[-2000:]}")
     with zipfile.ZipFile(zip_path) as z:
         z.extractall(out_dir / "unzipped")
-    return out_dir / "unzipped" / "world", pull.stdout
+    mirror_dir = next(p for p in (out_dir / "cache").iterdir() if p.is_dir())
+    return out_dir / "unzipped" / "world", mirror_dir, pull.stdout
 
 
 def main() -> None:

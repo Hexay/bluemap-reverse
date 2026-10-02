@@ -3,6 +3,10 @@ name = "bmr-score"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Block-by-block scoring of a reconstructed world against the original"
 
 [dependencies]
 anyhow.workspace = true

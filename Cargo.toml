@@ -6,6 +6,9 @@ members = ["crates/*"]
 edition = "2024"
 version = "0.1.0"
 license = "MIT OR Apache-2.0"
+rust-version = "1.88"
+repository = "https://github.com/Hexay/bluemap-reverse"
+publish = false
 
 # iterate on debug builds: deps optimised once, our crates lightly optimised (reverse runs on millions of faces)
 [profile.dev]

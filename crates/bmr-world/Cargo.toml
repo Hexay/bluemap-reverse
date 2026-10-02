@@ -3,6 +3,10 @@ name = "bmr-world"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Minecraft Anvil world read/write, block registry and Sponge schematic export"
 
 [dependencies]
 anyhow.workspace = true

@@ -1,4 +1,4 @@
-//! What drawn and missing faces say about unobserved neighbour cells (see docs/plan.md, fill):
+//! What drawn and missing faces say about unobserved neighbour cells (see docs/architecture.md, fill):
 //! - a matched block's cullable (non-liquid) face is missing → neighbour is a full opaque block (`solid`)
 //! - a liquid face is missing → neighbour is the same liquid or a full block (`liquid`)
 //! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`)

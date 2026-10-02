@@ -3,6 +3,10 @@ name = "bmr-fill"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Fill hidden volume, apply game rules and recover biomes for a reconstructed world"
 
 [dependencies]
 anyhow.workspace = true

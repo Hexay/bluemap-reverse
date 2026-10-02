@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Release archives include the cubiomes license (`LICENSE-cubiomes`).
+
+### Changed
+
+- Minimum supported Rust version is declared (1.88) and checked in CI.
+
 ## [0.1.0] - 2026-10-01
 
 First public release.

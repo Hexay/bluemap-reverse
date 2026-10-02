@@ -32,7 +32,7 @@ pub struct Confusion {
     pub count: u64,
 }
 
-/// See docs/plan.md "Scoring". `rendered` = cells BlueMap drew faces for (needs the mirror): the
+/// See docs/architecture.md "Scoring". `rendered` = cells BlueMap drew faces for (needs the mirror): the
 /// ceiling for pure inversion. `exposed` = non-air with an air neighbour, which also counts dark cave
 /// walls BlueMap never draws.
 #[derive(Debug, Default, Serialize)]

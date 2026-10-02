@@ -15,7 +15,7 @@ Only share map URLs you have permission to share.
 
 ## Setting up
 
-You need stable Rust (2024 edition), a C compiler and Python 3. The test tooling downloads its own JDK,
+You need Rust 1.88 or newer, a C compiler and Python 3. The test tooling downloads its own JDK,
 Minecraft server and BlueMap.
 
 ```sh
@@ -25,7 +25,7 @@ py -3 tools/up.py superflat     # build, render and serve a fixture world
 ```
 
 [docs/development.md](docs/development.md) covers the test loop, fixtures, every command and building packs.
-Start with [docs/plan.md](docs/plan.md) for the architecture.
+Start with [docs/architecture.md](docs/architecture.md) for the design.
 
 ## Making changes
 

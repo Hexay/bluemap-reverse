@@ -1,4 +1,4 @@
-//! Block-by-block scoring of a reconstructed world against the original (docs/plan.md "Scoring").
+//! Block-by-block scoring of a reconstructed world against the original (docs/architecture.md "Scoring").
 
 mod compare;
 mod report;

@@ -9,7 +9,7 @@ No server, no Java, no BlueMap install, just one binary.
 
 [![CI](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml/badge.svg)](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
-[![Rust 2024](https://img.shields.io/badge/rust-2024%20edition-orange?logo=rust)](https://www.rust-lang.org/)
+[![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange?logo=rust)](https://www.rust-lang.org/)
 [![Minecraft 1.18+](https://img.shields.io/badge/minecraft-1.18%2B-62b47a)](#supported-versions)
 [![BlueMap 5.27](https://img.shields.io/badge/bluemap-5.27-2c6fbb)](https://bluemap.bluecolored.de/)
 
@@ -146,7 +146,7 @@ Packs for any other 1.18+ version can be built unattended in about two minutes
 
 ## Building from source
 
-Requires a recent stable Rust toolchain (2024 edition) and a C compiler (MSVC, GCC or Clang) for the vendored
+Requires Rust 1.88 or newer and a C compiler (MSVC, GCC or Clang) for the vendored
 [cubiomes](https://github.com/Cubitect/cubiomes).
 
 ```sh
@@ -162,7 +162,7 @@ BlueMap to build fixture worlds and score reconstructions; see [docs/development
 
 | Document | Contents |
 |---|---|
-| [docs/plan.md](docs/plan.md) | Goal, architecture, phases, scoring, open questions. **Start here.** |
+| [docs/architecture.md](docs/architecture.md) | Goal, crates, scoring, roadmap, decision log. **Start here.** |
 | [docs/development.md](docs/development.md) | Test loop, fixtures, full command reference, building packs. |
 | [docs/seed.md](docs/seed.md) | Seed recovery pipeline. |
 | [docs/performance.md](docs/performance.md) | Benchmarking, profiling and performance decisions. |
@@ -171,7 +171,6 @@ BlueMap to build fixture worlds and score reconstructions; see [docs/development
 | [docs/research/03-rust-and-tooling.md](docs/research/03-rust-and-tooling.md) | Crates, BlueMap CLI usage, test-world generation, version pins. |
 | [docs/research/04-filling-hidden-data.md](docs/research/04-filling-hidden-data.md) | Recovering what tiles don't contain: seeds, regen, biome inference. |
 | [docs/research/seed-recovery.md](docs/research/seed-recovery.md) | Seed recovery from maps: structure cracking, upper bits, sources. |
-| [docs/chat-log.md](docs/chat-log.md) | The conversation that started the project. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Reporting problems, making changes, releasing. |
 | [CHANGELOG.md](CHANGELOG.md) | What changed in each release. |
 

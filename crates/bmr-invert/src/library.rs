@@ -1,5 +1,5 @@
 //! Face-signature library learned from BlueMap's render of the vanilla debug world
-//! (every state once, isolated, at y=70 on odd x/z). See docs/plan.md "Inversion by learned signatures".
+//! (every state once, isolated, at y=70 on odd x/z). See docs/architecture.md "Inversion by learned signatures".
 
 use std::collections::BTreeSet;
 

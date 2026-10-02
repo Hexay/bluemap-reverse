@@ -114,10 +114,12 @@ mod tests {
 
     /// Cross-check against the server jar's data when a local toolchain has extracted it (tools/setup.py).
     #[test]
+    #[ignore = "needs work/data from tools/setup.py"]
     fn matches_jar_data() {
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../work/data/structure_set-26.3");
-        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        let entries = std::fs::read_dir(dir).unwrap_or_else(|e| panic!("{dir}: {e}; run `py -3 tools/setup.py` first"));
         let sets = vanilla("26.3").unwrap();
+        let mut checked = 0;
         for e in entries.flatten() {
             let name = e.file_name().to_string_lossy().trim_end_matches(".json").to_string();
             let Some(s) = sets.iter().find(|s| s.name == name) else { continue };
@@ -128,6 +130,8 @@ mod tests {
             assert_eq!(p["salt"], s.salt, "{name}");
             let triangular = p["spread_type"].as_str().is_some_and(|t| t.ends_with("triangular"));
             assert_eq!(triangular, s.spread == Triangular, "{name}");
+            checked += 1;
         }
+        assert!(checked > 0, "{dir} has no structure sets we know");
     }
 }

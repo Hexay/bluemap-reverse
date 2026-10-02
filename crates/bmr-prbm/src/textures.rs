@@ -72,3 +72,7 @@ fn crop_top_square(png_bytes: &[u8]) -> Result<Vec<u8>> {
     enc.write_header()?.write_image_data(&buf[..info.line_size * side as usize])?;
     Ok(out)
 }
+
+#[cfg(test)]
+#[path = "textures_tests.rs"]
+mod tests;

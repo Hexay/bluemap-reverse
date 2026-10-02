@@ -1,0 +1,133 @@
+use std::path::PathBuf;
+
+use flate2::write::GzEncoder;
+
+use super::*;
+
+/// Unique per test so parallel tests never share a file; removed on drop.
+struct TempFile(PathBuf);
+
+impl TempFile {
+    fn new(name: &str) -> Self {
+        Self(std::env::temp_dir().join(format!("bmr-region-{}-{name}.mca", std::process::id())))
+    }
+
+    fn with(name: &str, bytes: &[u8]) -> Self {
+        let f = Self::new(name);
+        std::fs::write(&f.0, bytes).unwrap();
+        f
+    }
+}
+
+impl Drop for TempFile {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+/// Region with one chunk in slot (lx, lz) at sector 2: `len` field, compression byte, payload.
+fn region_with(slot: (u8, u8), len: u32, kind: u8, payload: &[u8]) -> Vec<u8> {
+    let mut data = vec![0u8; 2 * SECTOR];
+    let i = slot.1 as usize * 32 + slot.0 as usize;
+    data[i * 4..i * 4 + 4].copy_from_slice(&((2u32 << 8) | 1).to_be_bytes());
+    data.extend(len.to_be_bytes());
+    data.push(kind);
+    data.extend(payload);
+    data.resize(data.len().next_multiple_of(SECTOR), 0);
+    data
+}
+
+fn read_all(name: &str, bytes: &[u8]) -> Result<RegionChunks> {
+    let f = TempFile::with(name, bytes);
+    read_region_where(&f.0, &|_| true)
+}
+
+fn err_of(name: &str, bytes: &[u8]) -> String {
+    format!("{:#}", read_all(name, bytes).expect_err("expected an error"))
+}
+
+#[test]
+fn write_then_read_keeps_slots_and_payloads() {
+    let f = TempFile::new("roundtrip");
+    let chunks: RegionChunks = vec![((0, 0), b"first".to_vec()), ((31, 0), vec![7; 9000]), ((5, 31), Vec::new())];
+    write_region(&f.0, &chunks).unwrap();
+    let mut back = read_region_where(&f.0, &|_| true).unwrap();
+    back.sort();
+    let mut want = chunks.clone();
+    want.sort();
+    assert_eq!(back, want);
+    assert_eq!(std::fs::metadata(&f.0).unwrap().len() % SECTOR as u64, 0);
+
+    let only = read_region_where(&f.0, &|(x, _)| x == 31).unwrap();
+    assert_eq!(only, vec![((31, 0), vec![7; 9000])]);
+}
+
+#[test]
+fn gzip_and_uncompressed_chunks_read() {
+    let mut gz = GzEncoder::new(Vec::new(), Compression::default());
+    gz.write_all(b"gzipped").unwrap();
+    let gz = gz.finish().unwrap();
+    let got = read_all("gzip", &region_with((3, 4), gz.len() as u32 + 1, 1, &gz)).unwrap();
+    assert_eq!(got, vec![((3, 4), b"gzipped".to_vec())]);
+    let got = read_all("raw", &region_with((0, 0), 4, 3, b"raw")).unwrap();
+    assert_eq!(got, vec![((0, 0), b"raw".to_vec())]);
+}
+
+#[test]
+fn empty_file_is_an_empty_region() {
+    assert!(read_all("empty", &[]).unwrap().is_empty());
+}
+
+#[test]
+fn truncated_header_is_an_error() {
+    assert!(err_of("truncated", &[0u8; SECTOR + 10]).contains("truncated header"));
+}
+
+#[test]
+fn chunk_offset_past_eof_is_an_error() {
+    let mut data = vec![0u8; 2 * SECTOR];
+    data[..4].copy_from_slice(&((9u32 << 8) | 1).to_be_bytes());
+    let e = err_of("offset", &data);
+    assert!(e.contains("slot 0") && e.contains("offset past end"), "{e}");
+}
+
+#[test]
+fn bad_chunk_lengths_are_errors() {
+    assert!(err_of("len0", &region_with((0, 0), 0, 2, b"")).contains("bad chunk length 0"));
+    let e = err_of("len_long", &region_with((0, 0), 5000, 2, b"x"));
+    assert!(e.contains("bad chunk length 5000"), "{e}");
+}
+
+#[test]
+fn external_mcc_chunk_is_an_error() {
+    let e = err_of("mcc", &region_with((0, 0), 1, 0x82, b""));
+    assert!(e.contains(".mcc"), "{e}");
+}
+
+#[test]
+fn lz4_compression_is_a_clear_error() {
+    let e = err_of("lz4", &region_with((0, 0), 4, 4, b"lz4"));
+    assert!(e.contains("unsupported chunk compression 4"), "{e}");
+}
+
+#[test]
+fn corrupt_zlib_is_an_error() {
+    assert!(read_all("zlib", &region_with((0, 0), 5, 2, b"junk")).is_err());
+}
+
+#[test]
+fn oversized_chunk_is_refused_on_write() {
+    // xorshift noise: incompressible, so 1.1 MiB stays over the 255-sector limit
+    let mut x = 0x9e37_79b9_7f4a_7c15u64;
+    let noise: Vec<u8> = (0..1_100_000)
+        .map(|_| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x as u8
+        })
+        .collect();
+    let f = TempFile::new("oversized");
+    let e = write_region(&f.0, &[((1, 2), noise)]).expect_err("expected an error");
+    assert!(e.to_string().contains("chunk 1,2 too large"), "{e}");
+}

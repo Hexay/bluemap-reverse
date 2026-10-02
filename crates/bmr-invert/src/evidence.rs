@@ -102,3 +102,7 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
     }
     ev
 }
+
+#[cfg(test)]
+#[path = "evidence_tests.rs"]
+mod tests;

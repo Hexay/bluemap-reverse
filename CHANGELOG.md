@@ -34,6 +34,7 @@ All notable changes to this project are documented here. The format follows
 ### Fixed
 
 - Release archives include the cubiomes license (`LICENSE-cubiomes`).
+- A malformed PRBM tile with an oversized group table is an error instead of an integer overflow.
 - Every command-line flag has help text; rustdoc warnings in bmr-cli.
 
 ## [0.1.0] - 2026-10-01

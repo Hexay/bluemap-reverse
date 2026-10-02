@@ -178,3 +178,7 @@ fn fit(observed: &[FaceKey], sig: &[FaceKey]) -> Fit {
     }
     f
 }
+
+#[cfg(test)]
+#[path = "matcher_tests.rs"]
+mod tests;

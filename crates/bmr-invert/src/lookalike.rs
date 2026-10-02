@@ -59,3 +59,7 @@ impl Library {
         (uv_decides(self, &[a, b]) && x.uvs != y.uvs) || (light_decides(self, &[a, b]) && x.light != y.light)
     }
 }
+
+#[cfg(test)]
+#[path = "lookalike_tests.rs"]
+mod tests;

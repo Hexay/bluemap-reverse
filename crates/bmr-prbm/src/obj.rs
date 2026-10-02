@@ -101,3 +101,53 @@ fn write_mtl(dir: &Path, stem: &str, used: &BTreeSet<u32>, textures: &[Texture])
     mtl.flush()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn face() -> Face {
+        Face {
+            material: 0,
+            pos: [[1.0, 64.0, 2.0], [2.0, 64.0, 2.0], [2.0, 65.0, 3.5]],
+            uv: [[0.0, 0.0], [1.0, 0.25], [0.5, 1.0]],
+            ao: [255, 0, 255],
+            color: [255, 128, 0],
+            normal: [0, 127, 0],
+            blocklight: 0,
+            sunlight: 15,
+        }
+    }
+
+    fn lines(opts: ObjOptions) -> Vec<String> {
+        let mut out = Vec::new();
+        write_face(&mut out, &face(), [32, -16], 7, opts).unwrap();
+        String::from_utf8(out).unwrap().lines().map(str::to_owned).collect()
+    }
+
+    #[test]
+    fn tile_relative_xz_become_world_coordinates() {
+        let l = lines(ObjOptions { shade: false, ambient: 0.0 });
+        assert_eq!(l[0], "v 33 64 -14 1.0000 0.5020 0.0000");
+        assert_eq!(l[2], "v 34 65 -12.5 1.0000 0.5020 0.0000");
+    }
+
+    #[test]
+    fn uvs_flip_v_and_indices_continue() {
+        let l = lines(ObjOptions { shade: false, ambient: 0.0 });
+        assert_eq!(&l[3..6], ["vt 0 1", "vt 1 0.75", "vt 0.5 0"]);
+        assert_eq!(l[6], "f 7/7 8/8 9/9");
+    }
+
+    #[test]
+    fn shading_multiplies_ao_and_light() {
+        let l = lines(ObjOptions { shade: true, ambient: 0.5 });
+        assert_eq!(l[0], "v 33 64 -14 1.0000 0.5020 0.0000");
+        assert_eq!(l[1], "v 34 64 -14 0.0000 0.0000 0.0000");
+    }
+
+    #[test]
+    fn unknown_material_gets_placeholder_name() {
+        assert_eq!(material_name(&[], 42), "material_42");
+    }
+}

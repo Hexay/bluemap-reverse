@@ -74,3 +74,7 @@ fn rematch(lib: &Library, cells: &FxHashMap<Cell, CellFaces>, matched: &mut FxHa
     let sig = signature(obs.keys.clone());
     matched.insert(n, candidates(lib, &sig).map(|c| (resolve(lib, &c.ids, obs), c.how)));
 }
+
+#[cfg(test)]
+#[path = "overhang_tests.rs"]
+mod tests;

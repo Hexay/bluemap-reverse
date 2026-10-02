@@ -1,9 +1,9 @@
 {
-  "edge_faces": 6400,
-  "original_faces": 108162,
-  "reconstructed_faces": 108162,
-  "paired": 108162,
-  "identical": 91810,
+  "edge_faces": 80128,
+  "original_faces": 71298,
+  "reconstructed_faces": 71298,
+  "paired": 71298,
+  "identical": 71298,
   "aspects": {
     "ao": {
       "faces": 0,
@@ -14,8 +14,8 @@
       "mean_delta": 0.0
     },
     "sunlight": {
-      "faces": 16352,
-      "mean_delta": 7.722602739726027
+      "faces": 0,
+      "mean_delta": 0.0
     },
     "texture": {
       "faces": 0,
@@ -32,201 +32,5 @@
   },
   "missing": [],
   "extra": [],
-  "cells": [
-    {
-      "pos": [
-        -94,
-        -64,
-        -94
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -93
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -92
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -91
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -90
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -89
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -88
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -87
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -86
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -85
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -84
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -83
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -82
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -81
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -94,
-        -64,
-        -80
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 2,
-      "aspects": [
-        "sunlight"
-      ]
-    }
-  ]
+  "cells": []
 }

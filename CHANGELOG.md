@@ -35,9 +35,10 @@ All notable changes to this project are documented here. The format follows
 
 - Minimum supported Rust version is declared (1.88) and checked in CI.
 - bmr-fetch reports retries and mirror progress through `Options::progress` instead of printing.
-- Without `--regen`, unseen space below the overworld cave cutoff (y 55) is rock below the last sign of an
-  opening, instead of air down to bedrock (found by the render round-trip: shafts under seabeds). Vanilla
-  test world: all blocks 74.4% → 75.2%.
+- Without `--regen`, unseen space is filled in layers following the evidence down each column (water over rock
+  over an air pocket, …) instead of one guess per gap, and below the overworld cave cutoff (y 55) it is rock
+  under the last sign of an opening, instead of air down to bedrock. Found by the render round-trip (shafts
+  under seabeds, flooded ravines filled with rock). Vanilla test world: all blocks 74.4% → 75.3%.
 
 ### Fixed
 

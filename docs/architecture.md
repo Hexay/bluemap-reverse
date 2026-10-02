@@ -214,33 +214,29 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
 
 ### Render round-trip (2026-10-02)
 
-- `tools/roundtrip.py` copies a reconstruction, resaves it in the server (bmr writes no light), renders it with
-  the fixture's map config and diffs it against the original mirror (`bmr diff-render`, `bmr-prbm/src/diff/`).
-  Faces pair by geometry; faces looking into columns the original didn't render are skipped (the
-  reconstruction ends there, so BlueMap draws its outer walls). Reports in `docs/results/<fixture>-roundtrip.json`.
-- `superflat`: every face pairs, identical except sunlight on the underside of the bedrock floor (light below
-  the world, unseen).
-- `vanilla-edited`: 99.82% of original faces pair, 87% identical; above the cave cutoff (y 55) almost nothing
-  is missing or extra. The ~98k extra faces below it were mostly air gaps the fill ran down to bedrock under
-  seabeds (one open cell at the top made the whole gap air). Fix: air gaps turn solid below their lowest
-  evidence and the cutoff (`bmr-fill/src/columns.rs`, `dark_below`): extra faces 98k → 59k, vanilla occupied
-  74.4% → 75.2%, solid IoU 94.1% → 95.2%; superflat loses 4 cells (dark air inside builds now reads solid).
-- Left: 31k bedrock undersides at y -64 and sunlight on 11.6% of paired faces are relight artifacts of the
-  round trip (light below the world), not fill errors. AO 1.3% and blocklight 0.15% (hidden light sources)
-  are the inputs for the inference half of phase 10.
-- `nether`: 96.7% identical, 41k extra faces at y 48..95 (open caves under the roof mask filled solid, lava
-  filled up to the mask). Two evidence bugs (`bmr-invert/src/evidence.rs`, `face.rs`): a cell with both a
-  drawn face towards it and a missing one voted solid (a drawn face is proof, a missing one may be an imperfect
-  match: `open` now overrides `solid`); and a flowing liquid's sloped surface wasn't seen as facing up, so the
-  cell above read as more liquid. After: 98.7% identical, 7.9k extra, blocklight 2.9% → 0.9%.
-- Then overhang (`bmr-invert/src/overhang.rs`): a floor fire's side planes land in the air beside it and match
-  as wall fire, whose model "overhangs" back, so the fake fire stripped the real fire's sides; the bare fire
-  then claimed its neighbours solid. Cells made only of explained overhang no longer claim; when two such
-  cells explain each other (a spawner's inner faces in all six neighbours), the one showing more of its
-  signature is the real block. `strip_foreign` tries dropping duplicate planes before own faces. Nether:
-  98.9% identical, extra 7.9k → 253 (as many missing: shape differences, not wrong blocks); occupied 82.26%.
-  The fill also keeps void under floating blocks as air when nothing below the cave cutoff was seen (the
-  first `dark_below` cut `debug` from 12% to 0.6% occupied). `end`: 99.99% identical.
+- `tools/roundtrip.py` copies a reconstruction, relights it in the server over every written chunk plus one
+  around (bmr writes no light), renders it with the fixture's map config and diffs it against the original
+  mirror (`bmr diff-render`, `bmr-prbm/src/diff/`). Faces pair by geometry. Reports:
+  `docs/results/<fixture>-roundtrip.json`.
+- Columns within 16 blocks of the original render's edge are left out (`--inset`). The relit world ends there
+  next to void chunks, and sky light leaks in sideways up to 15 blocks, lighting caves (BlueMap then draws them)
+  and the sea. Proof: the original world itself through `copy-world` + relight differed from its site on
+  121k faces and 4.8% sunlight, 99.9% of them within 16 blocks of the edge; inset, 99.99% identical.
+- Results (inset): `superflat` and `end` 100% identical; `nether` 99.63% (blocklight 0.36%: hidden lava);
+  `vanilla-edited` 98.80%, 9.2k extra faces, AO 1.0%, blocklight 0.19%. AO and blocklight are the inputs
+  for the inference half of phase 10.
+- Fixes it found, in order:
+  - Fill (`bmr-fill/src/columns.rs`): a gap took one vote over all its evidence, so one open cell under a
+    seabed made air down to bedrock, and a flooded ravine's floor outvoted the water beside it. Gaps are now
+    layered by runs of solid / open-or-liquid evidence; a bottom air layer below the cave cutoff stops at its
+    lowest evidence (unseen ≠ empty there), above it runs on (void under islands). Vanilla occupied 74.4% →
+    75.3%, solid IoU 94.1% → 95.2%.
+  - Evidence (`bmr-invert/src/evidence.rs`, `face.rs`): a drawn face beats a missing one for the same cell;
+    a flowing liquid's sloped surface faces up (it read as "more liquid above", filling nether caves with lava).
+  - Overhang (`bmr-invert/src/overhang.rs`): a floor fire's side planes land beside it and match as wall fire,
+    whose model overhangs back and stripped the real fire. Cells made only of explained overhang don't claim;
+    when two explain each other (a spawner's inner faces), the one showing more of its signature wins.
+    `strip_foreign` drops duplicate planes before a block's own faces. Nether extra faces 41k → 105.
 - `bmr explain --mirror <m> x,z` prints a column's matched blocks and fill evidence.
 
 ### Seed recovery bindings

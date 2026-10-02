@@ -1,24 +1,24 @@
 {
-  "edge_faces": 114948,
-  "original_faces": 1433486,
-  "reconstructed_faces": 1433486,
-  "paired": 1433233,
-  "identical": 1417514,
+  "edge_faces": 726180,
+  "original_faces": 1127870,
+  "reconstructed_faces": 1127870,
+  "paired": 1127765,
+  "identical": 1123709,
   "aspects": {
     "ao": {
-      "faces": 4572,
-      "mean_delta": 44.72907553222514
+      "faces": 0,
+      "mean_delta": 0.0
     },
     "blocklight": {
-      "faces": 11556,
-      "mean_delta": 4.232952578746971
+      "faces": 4052,
+      "mean_delta": 4.674728529121421
     },
     "sunlight": {
       "faces": 0,
       "mean_delta": 0.0
     },
     "texture": {
-      "faces": 6,
+      "faces": 4,
       "mean_delta": null
     },
     "tint": {
@@ -33,29 +33,17 @@
   "missing": [
     [
       "minecraft:block/lava_flow",
-      137
-    ],
-    [
-      "minecraft:block/lava_still",
-      114
-    ],
-    [
-      "minecraft:block/netherrack",
-      2
+      105
     ]
   ],
   "extra": [
     [
-      "minecraft:block/lava_still",
-      162
-    ],
-    [
       "minecraft:block/lava_flow",
-      89
+      67
     ],
     [
-      "minecraft:block/magma",
-      2
+      "minecraft:block/lava_still",
+      38
     ]
   ],
   "cells": [
@@ -64,17 +52,6 @@
         25,
         88,
         95
-      ],
-      "missing": 8,
-      "extra": 8,
-      "differing": 0,
-      "aspects": []
-    },
-    {
-      "pos": [
-        116,
-        86,
-        -98
       ],
       "missing": 8,
       "extra": 8,
@@ -124,6 +101,85 @@
       "extra": 7,
       "differing": 0,
       "aspects": []
+    },
+    {
+      "pos": [
+        24,
+        86,
+        98
+      ],
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        26,
+        86,
+        95
+      ],
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        -85,
+        85,
+        111
+      ],
+      "missing": 6,
+      "extra": 6,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        -42,
+        69,
+        55
+      ],
+      "missing": 6,
+      "extra": 6,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        -41,
+        70,
+        55
+      ],
+      "missing": 6,
+      "extra": 6,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        24,
+        88,
+        96
+      ],
+      "missing": 6,
+      "extra": 6,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        -68,
+        83,
+        15
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 10,
+      "aspects": [
+        "blocklight"
+      ]
     }
   ]
 }

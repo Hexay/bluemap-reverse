@@ -13,6 +13,27 @@ from make_world import BASE_PROPERTIES, OVERWORLD, forceload_commands, wait_unti
 from paths import DEFAULT, Toolchain
 
 
+REGION_DIRS = {
+    "minecraft:overworld": ["dimensions/minecraft/overworld/region", "region"],
+    "minecraft:the_nether": ["dimensions/minecraft/the_nether/region", "DIM-1/region"],
+    "minecraft:the_end": ["dimensions/minecraft/the_end/region", "DIM1/region"],
+}
+
+
+def written_area(world: Path, dimension: str = OVERWORLD) -> list[int] | None:
+    """Block bounds x0,z0,x1,z1 of the chunks present in the world's region files for `dimension`."""
+    chunks = []
+    for rel in REGION_DIRS[dimension]:
+        for f in (world / rel).glob("r.*.*.mca"):
+            rx, rz = map(int, f.name.split(".")[1:3])
+            header = f.read_bytes()[:4096]
+            chunks += [(rx * 32 + i % 32, rz * 32 + i // 32) for i in range(1024) if header[4 * i:4 * i + 4] != b"\0" * 4]
+    if not chunks:
+        return None
+    xs, zs = [c[0] for c in chunks], [c[1] for c in chunks]
+    return [min(xs) * 16, min(zs) * 16, max(xs) * 16 + 15, max(zs) * 16 + 15]
+
+
 def resave(world: Path, area: list[int], tc: Toolchain = DEFAULT, dimensions: list[str] = (OVERWORLD,)) -> int:
     """Force-loads `area` in each of `dimensions`."""
     server_dir = world.parent

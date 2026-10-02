@@ -62,7 +62,7 @@ bmr probe <world> x,y,z ...             # print block states + biome
 bmr copy-world <world> -o <out>         # round-trip a world through our reader and writer
 ```
 
-- Data dir (`pull`, `fetch`, `pack list|fetch`): `--cache-dir <dir>`, else `$BMR_HOME`, else
+- Data dir (`pull`, `fetch`, `pack list|fetch`): `--data-dir <dir>`, else `$BMR_HOME`, else
   `%LOCALAPPDATA%\bluemap-reverse` (Windows), `~/Library/Application Support/bluemap-reverse` (macOS),
   `$XDG_DATA_HOME/bluemap-reverse` or `~/.local/share/bluemap-reverse`. Site mirrors go to `<data>/cache/<site>`,
   downloaded packs to `<data>/packs`. Packs are looked up in `packs/` next to `bmr` first, then `./packs`, then

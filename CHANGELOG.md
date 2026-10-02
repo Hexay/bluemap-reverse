@@ -11,15 +11,15 @@ All notable changes to this project are documented here. The format follows
 - `bmr --version`.
 - Global `-q`/`--quiet`: progress lines off; results, warnings and errors still print.
 - `bmr seed` exits with status 3 when it finishes without a world seed (exit codes in `bmr --help`).
-- `--cache-dir` on `fetch`, `pack list` and `pack fetch`; `BMR_HOME` sets the data dir for all of them.
+- `--data-dir` on `fetch`, `pack list` and `pack fetch`; `BMR_HOME` sets the data dir for all of them.
 
 ### Changed (breaking)
 
 - Downloads go to a per-user data dir (`%LOCALAPPDATA%\bluemap-reverse`, `~/Library/Application Support/bluemap-reverse`,
-  `$XDG_DATA_HOME/bluemap-reverse` or `~/.local/share/bluemap-reverse`; `BMR_HOME` or `--cache-dir` override):
+  `$XDG_DATA_HOME/bluemap-reverse` or `~/.local/share/bluemap-reverse`; `BMR_HOME` or `--data-dir` override):
   site mirrors in `cache/<site>` instead of `work/cache/<site>`, downloaded packs in `packs/` instead of `./packs`.
   Packs bundled next to `bmr` are still found first, then `./packs`.
-- `pull --cache <mirror>` is now `--cache-dir <data dir>` (the mirror goes to `<dir>/cache/<site>`).
+- `pull --cache <mirror>` is now `--data-dir <dir>` (the mirror goes to `<dir>/cache/<site>`).
 - Outputs are always `-o`/`--out`: `bmr reverse <mirror> -o <world>`, `bmr schem <world> -o <file>`,
   `bmr pack lookalikes <pack> -o <file>`, `bmr copy-world <world> -o <out>`; `fetch` and `obj` gain `-o`.
 - `pack build --mc-version` is now `--mc`, like `seed` and `structures`.

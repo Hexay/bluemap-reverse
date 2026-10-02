@@ -1,5 +1,5 @@
 //! Where user-facing commands keep downloads: the per-user data dir, with site mirrors in `cache/` and
-//! downloaded packs in `packs/`. Resolved from `--cache-dir`, else `$BMR_HOME`, else the platform's data dir.
+//! downloaded packs in `packs/`. Resolved from `--data-dir`, else `$BMR_HOME`, else the platform's data dir.
 
 use std::path::{Path, PathBuf};
 
@@ -14,12 +14,12 @@ pub struct DataArgs {
     /// %LOCALAPPDATA%\bluemap-reverse, ~/Library/Application Support/bluemap-reverse or
     /// $XDG_DATA_HOME/bluemap-reverse]
     #[arg(long, value_name = "DIR")]
-    pub cache_dir: Option<PathBuf>,
+    pub data_dir: Option<PathBuf>,
 }
 
 impl DataArgs {
     pub fn data_dir(&self) -> Result<PathBuf> {
-        data_dir(self.cache_dir.as_deref())
+        data_dir(self.data_dir.as_deref())
     }
 
     /// `<data>/cache/<site>` for the site at `url`.
@@ -35,7 +35,7 @@ pub fn data_dir(flag: Option<&Path>) -> Result<PathBuf> {
     if let Some(dir) = env_path("BMR_HOME") {
         return Ok(dir);
     }
-    platform_data_dir().map(|d| d.join(APP)).context("no per-user data dir found: set BMR_HOME or pass --cache-dir")
+    platform_data_dir().map(|d| d.join(APP)).context("no per-user data dir found: set BMR_HOME or pass --data-dir")
 }
 
 fn platform_data_dir() -> Option<PathBuf> {

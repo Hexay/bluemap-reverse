@@ -4,11 +4,11 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9830316,
-    "name": 9830390
+    "exact": 9830320,
+    "name": 9830394
   },
   "occupied": {
-    "total": 103072,
+    "total": 103068,
     "exact": 102988,
     "name": 103062
   },
@@ -25,7 +25,7 @@
   },
   "solid": {
     "original": 103068,
-    "reconstructed": 103072,
+    "reconstructed": 103068,
     "both": 103068
   },
   "surface": {
@@ -76,11 +76,6 @@
       "original": "minecraft:oak_leaves[distance=5,persistent=true,waterlogged=false]",
       "reconstructed": "minecraft:oak_leaves[distance=5,persistent=false,waterlogged=false]",
       "count": 5
-    },
-    {
-      "original": "minecraft:air",
-      "reconstructed": "minecraft:stone_bricks",
-      "count": 4
     },
     {
       "original": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",

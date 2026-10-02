@@ -18,6 +18,9 @@ All notable changes to this project are documented here. The format follows
 - Render round-trip: `tools/roundtrip.py` relights and re-renders a fixture's reconstruction with BlueMap, and
   the hidden `bmr diff-render` diffs the two renders face by face (geometry, texture, tint, AO, light).
 
+- Ambient occlusion on the map's faces is read as evidence: it counts the solid blocks around each corner,
+  which pins down hidden cells next to visible ones (rock beside dark caves, air pockets).
+
 ### Changed (breaking)
 
 - Downloads go to a per-user data dir (`%LOCALAPPDATA%\bluemap-reverse`, `~/Library/Application Support/bluemap-reverse`,

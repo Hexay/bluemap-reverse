@@ -222,9 +222,14 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
   next to void chunks, and sky light leaks in sideways up to 15 blocks, lighting caves (BlueMap then draws them)
   and the sea. Proof: the original world itself through `copy-world` + relight differed from its site on
   121k faces and 4.8% sunlight, 99.9% of them within 16 blocks of the edge; inset, 99.99% identical.
-- Results (inset): `superflat` and `end` 100% identical; `nether` 99.63% (blocklight 0.36%: hidden lava);
-  `vanilla-edited` 98.80%, 9.2k extra faces, AO 1.0%, blocklight 0.19%. AO and blocklight are the inputs
-  for the inference half of phase 10.
+- Results (inset): `superflat` and `end` 100% identical; `nether` 99.63% (blocklight 0.36%: glowstone in the
+  masked roof, lava); `vanilla-edited` 99.62%, 2.8k extra faces, AO 0.14%, blocklight 0.19%.
+- AO as evidence (`bmr-invert/src/ao.rs`): BlueMap's vertex AO is exactly 255 − 64 × the full blocks among the
+  vertex's two side cells and diagonal cell in the layer the face looks into (no exceptions on vanilla-edited).
+  Each full face's corners are solved against what is known; unseen cells a corner pins down become solid/open
+  evidence. Below the cave cutoff rock beside dark air shows no faces but still shades the lit faces next to
+  it. vanilla-edited round-trip 98.80% → 99.62% identical (AO mismatches 1.0% → 0.14%); vanilla occupied
+  +0.06%; superflat back to 100% solid IoU.
 - Fixes it found, in order:
   - Fill (`bmr-fill/src/columns.rs`): a gap took one vote over all its evidence, so one open cell under a
     seabed made air down to bedrock, and a flooded ravine's floor outvoted the water beside it. Gaps are now

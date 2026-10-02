@@ -123,6 +123,8 @@ pub struct WorldFace {
     /// Tint multiplier; `[255; 3]` = untinted.
     pub color: [u8; 3],
     pub blocklight: u8,
+    /// Per vertex, 255 = unoccluded (see ao.rs).
+    pub ao: [u8; 4],
 }
 
 impl WorldFace {
@@ -172,7 +174,7 @@ pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], textures: &[Tex]) -> Vec<Wor
     while i < tris.len() {
         let a = &tris[i];
         let pair = tris.get(i + 1).filter(|b| b.material == a.material && b.pos[0] == a.pos[0] && b.pos[1] == a.pos[2]);
-        let (c3, uv3) = pair.map_or((a.pos[2], a.uv[2]), |b| (b.pos[2], b.uv[2]));
+        let (c3, uv3, ao3) = pair.map_or((a.pos[2], a.uv[2], a.ao[2]), |b| (b.pos[2], b.uv[2], b.ao[2]));
         i += if pair.is_some() { 2 } else { 1 };
         let verts = [a.pos[0], a.pos[1], a.pos[2], c3].map(|[x, y, z]| [x + ox as f32, y, z + oz as f32]);
         out.push(WorldFace {
@@ -182,6 +184,7 @@ pub fn world_faces(tile: &Tile, [ox, oz]: [i32; 2], textures: &[Tex]) -> Vec<Wor
             texture: textures.get(a.material as usize).copied().unwrap_or(unknown),
             color: a.color,
             blocklight: a.blocklight.max(0) as u8,
+            ao: [a.ao[0], a.ao[1], a.ao[2], ao3],
         });
     }
     out

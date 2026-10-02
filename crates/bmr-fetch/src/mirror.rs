@@ -43,8 +43,7 @@ pub fn mirror(opts: &Options) -> Result<Vec<MapSummary>> {
     store.write("settings.json", &site_bytes)?;
     let site: SiteSettings = serde_json::from_slice(&site_bytes).context("settings.json")?;
 
-    let ids: Vec<&String> =
-        site.maps.iter().filter(|m| opts.maps.is_empty() || opts.maps.contains(m)).collect();
+    let ids: Vec<&String> = site.maps.iter().filter(|m| opts.maps.is_empty() || opts.maps.contains(m)).collect();
     pool.install(|| {
         ids.into_iter()
             .map(|id| MapMirror::new(&http, &store, &site.map_data_root, id, opts.progress.as_ref())?.run())
@@ -64,7 +63,13 @@ struct MapMirror<'a> {
 }
 
 impl<'a> MapMirror<'a> {
-    fn new(http: &'a Http, store: &'a Store, maps_root: &str, id: &str, progress: Option<&'a OnProgress>) -> Result<Self> {
+    fn new(
+        http: &'a Http,
+        store: &'a Store,
+        maps_root: &str,
+        id: &str,
+        progress: Option<&'a OnProgress>,
+    ) -> Result<Self> {
         let root = format!("{maps_root}/{id}");
         let bytes = http.get(&format!("{root}/settings.json"))?.context("map settings.json missing")?;
         store.write(&format!("{root}/settings.json"), &bytes)?;
@@ -122,7 +127,8 @@ impl<'a> MapMirror<'a> {
                 None => Ok(false),
             }
         };
-        let (manifest, path, map, progress) = (&mut self.manifest, &self.manifest_path, self.id.as_str(), self.progress);
+        let (manifest, path, map, progress) =
+            (&mut self.manifest, &self.manifest_path, self.id.as_str(), self.progress);
         let result = discover(&mut probed, seeds, fetch, |p| {
             emit(progress, Progress::Layer { map, lod, present: p.present.len(), empty: p.empty.len() });
             Ok(())

@@ -4,12 +4,45 @@
 
 /// BE types whose id equals the block name.
 const SAME_NAME: &[&str] = &[
-    "barrel", "beacon", "beehive", "bell", "blast_furnace", "brewing_stand", "calibrated_sculk_sensor",
-    "campfire", "chest", "chiseled_bookshelf", "command_block", "comparator", "conduit", "crafter",
-    "creaking_heart", "daylight_detector", "decorated_pot", "dispenser", "dropper", "enchanting_table",
-    "end_gateway", "end_portal", "ender_chest", "furnace", "hopper", "jigsaw", "jukebox", "lectern",
-    "potent_sulfur", "sculk_catalyst", "sculk_sensor", "sculk_shrieker", "smoker", "structure_block",
-    "test_block", "test_instance_block", "trapped_chest", "trial_spawner", "vault",
+    "barrel",
+    "beacon",
+    "beehive",
+    "bell",
+    "blast_furnace",
+    "brewing_stand",
+    "calibrated_sculk_sensor",
+    "campfire",
+    "chest",
+    "chiseled_bookshelf",
+    "command_block",
+    "comparator",
+    "conduit",
+    "crafter",
+    "creaking_heart",
+    "daylight_detector",
+    "decorated_pot",
+    "dispenser",
+    "dropper",
+    "enchanting_table",
+    "end_gateway",
+    "end_portal",
+    "ender_chest",
+    "furnace",
+    "hopper",
+    "jigsaw",
+    "jukebox",
+    "lectern",
+    "potent_sulfur",
+    "sculk_catalyst",
+    "sculk_sensor",
+    "sculk_shrieker",
+    "smoker",
+    "structure_block",
+    "test_block",
+    "test_instance_block",
+    "trapped_chest",
+    "trial_spawner",
+    "vault",
 ];
 
 /// Block-entity id (without namespace) for a block name (with namespace), if it has one.
@@ -63,9 +96,8 @@ mod tests {
             eprintln!("skipped: {REPORTS} missing (run tools/setup.py)");
             return;
         }
-        let read = |f: &str| -> serde_json::Value {
-            serde_json::from_slice(&std::fs::read(dir.join(f)).unwrap()).unwrap()
-        };
+        let read =
+            |f: &str| -> serde_json::Value { serde_json::from_slice(&std::fs::read(dir.join(f)).unwrap()).unwrap() };
         let registries = read("registries.json");
         let types: BTreeSet<String> = registries["minecraft:block_entity_type"]["entries"]
             .as_object()
@@ -75,12 +107,8 @@ mod tests {
             .filter(|t| t != "piston")
             .collect();
         let blocks = read("blocks.json");
-        let produced: BTreeSet<String> = blocks
-            .as_object()
-            .unwrap()
-            .keys()
-            .filter_map(|b| block_entity_type(b).map(str::to_owned))
-            .collect();
+        let produced: BTreeSet<String> =
+            blocks.as_object().unwrap().keys().filter_map(|b| block_entity_type(b).map(str::to_owned)).collect();
         let missing: Vec<_> = types.difference(&produced).collect();
         let bogus: Vec<_> = produced.difference(&types).collect();
         assert!(missing.is_empty() && bogus.is_empty(), "unmapped types {missing:?}, unknown types {bogus:?}");

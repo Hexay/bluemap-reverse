@@ -6,17 +6,30 @@ use super::cluster::Bbox;
 
 /// Local (x, z) of the bells in 26.3's town centres (`structure/village/*/town_centers`, zombie variants too).
 const BELLS: [(i32, i32); 18] = [
-    (10, 4), (3, 1), (6, 2), (4, 2), (3, 7), (5, 10), (5, 1), (5, 9), (6, 6),
-    (1, 1), (9, 9), (4, 5), (4, 4), (1, 7), (9, 5), (1, 4), (3, 3), (9, 3),
+    (10, 4),
+    (3, 1),
+    (6, 2),
+    (4, 2),
+    (3, 7),
+    (5, 10),
+    (5, 1),
+    (5, 9),
+    (6, 6),
+    (1, 1),
+    (9, 9),
+    (4, 5),
+    (4, 4),
+    (1, 7),
+    (9, 5),
+    (1, 4),
+    (3, 3),
+    (9, 3),
 ];
 
 /// Origin estimates for a bell at `bell.min`: rotations NONE (x,z), CW90 (−z,x), CW180 (−x,−z), CCW90 (z,−x).
 pub fn corners(bell: &Bbox) -> Vec<(i32, i32)> {
     let (bx, bz) = (bell.min[0], bell.min[2]);
-    BELLS
-        .iter()
-        .flat_map(|&(x, z)| [(bx - x, bz - z), (bx + z, bz - x), (bx + x, bz + z), (bx - z, bz + x)])
-        .collect()
+    BELLS.iter().flat_map(|&(x, z)| [(bx - x, bz - z), (bx + z, bz - x), (bx + x, bz + z), (bx - z, bz + x)]).collect()
 }
 
 #[cfg(test)]

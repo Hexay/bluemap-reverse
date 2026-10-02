@@ -26,9 +26,14 @@ impl Profile {
     /// BlueMap's default map for the dimension (overworld.conf / nether.conf / end.conf).
     pub fn for_dimension(id: &str) -> Self {
         match id {
-            "minecraft:the_nether" => {
-                Self { kind: Kind::Nether, min_y: 0, max_y: 255, cave_y: -10_000, mask: Some((90, 127)), roof_from: 108 }
-            }
+            "minecraft:the_nether" => Self {
+                kind: Kind::Nether,
+                min_y: 0,
+                max_y: 255,
+                cave_y: -10_000,
+                mask: Some((90, 127)),
+                roof_from: 108,
+            },
             "minecraft:the_end" => {
                 Self { kind: Kind::End, min_y: 0, max_y: 255, cave_y: -10_000, mask: None, roof_from: 0 }
             }

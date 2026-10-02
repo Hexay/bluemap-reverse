@@ -23,7 +23,11 @@ pub struct SetScore {
 }
 
 /// `in_area` decides which truth starts could have been seen (e.g. inside the rendered chunks).
-pub fn evaluate(detections: &[Detection], truth: &[Observation], in_area: impl Fn([i32; 2]) -> bool) -> BTreeMap<String, SetScore> {
+pub fn evaluate(
+    detections: &[Detection],
+    truth: &[Observation],
+    in_area: impl Fn([i32; 2]) -> bool,
+) -> BTreeMap<String, SetScore> {
     let mut scores: BTreeMap<String, SetScore> = BTreeMap::new();
     for t in truth.iter().filter(|t| in_area(t.chunks[0])) {
         scores.entry(t.set.clone()).or_default().truth += 1;
@@ -33,7 +37,8 @@ pub fn evaluate(detections: &[Detection], truth: &[Observation], in_area: impl F
         s.detections += 1;
         let starts = truth.iter().filter(|t| t.set == d.set).map(|t| t.chunks[0]);
         let center = [(d.min[0] + d.max[0]).div_euclid(32), (d.min[2] + d.max[2]).div_euclid(32)];
-        let near: Vec<[i32; 2]> = starts.filter(|c| (c[0] - center[0]).abs() <= 4 && (c[1] - center[1]).abs() <= 4).collect();
+        let near: Vec<[i32; 2]> =
+            starts.filter(|c| (c[0] - center[0]).abs() <= 4 && (c[1] - center[1]).abs() <= 4).collect();
         if near.iter().any(|c| d.chunks.contains(c)) {
             s.correct += 1;
             s.options += d.chunks.len() as f64;

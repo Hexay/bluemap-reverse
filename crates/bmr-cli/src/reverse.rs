@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use anyhow::{Context, Result};
-use bmr_invert::Library;
 use bmr_fill::Profile;
+use bmr_invert::Library;
 use bmr_invert::timings::Timings;
 
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
@@ -84,7 +84,13 @@ impl OptionArgs {
                 }
             };
         }
-        Ok(Options { no_fill: self.no_fill, no_window: self.no_window, halo: self.halo, profile, show_unmatched: self.show_unmatched })
+        Ok(Options {
+            no_fill: self.no_fill,
+            no_window: self.no_window,
+            halo: self.halo,
+            profile,
+            show_unmatched: self.show_unmatched,
+        })
     }
 }
 
@@ -123,7 +129,13 @@ pub fn run(a: Args) -> Result<()> {
     t.accumulate(wt);
     println!(
         "cells {} (unmatched {}), unseen solid {}, unseen liquid {}, adopted from regen {} → {} chunks in {}{}",
-        totals.cells, totals.unmatched, totals.solid, totals.liquid, totals.adopted, totals.chunks, a.out.display(),
+        totals.cells,
+        totals.unmatched,
+        totals.solid,
+        totals.liquid,
+        totals.adopted,
+        totals.chunks,
+        a.out.display(),
         totals.overlap_note()
     );
     if let Some(zip) = &a.zip {

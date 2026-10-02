@@ -59,7 +59,13 @@ pub fn resident_bytes() -> u64 {
         fn GetCurrentProcess() -> isize;
         fn K32GetProcessMemoryInfo(process: isize, counters: *mut Counters, cb: u32) -> i32;
     }
-    let mut c = Counters { cb: size_of::<Counters>() as u32, page_fault_count: 0, peak_working_set: 0, working_set: 0, rest: [0; 6] };
+    let mut c = Counters {
+        cb: size_of::<Counters>() as u32,
+        page_fault_count: 0,
+        peak_working_set: 0,
+        working_set: 0,
+        rest: [0; 6],
+    };
     // SAFETY: plain Win32 call writing into a correctly sized PROCESS_MEMORY_COUNTERS
     let ok = unsafe { K32GetProcessMemoryInfo(GetCurrentProcess(), &mut c, c.cb) };
     if ok != 0 { c.working_set as u64 } else { 0 }

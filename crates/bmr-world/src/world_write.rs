@@ -10,9 +10,9 @@ use rayon::prelude::*;
 
 use crate::chunk::{Chunk, PaletteStyle};
 use crate::nbt_write::encode_chunk;
-use crate::world::region_dir;
 use crate::region::write_region;
 use crate::registry::BlockRegistry;
+use crate::world::region_dir;
 
 /// Per-dimension dirs holding chunk-derived data that must not leak from the template.
 const CHUNK_DIRS: [&str; 3] = ["region", "entities", "poi"];
@@ -120,7 +120,8 @@ impl WorldWriter {
             let encoded = chunks
                 .par_iter()
                 .map(|c| {
-                    let nbt = encode_chunk(c, &self.registry, self.style).with_context(|| format!("chunk {},{}", c.x, c.z))?;
+                    let nbt = encode_chunk(c, &self.registry, self.style)
+                        .with_context(|| format!("chunk {},{}", c.x, c.z))?;
                     Ok(((c.x.rem_euclid(32) as u8, c.z.rem_euclid(32) as u8), nbt))
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -129,4 +130,3 @@ impl WorldWriter {
         Ok(count)
     }
 }
-

@@ -28,10 +28,8 @@ const MAX_SAMPLES: usize = 20;
 
 pub fn score(original: &World, reconstructed: &World, scope: &Scope, top_confusions: usize) -> Result<Report> {
     let regions = original.regions()?;
-    let parts = regions
-        .par_iter()
-        .map(|&r| score_region(original, reconstructed, r, scope))
-        .collect::<Result<Vec<_>>>()?;
+    let parts =
+        regions.par_iter().map(|&r| score_region(original, reconstructed, r, scope)).collect::<Result<Vec<_>>>()?;
     let mut report = Report::default();
     for p in parts {
         report.merge(p);
@@ -171,8 +169,7 @@ fn exposed(orig: &Chunks, pos: ChunkPos, chunk: &Chunk, lx: usize, y: i32, lz: u
             return air(chunk.block(nx as usize, y, nz as usize));
         }
         let npos = (pos.0 + nx.div_euclid(16), pos.1 + nz.div_euclid(16));
-        orig.get(&npos)
-            .is_some_and(|c| air(c.block(nx.rem_euclid(16) as usize, y, nz.rem_euclid(16) as usize)))
+        orig.get(&npos).is_some_and(|c| air(c.block(nx.rem_euclid(16) as usize, y, nz.rem_euclid(16) as usize)))
     })
 }
 

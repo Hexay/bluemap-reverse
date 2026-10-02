@@ -7,9 +7,9 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use bmr_pack::{Index, Pack, Source};
 
-use crate::{LibraryArgs, WorldArgs};
 use crate::pack_source::{IndexArgs, candidates, download, fetch_index, find_packs};
 use crate::paths::DataArgs;
+use crate::{LibraryArgs, WorldArgs};
 
 #[derive(clap::Subcommand)]
 pub enum Cmd {
@@ -82,7 +82,8 @@ fn build(a: BuildArgs) -> Result<()> {
     let registry = a.world_args.registry()?.context("pack build needs the block registry (tools/setup.py)")?;
     let (lib_map, lib_world) = a.library.library_sources(&registry)?;
     let biomes = a.library.biomes_or_warn(&registry);
-    let pack = Pack::build(&lib_map, &lib_world, registry, &a.library.template, &a.mc,biomes.as_ref().map(|(m, w)| (m, w)))?;
+    let pack =
+        Pack::build(&lib_map, &lib_world, registry, &a.library.template, &a.mc, biomes.as_ref().map(|(m, w)| (m, w)))?;
     let out = a.out.unwrap_or_else(|| {
         PathBuf::from("packs").join(format!("bmr-mc{}-bluemap{}.pack", pack.meta.mc_version, pack.meta.bluemap_version))
     });

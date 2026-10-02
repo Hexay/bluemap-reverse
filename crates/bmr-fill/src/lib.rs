@@ -6,10 +6,10 @@ mod biomes;
 mod columns;
 mod liquid;
 mod material;
-mod regen;
 mod note_block;
 mod profile;
 mod redstone;
+mod regen;
 mod rules;
 mod stairs;
 mod waterlog;
@@ -158,8 +158,7 @@ pub fn complete(
             }
             _ => false,
         };
-        stats.adopted_from_regen =
-            t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, table, &same_render));
+        stats.adopted_from_regen = t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, table, &same_render));
     }
     let biomes = t.time("biomes", || Biomes::new(&blocks, &bounds.profile, &inv.tints, biome_tints));
     stats.timings = t;

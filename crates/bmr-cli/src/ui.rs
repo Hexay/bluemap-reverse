@@ -33,6 +33,8 @@ pub fn fetch_progress() -> Option<OnProgress> {
 fn render_fetch(p: &Progress<'_>) {
     match p {
         Progress::Retry { url, attempt, of, error } => eprintln!("retry {attempt}/{of} {url}: {error:#}"),
-        Progress::Layer { map, lod, present, empty } => eprintln!("  {map} lod {lod}: {present} present, {empty} empty"),
+        Progress::Layer { map, lod, present, empty } => {
+            eprintln!("  {map} lod {lod}: {present} present, {empty} empty")
+        }
     }
 }

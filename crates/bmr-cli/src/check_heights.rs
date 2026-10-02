@@ -49,9 +49,8 @@ pub fn run(a: Args) -> Result<()> {
     columns.sort();
     for ((x, z), hires_y) in columns {
         let t = grid.tile_of(x, z);
-        let img = images.entry(t).or_insert_with(|| {
-            map.tile_bytes(1, t).ok().and_then(|b| LowresImage::decode(&b).ok())
-        });
+        let img =
+            images.entry(t).or_insert_with(|| map.tile_bytes(1, t).ok().and_then(|b| LowresImage::decode(&b).ok()));
         let (mx, mz) = grid.tile_min(t);
         let (px, pz) = ((x - mx) as usize, (z - mz) as usize);
         match img {

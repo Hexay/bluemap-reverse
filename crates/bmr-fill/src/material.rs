@@ -70,9 +70,26 @@ fn surface_kind(name: &str) -> Option<&str> {
     let s = name.strip_prefix("minecraft:")?;
     let terrain = matches!(
         s,
-        "grass_block" | "podzol" | "mycelium" | "dirt" | "coarse_dirt" | "rooted_dirt" | "dirt_path" | "farmland"
-            | "sand" | "sandstone" | "red_sand" | "red_sandstone" | "gravel" | "snow_block" | "powder_snow"
-            | "snow" | "soul_sand" | "soul_soil" | "crimson_nylium" | "warped_nylium"
+        "grass_block"
+            | "podzol"
+            | "mycelium"
+            | "dirt"
+            | "coarse_dirt"
+            | "rooted_dirt"
+            | "dirt_path"
+            | "farmland"
+            | "sand"
+            | "sandstone"
+            | "red_sand"
+            | "red_sandstone"
+            | "gravel"
+            | "snow_block"
+            | "powder_snow"
+            | "snow"
+            | "soul_sand"
+            | "soul_soil"
+            | "crimson_nylium"
+            | "warped_nylium"
     ) || CONTINUING.contains(&s)
         || STONY.contains(&s)
         || s.ends_with("terracotta");
@@ -85,7 +102,16 @@ const CONTINUING: &[&str] =
 
 /// Overworld rock: below it comes the stone/deepslate default, not more of the same (ore-like blobs).
 const STONY: &[&str] = &[
-    "stone", "deepslate", "tuff", "granite", "diorite", "andesite", "calcite", "dripstone_block", "clay", "mud",
+    "stone",
+    "deepslate",
+    "tuff",
+    "granite",
+    "diorite",
+    "andesite",
+    "calcite",
+    "dripstone_block",
+    "clay",
+    "mud",
     "bedrock",
 ];
 

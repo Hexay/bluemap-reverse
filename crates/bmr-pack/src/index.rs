@@ -70,7 +70,11 @@ impl Index {
 
     pub fn parse(json: &[u8]) -> Result<Self> {
         let index: Self = serde_json::from_slice(json).context("unreadable pack index")?;
-        ensure!(index.format == INDEX_FORMAT, "pack index format {} not supported (expects {INDEX_FORMAT})", index.format);
+        ensure!(
+            index.format == INDEX_FORMAT,
+            "pack index format {} not supported (expects {INDEX_FORMAT})",
+            index.format
+        );
         Ok(index)
     }
 

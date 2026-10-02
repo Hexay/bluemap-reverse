@@ -115,7 +115,8 @@ fn split_liquid(cells: FxHashMap<Cell, CellFaces>) -> (FxHashMap<Cell, CellFaces
             solid.insert(cell, obs);
             continue;
         }
-        let (wet, dry): (Vec<FaceKey>, Vec<FaceKey>) = std::mem::take(&mut obs.keys).into_iter().partition(|k| k.liquid().is_some());
+        let (wet, dry): (Vec<FaceKey>, Vec<FaceKey>) =
+            std::mem::take(&mut obs.keys).into_iter().partition(|k| k.liquid().is_some());
         if !wet.is_empty() {
             liquid.insert(cell, wet);
         }

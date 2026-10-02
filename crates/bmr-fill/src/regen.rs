@@ -11,10 +11,10 @@
 //! distance…): see `adopt_invisible`.
 
 use anyhow::Result;
-use rustc_hash::FxHashMap;
 use bmr_invert::face::{Cell, Liquid};
 use bmr_world::{BlockState, Chunk, ChunkPos, StateId, StateTable, World};
 use rayon::prelude::*;
+use rustc_hash::FxHashMap;
 
 use crate::Segment;
 use crate::columns::{Cursor, EvidenceByColumn, Fill, Gap};
@@ -33,16 +33,20 @@ impl RegenWorld {
     /// Chunks within `area` (inclusive chunk-coordinate box; `None` = everything). Regions decode in
     /// parallel; palettes are interned afterwards (few distinct states per section).
     pub fn load(world: &World, table: &mut StateTable, area: Option<(ChunkPos, ChunkPos)>) -> Result<Self> {
-        let inside = |(x, z): ChunkPos| area.is_none_or(|((x0, z0), (x1, z1))| (x0..=x1).contains(&x) && (z0..=z1).contains(&z));
+        let inside =
+            |(x, z): ChunkPos| area.is_none_or(|((x0, z0), (x1, z1))| (x0..=x1).contains(&x) && (z0..=z1).contains(&z));
         let region_hit = |(rx, rz): (i32, i32)| {
-            area.is_none_or(|((x0, z0), (x1, z1))| rx * 32 <= x1 && rx * 32 + 31 >= x0 && rz * 32 <= z1 && rz * 32 + 31 >= z0)
+            area.is_none_or(|((x0, z0), (x1, z1))| {
+                rx * 32 <= x1 && rx * 32 + 31 >= x0 && rz * 32 <= z1 && rz * 32 + 31 >= z0
+            })
         };
         let regions: Vec<_> = world.regions()?.into_iter().filter(|&r| region_hit(r)).collect();
         // decode only the chunks in the area: windows overlap regions, whole-region decodes repeat work
         let decoded = regions.par_iter().map(|&r| world.read_region_where(r, &inside)).collect::<Result<Vec<_>>>()?;
         let mut chunks = FxHashMap::default();
         for (pos, chunk) in decoded.into_iter().flatten().filter(|(_, c)| c.is_full()) {
-            let palette_ids = chunk.sections.iter().map(|s| s.palette.iter().map(|b| table.intern(b)).collect()).collect();
+            let palette_ids =
+                chunk.sections.iter().map(|s| s.palette.iter().map(|b| table.intern(b)).collect()).collect();
             chunks.insert(pos, RegenChunk { chunk, palette_ids });
         }
         Ok(Self { chunks })

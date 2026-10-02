@@ -44,7 +44,9 @@ impl Fit {
         let ok = self.matched > 0 && self.extra == 0 && self.missing_interior == 0;
         match strict {
             true => (ok && self.missing_cullable == 0).then_some(self.missing_boundary),
-            false => (ok && self.missing_cullable < self.matched).then_some(self.missing_boundary + self.missing_cullable),
+            false => {
+                (ok && self.missing_cullable < self.matched).then_some(self.missing_boundary + self.missing_cullable)
+            }
         }
     }
 }
@@ -62,7 +64,9 @@ pub fn candidates(lib: &Library, sig: &[FaceKey]) -> Option<Candidates> {
         let ids: Vec<usize> = lib
             .with_textures(textures.iter().copied())
             .into_iter()
-            .filter(|&id| lib.entries[id].sig.len() == sig.len() && all_close(&aligned, &corner_aligned(&lib.entries[id].sig)))
+            .filter(|&id| {
+                lib.entries[id].sig.len() == sig.len() && all_close(&aligned, &corner_aligned(&lib.entries[id].sig))
+            })
             .collect();
         if !ids.is_empty() {
             return Some(Candidates { ids, how: How::Offset });
@@ -78,8 +82,11 @@ pub fn candidates_cullable(lib: &Library, sig: &[FaceKey]) -> Option<Candidates>
 }
 
 fn partial(lib: &Library, sig: &[FaceKey], textures: BTreeSet<Tex>, strict: bool) -> Option<Candidates> {
-    let missing: Vec<(usize, u32)> =
-        lib.with_textures(textures).into_iter().filter_map(|id| fit(sig, &lib.entries[id].sig).missing(strict).map(|m| (id, m))).collect();
+    let missing: Vec<(usize, u32)> = lib
+        .with_textures(textures)
+        .into_iter()
+        .filter_map(|id| fit(sig, &lib.entries[id].sig).missing(strict).map(|m| (id, m)))
+        .collect();
     let best = missing.iter().map(|&(_, m)| m).min()?;
     let ids = missing.into_iter().filter(|&(_, m)| m == best).map(|(id, _)| id).collect();
     Some(Candidates { ids, how: How::Partial })

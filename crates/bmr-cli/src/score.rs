@@ -76,7 +76,8 @@ pub fn run(a: Args) -> Result<()> {
     let t = Instant::now();
     let sample = a.sample.as_deref().and_then(|s| s.split_once("->")).map(|(o, r)| (o.trim(), r.trim()));
     let lookalikes = a.pack.as_deref().map(lookalike_groups).transpose()?;
-    let scope = bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample, lookalikes: lookalikes.as_ref() };
+    let scope =
+        bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample, lookalikes: lookalikes.as_ref() };
     let report = bmr_score::score(&original, &reconstructed, &scope, a.top)?;
     print!("{report}");
     println!("scored in {:.1?}", t.elapsed());

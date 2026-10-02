@@ -53,7 +53,8 @@ pub fn detect(world: &World) -> Result<Scan> {
             .into_iter()
             .filter(|c| c.points.len() >= rule.min_points && (rule.accepts)(&c.bbox))
             .map(|c| {
-                let anchors = if rule.per_point { c.points.iter().map(|&p| Bbox::at(p)).collect() } else { vec![c.bbox] };
+                let anchors =
+                    if rule.per_point { c.points.iter().map(|&p| Bbox::at(p)).collect() } else { vec![c.bbox] };
                 let estimates: Vec<(i32, i32)> = anchors.iter().flat_map(rule.corners).collect();
                 Detection {
                     set: rule.set,
@@ -84,8 +85,7 @@ fn candidate_chunks(estimates: &[(i32, i32)], tolerance: i32) -> Vec<[i32; 2]> {
             None
         }
     };
-    let mut out: Vec<[i32; 2]> =
-        estimates.iter().filter_map(|&(x, z)| Some([snap(x)?, snap(z)?])).collect();
+    let mut out: Vec<[i32; 2]> = estimates.iter().filter_map(|&(x, z)| Some([snap(x)?, snap(z)?])).collect();
     out.sort_unstable();
     out.dedup();
     out

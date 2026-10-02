@@ -97,8 +97,11 @@ fn placement(set: &StructureSet, chunk: [i32; 2]) -> Option<Placement> {
     let (rx, rz) = region_of(set, chunk);
     let target = (chunk.0 - rx * set.spacing, chunk.1 - rz * set.spacing);
     let r = set.range();
-    ((0..r).contains(&target.0) && (0..r).contains(&target.1))
-        .then(|| Placement { chunk, offset: region_offset(set, rx, rz), target })
+    ((0..r).contains(&target.0) && (0..r).contains(&target.1)).then(|| Placement {
+        chunk,
+        offset: region_offset(set, rx, rz),
+        target,
+    })
 }
 
 pub fn constraints(mc: &str, observations: &[Observation]) -> Result<Vec<Constraint>> {

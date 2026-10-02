@@ -90,12 +90,10 @@ mod tests {
 
     /// Every registered BE type (except piston) is produced by at least one registered block.
     #[test]
+    #[ignore = "needs work/data from tools/setup.py"]
     fn covers_every_registered_type() {
         let dir = Path::new(REPORTS);
-        if !dir.exists() {
-            eprintln!("skipped: {REPORTS} missing (run tools/setup.py)");
-            return;
-        }
+        assert!(dir.exists(), "{REPORTS} missing: run `py -3 tools/setup.py` first");
         let read =
             |f: &str| -> serde_json::Value { serde_json::from_slice(&std::fs::read(dir.join(f)).unwrap()).unwrap() };
         let registries = read("registries.json");

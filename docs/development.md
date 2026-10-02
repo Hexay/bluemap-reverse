@@ -16,6 +16,8 @@ py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / Blu
 - Fixtures: `fixtures/<name>/fixture.json` (server.properties overrides, area to force-load, optional `bluemap`
   map-config overrides) + `commands.txt` (console commands run after the area loads).
 - `work/` is git-ignored.
+- Tests that need `work/data` are `#[ignore]`d; after `tools/setup.py` run them with
+  `cargo test --workspace -- --include-ignored`.
 
 ## Fixtures
 

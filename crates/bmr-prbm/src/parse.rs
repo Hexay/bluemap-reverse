@@ -77,7 +77,7 @@ fn read_groups(r: &mut Reader, vertices: usize) -> Result<Vec<Group>> {
         }
         let (start, count) = (r.i32()?, r.i32()?);
         ensure!(material >= 0 && start == expected_start && count > 0, "bad group {material}/{start}/{count}");
-        expected_start = start + count;
+        expected_start = start.checked_add(count).context("group table overflows i32")?;
         groups.push(Group { material: material as u32, start: start as u32, count: count as u32 });
     }
     ensure!(expected_start as usize == vertices, "groups cover {expected_start} of {vertices} vertices");
@@ -119,76 +119,5 @@ fn flat<T: Copy>(v: Vec<[T; 1]>) -> Vec<T> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn pad(b: &mut Vec<u8>) {
-        while !b.len().is_multiple_of(4) {
-            b.push(0);
-        }
-    }
-
-    fn attr(b: &mut Vec<u8>, name: &str, flags: u8, values: &[u8]) {
-        b.extend(name.as_bytes());
-        b.extend([0, flags]);
-        pad(b);
-        b.extend(values);
-    }
-
-    /// One triangle, byte layout as PRBMWriter.java writes it.
-    fn one_triangle() -> Vec<u8> {
-        let mut b = vec![1, 0b0000_0111, 3, 0, 0, 0, 0, 0];
-        let pos: Vec<u8> =
-            [0.0f32, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0].iter().flat_map(|f| f.to_le_bytes()).collect();
-        attr(&mut b, "position", 0x21, &pos);
-        attr(&mut b, "normal", 0x63, &[0, 127, 0].repeat(3));
-        attr(&mut b, "color", 0x67, &[255, 128, 0].repeat(3));
-        let uv: Vec<u8> = [0.0f32, 0.0, 1.0, 0.0, 1.0, 1.0].iter().flat_map(|f| f.to_le_bytes()).collect();
-        attr(&mut b, "uv", 0x11, &uv);
-        attr(&mut b, "ao", 0x47, &[255, 191, 127]);
-        attr(&mut b, "blocklight", 0x03, &[14; 3]);
-        attr(&mut b, "sunlight", 0x03, &[15; 3]);
-        pad(&mut b);
-        for v in [5i32, 0, 3, -1] {
-            b.extend(v.to_le_bytes());
-        }
-        b
-    }
-
-    #[test]
-    fn parses_writer_layout() {
-        let tile = parse(&one_triangle()).unwrap();
-        assert_eq!(tile.face_count(), 1);
-        let f = tile.faces().next().unwrap();
-        assert_eq!(f.material, 5);
-        assert_eq!(f.pos[2], [1.0, 1.0, 1.0]);
-        assert_eq!(f.uv[1], [1.0, 0.0]);
-        assert_eq!(f.ao, [255, 191, 127]);
-        assert_eq!((f.color, f.normal, f.blocklight, f.sunlight), ([255, 128, 0], [0, 127, 0], 14, 15));
-    }
-
-    #[test]
-    fn empty_tile() {
-        let mut b = vec![1, 0b0000_0111, 0, 0, 0, 0, 0, 0];
-        for (name, flags) in [
-            ("position", 0x21),
-            ("normal", 0x63),
-            ("color", 0x67),
-            ("uv", 0x11),
-            ("ao", 0x47),
-            ("blocklight", 3),
-            ("sunlight", 3),
-        ] {
-            attr(&mut b, name, flags, &[]);
-        }
-        pad(&mut b);
-        b.extend((-1i32).to_le_bytes());
-        assert_eq!(parse(&b).unwrap().face_count(), 0);
-    }
-
-    #[test]
-    fn rejects_truncated() {
-        let b = one_triangle();
-        assert!(parse(&b[..b.len() - 8]).is_err());
-    }
-}
+#[path = "parse_tests.rs"]
+mod tests;

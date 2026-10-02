@@ -86,3 +86,6 @@ fn read_chunk(data: &[u8], offset: usize) -> Result<Vec<u8>> {
     };
     Ok(out)
 }
+
+#[cfg(test)]
+mod tests;

@@ -284,3 +284,7 @@ pub fn normalized(sig: &[FaceKey]) -> Vec<FaceKey> {
     let (dx, dz) = ((min_x + max_x) / 2 - Q as i16 / 2, (min_z + max_z) / 2 - Q as i16 / 2);
     signature(sig.iter().map(|k| k.translated(dx, dz)).collect())
 }
+
+#[cfg(test)]
+#[path = "face_tests.rs"]
+mod tests;

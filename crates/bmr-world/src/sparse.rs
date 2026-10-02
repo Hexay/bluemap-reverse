@@ -114,3 +114,61 @@ impl ChunkBuilder {
         out
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::chunk::BlockState;
+
+    fn setup() -> (StateTable, ChunkBuilder, [StateId; 3]) {
+        let mut table = StateTable::default();
+        let ids =
+            ["air", "stone", "dirt"].map(|n| table.intern(&BlockState::new(format!("minecraft:{n}"), Vec::new())));
+        let layout = ChunkLayout { data_version: 1, sections: (-1, 1), biome: "minecraft:plains".into() };
+        (table, ChunkBuilder::new(layout, ids[0]), ids)
+    }
+
+    fn name(c: &Chunk, x: usize, y: i32, z: usize) -> &str {
+        &c.block(x, y, z).unwrap().name
+    }
+
+    #[test]
+    fn columns_span_sections_clamp_and_map_negative_coords() {
+        let (table, mut b, [_, stone, dirt]) = setup();
+        b.fill_column((-1, -17), -100, 100, stone);
+        b.set_block((-1, 5, -17), dirt);
+        b.touch((100, 100));
+        let mut chunks = b.finish(&table);
+        chunks.sort_by_key(|c| (c.x, c.z));
+        assert_eq!(chunks.iter().map(|c| (c.x, c.z)).collect::<Vec<_>>(), vec![(-1, -2), (6, 6)]);
+
+        let c = &chunks[0];
+        assert_eq!(c.sections.iter().map(|s| s.y).collect::<Vec<_>>(), vec![-1, 0, 1]);
+        assert_eq!(
+            (name(c, 15, -16, 15), name(c, 15, 4, 15), name(c, 15, 5, 15)),
+            ("minecraft:stone", "minecraft:stone", "minecraft:dirt")
+        );
+        assert_eq!(name(c, 15, 31, 15), "minecraft:stone");
+        assert_eq!(name(c, 14, 0, 15), "minecraft:air");
+        assert_eq!(c.section(0).unwrap().palette.len(), 3);
+
+        let empty = &chunks[1];
+        assert!(empty.sections.iter().all(|s| s.blocks.is_empty() && s.palette.len() == 1 && s.palette[0].is_air()));
+    }
+
+    #[test]
+    fn finish_drops_unused_states_and_uniform_sections_lose_their_array() {
+        let (table, mut b, [air, stone, _]) = setup();
+        b.set_block((0, -5, 0), stone);
+        b.set_block((0, -5, 0), air);
+        for x in 0..16 {
+            for z in 0..16 {
+                b.fill_column((x, z), 0, 15, stone);
+            }
+        }
+        let chunks = b.finish(&table);
+        let s = |y| chunks[0].section(y).unwrap();
+        assert!(s(-1).blocks.is_empty() && s(-1).palette[0].is_air() && s(-1).palette.len() == 1);
+        assert!(s(0).blocks.is_empty() && s(0).palette.len() == 1 && s(0).palette[0].name == "minecraft:stone");
+    }
+}

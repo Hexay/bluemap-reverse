@@ -277,3 +277,7 @@ fn axis_anchor(owner: i32, centroid: f32) -> i32 {
     let (lo, hi) = (owner - 1, owner + 1);
     if (centroid - (lo as f32 + 0.5)).abs() <= (centroid - (hi as f32 + 0.5)).abs() { lo } else { hi }
 }
+
+#[cfg(test)]
+#[path = "library_tests.rs"]
+mod tests;

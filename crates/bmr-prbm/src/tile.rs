@@ -66,3 +66,46 @@ impl Tile {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Two triangles; per-vertex values are distinct so each can be traced to its slot.
+    fn two_triangles() -> Tile {
+        Tile {
+            position: (0..6).map(|i| [i as f32, 64.0 + i as f32, -(i as f32)]).collect(),
+            normal: vec![[0, 127, 0], [1, 1, 1], [1, 1, 1], [127, 0, 0], [2, 2, 2], [2, 2, 2]],
+            color: vec![[255; 3], [0; 3], [0; 3], [10, 20, 30], [0; 3], [0; 3]],
+            uv: (0..6).map(|i| [i as f32 / 8.0, 1.0]).collect(),
+            ao: vec![255, 200, 100, 50, 25, 0],
+            blocklight: vec![1, 9, 9, 3, 9, 9],
+            sunlight: vec![15, 0, 0, -1, 0, 0],
+            groups: vec![Group { material: 2, start: 0, count: 3 }, Group { material: 7, start: 3, count: 3 }],
+        }
+    }
+
+    #[test]
+    fn faces_follow_groups() {
+        let tile = two_triangles();
+        assert_eq!(tile.face_count(), 2);
+        let faces: Vec<Face> = tile.faces().collect();
+        assert_eq!(faces.iter().map(|f| f.material).collect::<Vec<_>>(), [2, 7]);
+        assert_eq!(faces[1].pos, [[3.0, 67.0, -3.0], [4.0, 68.0, -4.0], [5.0, 69.0, -5.0]]);
+        assert_eq!(faces[1].uv[2], [5.0 / 8.0, 1.0]);
+        assert_eq!(faces[1].ao, [50, 25, 0]);
+    }
+
+    #[test]
+    fn per_face_values_come_from_first_vertex() {
+        let f = two_triangles().faces().nth(1).unwrap();
+        assert_eq!((f.color, f.normal, f.blocklight, f.sunlight), ([10, 20, 30], [127, 0, 0], 3, -1));
+    }
+
+    #[test]
+    fn empty_tile_has_no_faces() {
+        let tile = Tile::default();
+        assert_eq!(tile.face_count(), 0);
+        assert_eq!(tile.faces().count(), 0);
+    }
+}

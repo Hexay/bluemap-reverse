@@ -3,6 +3,8 @@
 pub mod obj;
 mod parse;
 mod reader;
+#[cfg(test)]
+mod test_prbm;
 pub mod textures;
 pub mod tile;
 

@@ -42,8 +42,6 @@ fn canonical<'a>(f: &Face, names: &'a [String], origin: [i32; 2]) -> (Key, Attrs
     let q = f.pos.map(|p| p.map(|c| (c * QUANT).round() as i32));
     let mut order = [0, 1, 2];
     order.sort_by_key(|&i| q[i]);
-    let n = f.normal.map(|c| c as f32 / 127.0);
-    let centre = |axis: usize| f.pos.iter().map(|p| p[axis]).sum::<f32>() / 3.0 - n[axis] * 0.01;
     let key = Key { pos: order.map(|i| q[i]), normal: f.normal };
     let attrs = Attrs {
         texture: names.get(f.material as usize).map_or("?", String::as_str),
@@ -52,9 +50,16 @@ fn canonical<'a>(f: &Face, names: &'a [String], origin: [i32; 2]) -> (Key, Attrs
         ao: order.map(|i| f.ao[i]),
         blocklight: f.blocklight,
         sunlight: f.sunlight,
-        cell: [centre(0).floor() as i32 + origin[0], centre(1).floor() as i32, centre(2).floor() as i32 + origin[1]],
+        cell: face_cell(f, origin),
     };
     (key, attrs)
+}
+
+/// World cell of the block that drew the face (just behind it); `origin` is the tile's x/z min corner.
+pub fn face_cell(f: &Face, origin: [i32; 2]) -> [i32; 3] {
+    let n = f.normal.map(|c| c as f32 / 127.0);
+    let centre = |axis: usize| f.pos.iter().map(|p| p[axis]).sum::<f32>() / 3.0 - n[axis] * 0.01;
+    [centre(0).floor() as i32 + origin[0], centre(1).floor() as i32, centre(2).floor() as i32 + origin[1]]
 }
 
 /// The cell the face looks into.
@@ -105,8 +110,8 @@ pub struct RenderDiff {
 impl RenderDiff {
     /// `original`/`reconstructed`: the same hires tile from each render (empty if absent); `*_names`: each
     /// site's texture resource paths; `origin`: the tile's world x/z min corner; `unrendered(x, z)`: the column
-    /// is outside the original render. Faces looking into such a column are skipped: the original world went on
-    /// there, the reconstruction ends, so BlueMap draws the reconstruction's outer walls.
+    /// is outside the compared area. Faces in or looking into such a column are skipped: past the area's edge
+    /// one world goes on and the other ends, so BlueMap draws outer walls on one side only.
     pub fn add_tile(
         &mut self,
         original: &Tile,
@@ -145,7 +150,7 @@ impl RenderDiff {
         }
     }
 
-    /// Canonical faces of `tile`, minus (and counting) those looking into unrendered columns.
+    /// Canonical faces of `tile`, minus (and counting) those in or looking into unrendered columns.
     fn compared_faces<'a>(
         &mut self,
         tile: &Tile,
@@ -157,7 +162,8 @@ impl RenderDiff {
         for f in tile.faces() {
             let (key, attrs) = canonical(&f, names, origin);
             let [x, _, z] = facing(&f, attrs.cell);
-            if unrendered(x, z) { self.edge += 1 } else { kept.push((key, attrs)) }
+            let [cx, _, cz] = attrs.cell;
+            if unrendered(x, z) || unrendered(cx, cz) { self.edge += 1 } else { kept.push((key, attrs)) }
         }
         kept
     }

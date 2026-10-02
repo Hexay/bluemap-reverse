@@ -67,7 +67,7 @@ Hidden from `bmr --help` (still runnable, `bmr <cmd> --help` works):
 
 ```
 bmr check-heights --mirror <dir>        # hires top faces vs lowres heightmap (decode sanity check)
-bmr diff-render <orig-mirror> <recon-mirror> [--json out]   # face-by-face render diff (tools/roundtrip.py)
+bmr diff-render <orig-mirror> <recon-mirror> [--inset 16] [--json out]   # face-by-face render diff (tools/roundtrip.py)
 bmr probe <world> x,y,z ...             # print block states + biome
 bmr copy-world <world> -o <out>         # round-trip a world through our reader and writer
 ```

@@ -1,28 +1,28 @@
 {
-  "edge_faces": 298720,
-  "original_faces": 951564,
-  "reconstructed_faces": 1009062,
-  "paired": 949871,
-  "identical": 826906,
+  "edge_faces": 729396,
+  "original_faces": 755572,
+  "reconstructed_faces": 764584,
+  "paired": 755337,
+  "identical": 746497,
   "aspects": {
     "ao": {
-      "faces": 12449,
-      "mean_delta": 46.541248293035586
+      "faces": 7502,
+      "mean_delta": 46.30374122456234
     },
     "blocklight": {
-      "faces": 1415,
-      "mean_delta": 2.1915194346289755
+      "faces": 1441,
+      "mean_delta": 2.2713393476752257
     },
     "sunlight": {
-      "faces": 110098,
-      "mean_delta": 6.96963614234591
+      "faces": 0,
+      "mean_delta": 0.0
     },
     "texture": {
-      "faces": 104,
+      "faces": 80,
       "mean_delta": null
     },
     "tint": {
-      "faces": 1150,
+      "faces": 158,
       "mean_delta": null
     },
     "uv": {
@@ -32,205 +32,219 @@
   },
   "missing": [
     [
-      "minecraft:block/stone",
-      830
-    ],
-    [
       "minecraft:block/water_still",
-      293
-    ],
-    [
-      "minecraft:block/diorite",
-      110
-    ],
-    [
-      "minecraft:block/sand",
-      106
-    ],
-    [
-      "minecraft:block/granite",
-      90
-    ],
-    [
-      "minecraft:block/andesite",
-      88
+      91
     ],
     [
       "minecraft:block/kelp_plant",
       58
     ],
     [
-      "minecraft:block/dirt",
-      30
+      "minecraft:block/stone",
+      44
     ],
     [
       "minecraft:block/tall_seagrass_top",
       20
     ],
     [
-      "minecraft:block/coal_ore",
-      12
-    ],
-    [
-      "minecraft:block/iron_ore",
-      10
-    ],
-    [
-      "minecraft:block/water_flow",
-      10
+      "minecraft:block/diorite",
+      6
     ],
     [
       "minecraft:block/deepslate",
-      8
+      4
     ],
     [
-      "minecraft:block/copper_ore",
-      6
+      "minecraft:block/kelp",
+      4
     ],
     [
-      "minecraft:block/gravel",
-      6
+      "minecraft:block/sand",
+      4
+    ],
+    [
+      "minecraft:block/water_flow",
+      4
     ]
   ],
   "extra": [
     [
-      "minecraft:block/bedrock",
-      30688
-    ],
-    [
       "minecraft:block/stone",
-      19452
+      7876
     ],
     [
       "minecraft:block/water_flow",
-      5812
-    ],
-    [
-      "minecraft:block/water_still",
-      611
-    ],
-    [
-      "minecraft:block/sand",
-      518
+      520
     ],
     [
       "minecraft:block/andesite",
-      446
+      178
     ],
     [
-      "minecraft:block/granite",
-      410
+      "minecraft:block/sand",
+      132
+    ],
+    [
+      "minecraft:block/water_still",
+      119
     ],
     [
       "minecraft:block/dirt",
-      374
+      84
     ],
     [
       "minecraft:block/diorite",
-      360
+      82
     ],
     [
       "minecraft:block/kelp",
-      104
+      80
     ],
     [
-      "minecraft:block/gravel",
-      72
+      "minecraft:block/granite",
+      34
     ],
     [
-      "minecraft:block/deepslate_top",
-      70
+      "minecraft:block/grass_block_side",
+      24
+    ],
+    [
+      "minecraft:block/grass_block_side_overlay",
+      24
     ],
     [
       "minecraft:block/deepslate",
-      66
+      22
     ],
     [
-      "minecraft:block/cut_sandstone",
-      46
+      "minecraft:block/gravel",
+      20
+    ],
+    [
+      "minecraft:block/deepslate_top",
+      12
     ],
     [
       "minecraft:block/iron_ore",
-      32
+      12
     ]
   ],
   "cells": [
     {
       "pos": [
-        -15,
-        48,
-        128
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 36,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -156,
-        48,
-        68
+        -124,
+        25,
+        -121
       ],
       "missing": 0,
       "extra": 0,
-      "differing": 36,
-      "aspects": [
-        "sunlight"
-      ]
-    },
-    {
-      "pos": [
-        -153,
-        26,
-        -106
-      ],
-      "missing": 0,
-      "extra": 2,
       "differing": 16,
       "aspects": [
-        "sunlight"
+        "blocklight"
       ]
     },
     {
       "pos": [
-        -147,
-        43,
-        -138
+        -123,
+        25,
+        -121
       ],
       "missing": 0,
       "extra": 0,
-      "differing": 18,
+      "differing": 16,
       "aspects": [
-        "sunlight"
+        "blocklight"
       ]
     },
     {
       "pos": [
-        -146,
-        43,
-        -139
+        -123,
+        26,
+        -119
       ],
       "missing": 0,
       "extra": 0,
-      "differing": 18,
+      "differing": 16,
       "aspects": [
-        "sunlight"
+        "blocklight"
       ]
     },
     {
       "pos": [
-        -145,
-        44,
-        -140
+        59,
+        23,
+        -5
       ],
-      "missing": 2,
-      "extra": 4,
-      "differing": 12,
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
       "aspects": [
-        "ao",
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        59,
+        24,
+        -6
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        21,
+        -36
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        22,
+        -37
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        22,
+        -6
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        22,
+        -5
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
         "blocklight"
       ]
     },
@@ -241,7 +255,33 @@
         -39
       ],
       "missing": 0,
-      "extra": 2,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        23,
+        -6
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        24,
+        -41
+      ],
+      "missing": 0,
+      "extra": 0,
       "differing": 16,
       "aspects": [
         "blocklight"
@@ -254,7 +294,7 @@
         -39
       ],
       "missing": 0,
-      "extra": 2,
+      "extra": 0,
       "differing": 16,
       "aspects": [
         "blocklight"
@@ -267,7 +307,7 @@
         -40
       ],
       "missing": 0,
-      "extra": 2,
+      "extra": 0,
       "differing": 16,
       "aspects": [
         "blocklight"
@@ -280,75 +320,10 @@
         -40
       ],
       "missing": 0,
-      "extra": 2,
+      "extra": 0,
       "differing": 16,
       "aspects": [
         "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        74,
-        27,
-        -33
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 16,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        75,
-        26,
-        -34
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 16,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        75,
-        27,
-        -34
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 16,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        76,
-        28,
-        -34
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 16,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        122,
-        37,
-        -6
-      ],
-      "missing": 0,
-      "extra": 2,
-      "differing": 16,
-      "aspects": [
-        "sunlight"
       ]
     }
   ]

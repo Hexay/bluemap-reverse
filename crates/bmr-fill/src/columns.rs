@@ -105,7 +105,7 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
                     .is_none_or(|&(lo, hi)| classify(ce, lo, hi) == Fill::Solid);
                 for (ylo, yhi) in parts {
                     let floored = ylo > p.min_y || y >= p.min_y;
-                    let mut push = |ylo: i32, yhi: i32, fill| {
+                    let mut push = |ylo: i32, yhi: i32, fill, floored| {
                         if ylo <= yhi {
                             out.push(Gap { column: col, ylo, yhi, fill, floored });
                         }
@@ -113,19 +113,14 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
                     if p.masked(ylo) {
                         // left out of the render (nether roof): its drawn faces say nothing
                         let roof = if rock_under { ylo } else { p.roof_from.max(ylo) };
-                        push(ylo, roof - 1, Fill::Air);
-                        push(roof, yhi, Fill::Solid);
+                        push(ylo, roof - 1, Fill::Air, floored);
+                        push(roof, yhi, Fill::Solid, floored);
                     } else if yhi == p.max_y {
                         // open to the sky: anything in it would show its top face
-                        push(ylo, yhi, Fill::Air);
+                        push(ylo, yhi, Fill::Air, floored);
                     } else {
-                        match classify(ce, ylo, yhi) {
-                            Fill::Air => {
-                                let cut = dark_below(ce, ylo, yhi, p.cave_y);
-                                push(cut, yhi, Fill::Air);
-                                push(ylo, cut - 1, Fill::Solid);
-                            }
-                            fill => push(ylo, yhi, fill),
+                        for (lo, hi, fill) in layers(ce, ylo, yhi, p.cave_y) {
+                            push(lo, hi, fill, floored || lo > ylo);
                         }
                     }
                 }
@@ -151,17 +146,75 @@ pub fn ring(r: i32) -> impl Iterator<Item = (i32, i32)> {
     (-r..=r).flat_map(move |dx| (-r..=r).map(move |dz| (dx, dz))).filter(move |(dx, dz)| dx.abs().max(dz.abs()) == r)
 }
 
-/// Lowest y of an air gap that stays air. Below `cave_y` BlueMap drops unlit faces, so when the gap's lowest
-/// open/liquid evidence is itself below `cave_y` (lit space seen under a seabed), the cells under it are
-/// unknown, not empty: rock is far likelier, and leaving them air carved shafts down to bedrock (render
-/// round-trip, 2026-10-02). Evidence only above `cave_y` with nothing drawn under it, where nothing is culled,
-/// means real open space: a build or island over void.
-fn dark_below(ce: &ColumnEvidence, ylo: i32, yhi: i32, cave_y: i32) -> i32 {
-    let lowest = ce.open.iter().chain(ce.liquid.iter().map(|(y, _)| y)).filter(|y| (ylo..=yhi).contains(*y)).min();
-    match lowest {
-        Some(&y) if y < cave_y => y.max(ylo),
-        _ => ylo,
+/// One run of same-kind evidence down a gap: solid, or open/liquid (`liquid` set if any of it is liquid).
+struct Run {
+    top: i32,
+    bottom: i32,
+    solid: bool,
+    liquid: Option<Liquid>,
+}
+
+/// [ylo, yhi] cut into layers, top-down, one per run of solid or open/liquid evidence; a single vote over the
+/// whole gap let a flooded ravine's floor outvote the water drawn beside it (render round-trip, 2026-10-02).
+/// Open space reaches down to its lowest evidence and rock fills the unknown cells between runs. A bottom
+/// liquid layer runs on to `ylo` (unfloored: `liquid.rs` estimates the sea floor). A bottom air layer goes on
+/// to `ylo` only above `cave_y`: below it BlueMap drops unlit faces, so cells under the last
+/// sign of an opening are unknown, and rock is far likelier (leaving them air carved shafts down to bedrock);
+/// above it nothing is culled, so open space with nothing drawn under it is real (an island over void).
+fn layers(ce: &ColumnEvidence, ylo: i32, yhi: i32, cave_y: i32) -> Vec<(i32, i32, Fill)> {
+    let inside = |y: &i32| (ylo..=yhi).contains(y);
+    let mut points: Vec<(i32, bool, Option<Liquid>)> =
+        ce.solid.iter().filter(|y| inside(y)).map(|&y| (y, true, None)).collect();
+    points.extend(ce.open.iter().filter(|y| inside(y)).map(|&y| (y, false, None)));
+    points.extend(ce.liquid.iter().filter(|(y, _)| inside(y)).map(|&(y, l)| (y, false, Some(l))));
+    points.sort_unstable_by_key(|&(y, _, _)| std::cmp::Reverse(y));
+    // one point per cell; solid wins a cell it shares with liquid evidence (a missing liquid face means liquid
+    // or full block), and liquid evidence names the liquid of an open cell
+    let mut cells: Vec<(i32, bool, Option<Liquid>)> = Vec::with_capacity(points.len());
+    for (y, solid, liquid) in points {
+        match cells.last_mut() {
+            Some(c) if c.0 == y => {
+                c.1 |= solid;
+                c.2 = c.2.or(liquid);
+            }
+            _ => cells.push((y, solid, liquid)),
+        }
     }
+
+    let mut runs: Vec<Run> = Vec::new();
+    for (y, solid, liquid) in cells {
+        match runs.last_mut() {
+            Some(r) if r.solid == solid => {
+                r.bottom = y;
+                r.liquid = r.liquid.or(liquid);
+            }
+            _ => runs.push(Run { top: y, bottom: y, solid, liquid }),
+        }
+    }
+    let fill = |r: &Run| match (r.solid, r.liquid) {
+        (true, _) => Fill::Solid,
+        (false, Some(l)) => Fill::Liquid(l),
+        (false, None) => Fill::Air,
+    };
+    if runs.is_empty() {
+        return vec![(ylo, yhi, Fill::Air)];
+    }
+    let mut out = Vec::new();
+    let mut hi = yhi;
+    for (i, r) in runs.iter().enumerate() {
+        let lo = match runs.get(i + 1) {
+            Some(next) if r.solid => next.top + 1,
+            Some(_) => r.bottom,
+            None if fill(r) == Fill::Air && r.bottom < cave_y => r.bottom.max(ylo),
+            None => ylo,
+        };
+        out.push((lo, hi, fill(r)));
+        hi = lo - 1;
+    }
+    if hi >= ylo {
+        out.push((ylo, hi, Fill::Solid));
+    }
+    out
 }
 
 fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Fill {

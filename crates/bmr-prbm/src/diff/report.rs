@@ -24,7 +24,7 @@ pub struct CellReport {
 
 #[derive(Debug, Serialize)]
 pub struct Report {
-    /// Faces (both renders) skipped because they look into a column outside the original render.
+    /// Faces (both renders) skipped because they are in or look into a column outside the compared area.
     pub edge_faces: u64,
     pub original_faces: u64,
     pub reconstructed_faces: u64,

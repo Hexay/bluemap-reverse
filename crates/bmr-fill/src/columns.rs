@@ -128,7 +128,40 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
             cursor = cursor.min(y - 1);
         }
     }
+    flood_beside_liquid(&mut out, p);
     out
+}
+
+/// Enclosed air that shares heights with a neighbour column's liquid is that liquid: still water or lava next
+/// to air would have flowed into it, and BlueMap would have drawn the liquid's side. Open-to-sky and masked
+/// gaps are left alone (air above a shore, the nether roof). Repeats so a flooded cavity fills across columns.
+/// Evidence alone can't tell: "open" only means "not a full block" (AO, faces drawn towards it).
+fn flood_beside_liquid(gaps: &mut [Gap], p: &Profile) {
+    const PASSES: usize = 8;
+    for _ in 0..PASSES {
+        let mut liquid: FxHashMap<Column, Vec<(i32, i32, Liquid)>> = FxHashMap::default();
+        for g in gaps.iter() {
+            if let Fill::Liquid(l) = g.fill {
+                liquid.entry(g.column).or_default().push((g.ylo, g.yhi, l));
+            }
+        }
+        let mut changed = false;
+        for g in gaps.iter_mut().filter(|g| g.fill == Fill::Air && g.yhi < p.max_y && !p.masked(g.ylo)) {
+            let (x, z) = g.column;
+            let beside = [(x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)]
+                .iter()
+                .filter_map(|n| liquid.get(n))
+                .flatten()
+                .find(|&&(lo, hi, _)| lo <= g.yhi && g.ylo <= hi);
+            if let Some(&(_, _, l)) = beside {
+                g.fill = Fill::Liquid(l);
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
 }
 
 /// [ylo, yhi] cut into the parts below, inside and above `mask`, top-down.
@@ -147,6 +180,8 @@ pub fn ring(r: i32) -> impl Iterator<Item = (i32, i32)> {
 }
 
 /// One run of same-kind evidence down a gap: solid, or open/liquid (`liquid` set if any of it is liquid).
+/// An open run with any liquid is all liquid: splitting off an air pocket above the first liquid evidence
+/// scored worse (water right under rock shows the same open-then-liquid evidence, and is commoner).
 struct Run {
     top: i32,
     bottom: i32,

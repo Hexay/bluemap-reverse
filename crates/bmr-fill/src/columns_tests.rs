@@ -82,6 +82,31 @@ fn a_cell_with_solid_and_liquid_evidence_is_solid() {
     assert_eq!(got[1..], [(40, 44, Fill::Liquid(Liquid::Water)), (-64, 39, Fill::Solid)]);
 }
 
+/// Gaps of two neighbouring overworld columns.
+fn two_column_gaps(a: (&[i32], ColumnEvidence), b: (&[i32], ColumnEvidence)) -> Vec<(Column, i32, i32, Fill)> {
+    let (ca, cb) = ((0, 0), (1, 0));
+    let bounds = Bounds { columns: vec![ca, cb], profile: Profile::for_dimension("minecraft:overworld") };
+    let observed = FxHashMap::from_iter([(ca, a.0.to_vec()), (cb, b.0.to_vec())]);
+    let evidence = FxHashMap::from_iter([(ca, a.1), (cb, b.1)]);
+    gaps(&observed, &evidence, &bounds).into_iter().map(|g| (g.column, g.ylo, g.yhi, g.fill)).collect()
+}
+
+#[test]
+fn enclosed_air_beside_water_is_water() {
+    // column a: water run down to 1; column b: rock band 39..43 then an open run 1..38 with no liquid seen
+    let a = ColumnEvidence { liquid: vec![(61, Liquid::Water)], open: vec![38, 1], solid: vec![0] };
+    let b = ColumnEvidence { solid: vec![43, 39, 0], open: vec![38, 1], ..Default::default() };
+    let got = two_column_gaps((&[62, -1], a), (&[44, -1], b));
+    assert!(got.contains(&((1, 0), 1, 38, Fill::Liquid(Liquid::Water))), "{got:?}");
+}
+
+#[test]
+fn sky_open_air_beside_water_stays_air() {
+    let a = ColumnEvidence { liquid: vec![(60, Liquid::Water)], ..Default::default() };
+    let got = two_column_gaps((&[62], a), (&[59], ColumnEvidence::default()));
+    assert!(got.contains(&((1, 0), 60, 319, Fill::Air)), "{got:?}");
+}
+
 #[test]
 fn liquid_and_solid_gaps_are_unchanged() {
     let water = ColumnEvidence { liquid: vec![(46, Liquid::Water)], ..Default::default() };

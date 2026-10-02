@@ -1,9 +1,9 @@
 {
-  "edge_faces": 728872,
+  "edge_faces": 728708,
   "original_faces": 755572,
-  "reconstructed_faces": 758150,
-  "paired": 755362,
-  "identical": 752711,
+  "reconstructed_faces": 757246,
+  "paired": 755175,
+  "identical": 752428,
   "aspects": {
     "ao": {
       "faces": 1087,
@@ -18,7 +18,7 @@
       "mean_delta": 0.0
     },
     "texture": {
-      "faces": 32,
+      "faces": 128,
       "mean_delta": null
     },
     "tint": {
@@ -33,7 +33,7 @@
   "missing": [
     [
       "minecraft:block/water_still",
-      98
+      285
     ],
     [
       "minecraft:block/kelp_plant",
@@ -66,24 +66,24 @@
   ],
   "extra": [
     [
-      "minecraft:block/water_flow",
-      1544
-    ],
-    [
       "minecraft:block/stone",
       970
     ],
     [
       "minecraft:block/water_still",
-      126
+      723
+    ],
+    [
+      "minecraft:block/water_flow",
+      134
+    ],
+    [
+      "minecraft:block/kelp",
+      128
     ],
     [
       "minecraft:block/andesite",
       38
-    ],
-    [
-      "minecraft:block/kelp",
-      32
     ],
     [
       "minecraft:block/sand",

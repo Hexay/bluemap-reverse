@@ -228,8 +228,12 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
 - Left: 31k bedrock undersides at y -64 and sunlight on 11.6% of paired faces are relight artifacts of the
   round trip (light below the world), not fill errors. AO 1.3% and blocklight 0.15% (hidden light sources)
   are the inputs for the inference half of phase 10.
-- `nether`: 99.91% pair, 96.7% identical; 41k extra faces at y 48..95 (air where the original has netherrack,
-  near the roof mask) and blocklight on 2.9% (hidden lava). `end`: 99.99% identical.
+- `nether`: 96.7% identical, 41k extra faces at y 48..95 (open caves under the roof mask filled solid, lava
+  filled up to the mask). Two evidence bugs (`bmr-invert/src/evidence.rs`, `face.rs`): a cell with both a
+  drawn face towards it and a missing one voted solid (a drawn face is proof, a missing one may be an imperfect
+  match: `open` now overrides `solid`); and a flowing liquid's sloped surface wasn't seen as facing up, so the
+  cell above read as more liquid. After: 98.7% identical, 7.9k extra, blocklight 2.9% → 0.9%; occupied
+  82.15% → 82.24%. `end`: 99.99% identical.
 
 ### Seed recovery bindings
 

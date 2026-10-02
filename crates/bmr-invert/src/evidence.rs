@@ -1,7 +1,8 @@
 //! What drawn and missing faces say about unobserved neighbour cells (see docs/architecture.md, fill):
 //! - a matched block's cullable (non-liquid) face is missing → neighbour is a full opaque block (`solid`)
 //! - a liquid face is missing → neighbour is the same liquid or a full block (`liquid`)
-//! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`)
+//! - any face drawn towards a neighbour → neighbour is air/liquid/transparent, not a full block (`open`);
+//!   this overrides `solid` for the same cell
 
 use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -100,6 +101,9 @@ pub fn collect(lib: &Library, o: &Observed) -> Evidence {
             }
         }
     }
+    // a drawn face proves its neighbour isn't a full block; a missing one may just be an imperfect match.
+    // Left in, the tie made the fill's gap vote rock and filled open nether caves solid (render round-trip).
+    ev.solid.retain(|c| !ev.open.contains(c));
     ev
 }
 

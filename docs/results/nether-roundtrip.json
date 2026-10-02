@@ -1,24 +1,24 @@
 {
-  "edge_faces": 115568,
+  "edge_faces": 114948,
   "original_faces": 1433486,
-  "reconstructed_faces": 1472888,
-  "paired": 1432203,
-  "identical": 1386495,
+  "reconstructed_faces": 1440898,
+  "paired": 1433037,
+  "identical": 1415141,
   "aspects": {
     "ao": {
-      "faces": 6502,
-      "mean_delta": 45.51132984722649
+      "faces": 5094,
+      "mean_delta": 44.119879596911396
     },
     "blocklight": {
-      "faces": 40770,
-      "mean_delta": 4.069364728967378
+      "faces": 13344,
+      "mean_delta": 3.9159172661870505
     },
     "sunlight": {
       "faces": 0,
       "mean_delta": 0.0
     },
     "texture": {
-      "faces": 2,
+      "faces": 6,
       "mean_delta": null
     },
     "tint": {
@@ -26,76 +26,68 @@
       "mean_delta": null
     },
     "uv": {
-      "faces": 0,
+      "faces": 4,
       "mean_delta": null
     }
   },
   "missing": [
     [
       "minecraft:block/netherrack",
-      618
-    ],
-    [
-      "minecraft:block/lava_still",
-      269
+      138
     ],
     [
       "minecraft:block/lava_flow",
-      170
+      137
+    ],
+    [
+      "minecraft:block/lava_still",
+      114
     ],
     [
       "minecraft:block/soul_soil",
-      164
-    ],
-    [
-      "minecraft:block/soul_sand",
-      36
+      28
     ],
     [
       "minecraft:block/spawner",
       20
     ],
     [
-      "minecraft:block/nether_gold_ore",
-      6
+      "minecraft:block/soul_sand",
+      12
     ]
   ],
   "extra": [
     [
       "minecraft:block/netherrack",
-      27726
-    ],
-    [
-      "minecraft:block/lava_flow",
-      5406
+      6196
     ],
     [
       "minecraft:block/soul_soil",
-      3676
+      676
     ],
     [
       "minecraft:block/soul_sand",
-      2184
-    ],
-    [
-      "minecraft:block/bone_block_side",
-      868
+      608
     ],
     [
       "minecraft:block/lava_still",
-      321
+      162
+    ],
+    [
+      "minecraft:block/lava_flow",
+      89
     ],
     [
       "minecraft:block/nether_gold_ore",
-      270
+      82
+    ],
+    [
+      "minecraft:block/bone_block_side",
+      30
     ],
     [
       "minecraft:block/bone_block_top",
-      204
-    ],
-    [
-      "minecraft:block/nether_quartz_ore",
-      28
+      16
     ],
     [
       "minecraft:block/magma",
@@ -105,82 +97,12 @@
   "cells": [
     {
       "pos": [
-        -138,
-        82,
-        27
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 12,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        -40,
-        70,
-        54
+        25,
+        88,
+        95
       ],
       "missing": 8,
-      "extra": 4,
-      "differing": 0,
-      "aspects": []
-    },
-    {
-      "pos": [
-        -39,
-        84,
-        47
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 12,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        -37,
-        71,
-        62
-      ],
-      "missing": 7,
-      "extra": 5,
-      "differing": 0,
-      "aspects": []
-    },
-    {
-      "pos": [
-        -37,
-        76,
-        61
-      ],
-      "missing": 8,
-      "extra": 4,
-      "differing": 0,
-      "aspects": []
-    },
-    {
-      "pos": [
-        24,
-        86,
-        98
-      ],
-      "missing": 7,
-      "extra": 5,
-      "differing": 0,
-      "aspects": []
-    },
-    {
-      "pos": [
-        116,
-        84,
-        -100
-      ],
-      "missing": 7,
-      "extra": 5,
+      "extra": 8,
       "differing": 0,
       "aspects": []
     },
@@ -191,92 +113,95 @@
         -98
       ],
       "missing": 8,
-      "extra": 4,
+      "extra": 8,
       "differing": 0,
       "aspects": []
     },
     {
       "pos": [
-        -157,
-        66,
-        120
+        -40,
+        70,
+        54
       ],
-      "missing": 0,
-      "extra": 10,
+      "missing": 7,
+      "extra": 7,
       "differing": 0,
       "aspects": []
     },
     {
       "pos": [
-        -157,
-        69,
-        10
+        -40,
+        71,
+        55
       ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 10,
-      "aspects": [
-        "blocklight"
-      ]
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
     },
     {
       "pos": [
-        -157,
+        -37,
+        71,
+        62
+      ],
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        -37,
         76,
-        34
+        61
       ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 10,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        -156,
-        59,
-        4
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 10,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        -156,
-        60,
-        0
-      ],
-      "missing": 0,
-      "extra": 0,
-      "differing": 10,
-      "aspects": [
-        "blocklight"
-      ]
-    },
-    {
-      "pos": [
-        -155,
-        89,
-        2
-      ],
-      "missing": 0,
-      "extra": 10,
+      "missing": 7,
+      "extra": 7,
       "differing": 0,
       "aspects": []
     },
     {
       "pos": [
-        -155,
-        89,
-        5
+        24,
+        86,
+        98
       ],
-      "missing": 0,
-      "extra": 10,
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        26,
+        86,
+        95
+      ],
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        116,
+        84,
+        -100
+      ],
+      "missing": 7,
+      "extra": 7,
+      "differing": 0,
+      "aspects": []
+    },
+    {
+      "pos": [
+        116,
+        85,
+        -99
+      ],
+      "missing": 7,
+      "extra": 7,
       "differing": 0,
       "aspects": []
     }

@@ -124,3 +124,8 @@
 {"time": "2026-10-02T14:45:53", "commit": "26a2b8b", "fixture": "vanilla-edited", "args": [], "occupied": 75.2, "rendered": 98.93, "rendered_alike": 99.975, "exposed": 87.916, "solid_iou": 95.195, "surface": 99.941}
 {"time": "2026-10-02T14:47:16", "commit": "26a2b8b", "fixture": "vanilla", "args": [], "occupied": 75.244, "rendered": 98.937, "rendered_alike": 99.99, "exposed": 87.918, "solid_iou": 95.204, "surface": 99.941}
 {"time": "2026-10-02T14:47:19", "commit": "26a2b8b", "fixture": "superflat", "args": [], "occupied": 99.919, "rendered": 99.856, "rendered_alike": 100.0, "exposed": 99.874, "solid_iou": 99.996, "surface": 99.902}
+{"time": "2026-10-02T15:21:50", "commit": "49af38f", "fixture": "nether", "args": [], "occupied": 82.238, "rendered": 99.985, "rendered_alike": 99.985, "exposed": 87.915, "solid_iou": 94.071, "surface": 100.0}
+{"time": "2026-10-02T15:21:55", "commit": "49af38f", "fixture": "vanilla", "args": [], "occupied": 75.244, "rendered": 98.937, "rendered_alike": 99.99, "exposed": 87.918, "solid_iou": 95.204, "surface": 99.941}
+{"time": "2026-10-02T15:21:58", "commit": "49af38f", "fixture": "superflat", "args": [], "occupied": 99.919, "rendered": 99.856, "rendered_alike": 100.0, "exposed": 99.874, "solid_iou": 99.996, "surface": 99.902}
+{"time": "2026-10-02T15:22:01", "commit": "49af38f", "fixture": "end", "args": [], "occupied": 97.608, "rendered": 100.0, "rendered_alike": 100.0, "exposed": 100.0, "solid_iou": 100.0, "surface": 100.0}
+{"time": "2026-10-02T15:22:06", "commit": "49af38f", "fixture": "vanilla-edited", "args": [], "occupied": 75.2, "rendered": 98.93, "rendered_alike": 99.975, "exposed": 87.916, "solid_iou": 95.195, "surface": 99.941}

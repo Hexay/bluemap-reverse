@@ -1,5 +1,6 @@
 mod check_heights;
 mod copy_world;
+mod diff_render;
 mod explain;
 mod fetch;
 mod obj;
@@ -55,6 +56,9 @@ enum Cmd {
     /// Cross-check hires top faces against the lowres heightmap.
     #[command(hide = true)]
     CheckHeights(check_heights::Args),
+    /// Diff two renders of the same area face by face (original site vs re-rendered reconstruction).
+    #[command(hide = true)]
+    DiffRender(diff_render::Args),
     /// Score a reconstructed world against the original, block by block.
     Score(score::Args),
     /// Print block states (and biome) at world positions.
@@ -187,6 +191,7 @@ fn run(cmd: Cmd) -> Result<ExitCode> {
         Cmd::Fetch(a) => fetch::run(a),
         Cmd::Obj(a) => obj::run(a),
         Cmd::CheckHeights(a) => check_heights::run(a),
+        Cmd::DiffRender(a) => diff_render::run(a),
         Cmd::Score(a) => score::run(a),
         Cmd::Probe(a) => probe::run(a),
         Cmd::CopyWorld(a) => copy_world::run(a),

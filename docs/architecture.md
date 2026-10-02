@@ -70,8 +70,9 @@ only needed for render round-trip verification (see Roadmap).
 
 ```
 crates/
+  bmr-compress  gzip, zlib, zstd, lz4-java blocks: BlueMap storage + region chunk decompression
   bmr-fetch     scrape webroot → local mirror (settings, textures.json, hires .prbm, lowres .png)
-  bmr-prbm      PRBM parser, tile → world coordinates, OBJ export
+  bmr-prbm      PRBM parser, tile → world coordinates, OBJ export, render diff
   bmr-world     Anvil read/write (fastnbt), block registry, level.dat template, .schem export
   bmr-invert    signature library, face matching, evidence, look-alikes, tints
   bmr-fill      hidden-volume fill, game rules, biome recovery, seed-based regen merge
@@ -91,7 +92,8 @@ Dependency direction (no cycles):
 - `invert` → `fetch`, `prbm`, `world`
 - `seed` → `cubiomes`, `world`
 - `score` → `world`
-- `fetch`, `prbm`, `world`, `cubiomes` are leaves
+- `fetch`, `world` → `compress`
+- `compress`, `prbm`, `cubiomes` are leaves
 
 ## Scoring
 

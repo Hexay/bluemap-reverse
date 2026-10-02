@@ -13,6 +13,8 @@ All notable changes to this project are documented here. The format follows
 - `bmr seed` exits with status 3 when it finishes without a world seed (exit codes in `bmr --help`).
 - `--data-dir` on `fetch`, `pack list` and `pack fetch`; `BMR_HOME` sets the data dir for all of them.
 - LZ4-compressed region files (Minecraft 1.20.5+ `region-file-compression=lz4`) are read.
+- Sites whose host sends BlueMap's stored tiles as-is (SQL storage via `sql.php`, static hosts) are mirrored with
+  any storage compression: deflate, zstd and lz4 alongside gzip (was gzip only; zstd failed).
 - Render round-trip: `tools/roundtrip.py` relights and re-renders a fixture's reconstruction with BlueMap, and
   the hidden `bmr diff-render` diffs the two renders face by face (geometry, texture, tint, AO, light).
 

@@ -232,8 +232,16 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
   filled up to the mask). Two evidence bugs (`bmr-invert/src/evidence.rs`, `face.rs`): a cell with both a
   drawn face towards it and a missing one voted solid (a drawn face is proof, a missing one may be an imperfect
   match: `open` now overrides `solid`); and a flowing liquid's sloped surface wasn't seen as facing up, so the
-  cell above read as more liquid. After: 98.7% identical, 7.9k extra, blocklight 2.9% → 0.9%; occupied
-  82.15% → 82.24%. `end`: 99.99% identical.
+  cell above read as more liquid. After: 98.7% identical, 7.9k extra, blocklight 2.9% → 0.9%.
+- Then overhang (`bmr-invert/src/overhang.rs`): a floor fire's side planes land in the air beside it and match
+  as wall fire, whose model "overhangs" back, so the fake fire stripped the real fire's sides; the bare fire
+  then claimed its neighbours solid. Cells made only of explained overhang no longer claim; when two such
+  cells explain each other (a spawner's inner faces in all six neighbours), the one showing more of its
+  signature is the real block. `strip_foreign` tries dropping duplicate planes before own faces. Nether:
+  98.9% identical, extra 7.9k → 253 (as many missing: shape differences, not wrong blocks); occupied 82.26%.
+  The fill also keeps void under floating blocks as air when nothing below the cave cutoff was seen (the
+  first `dark_below` cut `debug` from 12% to 0.6% occupied). `end`: 99.99% identical.
+- `bmr explain --mirror <m> x,z` prints a column's matched blocks and fill evidence.
 
 ### Seed recovery bindings
 

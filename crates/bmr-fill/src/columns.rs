@@ -151,12 +151,17 @@ pub fn ring(r: i32) -> impl Iterator<Item = (i32, i32)> {
     (-r..=r).flat_map(move |dx| (-r..=r).map(move |dz| (dx, dz))).filter(move |(dx, dz)| dx.abs().max(dz.abs()) == r)
 }
 
-/// Lowest y of an air gap that stays air. Below `cave_y` BlueMap drops unlit faces, so cells under the
-/// gap's lowest open/liquid evidence are unknown, not empty: rock is far likelier than a dark void, and
-/// leaving them air carved shafts down to bedrock under every seabed (render round-trip, 2026-10-02).
+/// Lowest y of an air gap that stays air. Below `cave_y` BlueMap drops unlit faces, so when the gap's lowest
+/// open/liquid evidence is itself below `cave_y` (lit space seen under a seabed), the cells under it are
+/// unknown, not empty: rock is far likelier, and leaving them air carved shafts down to bedrock (render
+/// round-trip, 2026-10-02). Evidence only above `cave_y` with nothing drawn under it, where nothing is culled,
+/// means real open space: a build or island over void.
 fn dark_below(ce: &ColumnEvidence, ylo: i32, yhi: i32, cave_y: i32) -> i32 {
     let lowest = ce.open.iter().chain(ce.liquid.iter().map(|(y, _)| y)).filter(|y| (ylo..=yhi).contains(*y)).min();
-    lowest.map_or(yhi + 1, |&y| y).min(cave_y).max(ylo)
+    match lowest {
+        Some(&y) if y < cave_y => y.max(ylo),
+        _ => ylo,
+    }
 }
 
 fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Fill {

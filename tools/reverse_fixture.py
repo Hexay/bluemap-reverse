@@ -47,7 +47,7 @@ def main() -> None:
         "solid_iou": round(100.0 * r["solid"]["both"] / max(r["solid"]["original"] + r["solid"]["reconstructed"] - r["solid"]["both"], 1), 3),
         "surface": round(100.0 * r["surface"]["hits"] / max(r["surface"]["total"], 1), 3),
     }
-    with open(RESULTS / "history.jsonl", "a") as f:
+    with open(RESULTS / "history.jsonl", "a", newline="\n") as f:
         f.write(json.dumps(line) + "\n")
 
 

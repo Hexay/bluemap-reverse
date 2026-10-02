@@ -85,10 +85,10 @@ pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
         t.accumulate(wt);
         if windows.len() > 1 {
             progress!(
-                "  window {}/{} {:?}: {} tiles, {} columns",
+                "  window {}/{} region {}: {} tiles, {} columns",
                 i + 1,
                 windows.len(),
-                win.region,
+                win.region.map_or("all".to_string(), |(x, z)| format!("{x},{z}")),
                 win.tiles.len(),
                 win.columns.len()
             );

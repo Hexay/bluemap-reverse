@@ -12,6 +12,7 @@ All notable changes to this project are documented here. The format follows
 - Global `-q`/`--quiet`: progress lines off; results, warnings and errors still print.
 - `bmr seed` exits with status 3 when it finishes without a world seed (exit codes in `bmr --help`).
 - `--data-dir` on `fetch`, `pack list` and `pack fetch`; `BMR_HOME` sets the data dir for all of them.
+- LZ4-compressed region files (Minecraft 1.20.5+ `region-file-compression=lz4`) are read.
 
 ### Changed (breaking)
 
@@ -36,6 +37,8 @@ All notable changes to this project are documented here. The format follows
 - Release archives include the cubiomes license (`LICENSE-cubiomes`).
 - A malformed PRBM tile with an oversized group table is an error instead of an integer overflow.
 - Every command-line flag has help text; rustdoc warnings in bmr-cli.
+- Structure biome checks reject Minecraft versions newer than cubiomes knows instead of treating them as the newest.
+- Structure biome checks treat chunks outside the world border as not viable instead of overflowing.
 
 ## [0.1.0] - 2026-10-01
 

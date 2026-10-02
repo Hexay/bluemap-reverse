@@ -31,7 +31,14 @@ const VERSIONS: &[((u32, u32, u32), &str)] = &[
     ((26, 3, 0), "26.3"),
 ];
 
+/// Vanilla's world border radius in chunks (30M blocks); keeps cubiomes' block-coordinate maths far from i32 overflow.
+const MAX_CHUNK: i32 = 30_000_000 / 16;
+
 fn mc_id(version: (u32, u32, u32)) -> Option<c_int> {
+    let &((major, minor, _), _) = VERSIONS.last()?;
+    if (version.0, version.1) > (major, minor) {
+        return None;
+    }
     let (_, name) = VERSIONS.iter().rev().find(|(v, _)| *v <= version)?;
     let name = CString::new(*name).ok()?;
     // SAFETY: `name` is NUL-terminated and outlives the call; str2mc only strcmp's it against a static table.
@@ -60,7 +67,7 @@ pub struct Generator(NonNull<c_void>);
 unsafe impl Send for Generator {}
 
 impl Generator {
-    /// Unseeded until `apply_seed`; `None` for versions before 1.18.
+    /// Unseeded until `apply_seed`; `None` for versions before 1.18 or newer than cubiomes' table.
     pub fn new(version: (u32, u32, u32)) -> Option<Self> {
         let mc = mc_id(version)?;
         // SAFETY: `mc` is a 1.18+ id from str2mc, which setupGenerator handles; NULL (OOM) is checked below.
@@ -74,8 +81,11 @@ impl Generator {
     }
 
     /// Whether the biomes at a start chunk allow the structure (cubiomes' approximation of vanilla's check).
-    /// Meaningless (but sound) before `apply_seed`.
+    /// Meaningless (but sound) before `apply_seed`. Chunks outside the world border are never viable.
     pub fn is_viable(&mut self, structure: StructureType, chunk: (i32, i32)) -> bool {
+        if chunk.0.unsigned_abs() > MAX_CHUNK as u32 || chunk.1.unsigned_abs() > MAX_CHUNK as u32 {
+            return false;
+        }
         // SAFETY: `self.0` is live and exclusively borrowed (cubiomes mutates then restores it); `structure.0` comes
         // from the shim's table. Unseeded, g->dim is DIM_UNDEF and genBiomes errors instead of reading unseeded noise.
         unsafe { isViableStructurePos(structure.0, self.0.as_ptr(), chunk.0 * 16, chunk.1 * 16, 0) != 0 }

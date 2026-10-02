@@ -35,7 +35,8 @@ py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / Blu
   `bmr score work/worlds/superflat/world work/worlds/superflat-lz4/world` must be 100%.
 - Render round-trip: after `reverse_fixture.py <f>`, `py -3 tools/roundtrip.py <f>` relights the
   reconstruction, renders and mirrors it (`work/cache/<f>-roundtrip`) and diffs it face by face against the
-  original (`docs/results/<f>-roundtrip.json`). Overworld fixtures only.
+  original (`docs/results/<f>-roundtrip.json`). Any dimension; for the multi-map `dimensions` fixture pass the
+  pulled world (`--recon`).
 - Biomes: the `biomes` fixture (one patch per overworld biome, `py -3 tools/gen_biomes.py`, commands generated
   per version) is where packs learn biome tints; `bmr reverse` learns them from `work/cache/biomes` directly.
 

@@ -6,7 +6,7 @@ Layout: <toolchain>/bluemap/<name>/{config,data,web}; name defaults to the fixtu
 Map settings are BlueMap defaults (what public maps run) unless fixture.json has a "bluemap" object.
 --world renders another world (e.g. a reconstruction) with the fixture's map config; give it its own --name so
 it gets its own webroot. Map ids stay the fixture's, so a camera URL hash works on both sites.
---relight first resaves --world in the server over the fixture area: bmr writes no light data, and BlueMap
+--relight first resaves --world in the server over the fixture area (each of its dimensions): bmr writes no light data, and BlueMap
 skips/darkens unlit chunks.
 """
 import argparse
@@ -100,8 +100,8 @@ def main() -> None:
             ap.error("--relight needs --world")
         from resave_world import resave
 
-        area = json.loads((FIXTURES / args.fixture / "fixture.json").read_text())["area"]
-        if resave(args.world.resolve(), area, tc):
+        spec = json.loads((FIXTURES / args.fixture / "fixture.json").read_text())
+        if resave(args.world.resolve(), spec["area"], tc, fixture_dimensions(spec)):
             sys.exit("relight failed")
     base = configure(args.fixture, tc, args.world, args.name, args.port)
     flags = []

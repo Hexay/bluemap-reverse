@@ -9,11 +9,12 @@ import sys
 from pathlib import Path
 
 from console import Server
-from make_world import BASE_PROPERTIES, forceload_commands, wait_until_loaded
+from make_world import BASE_PROPERTIES, OVERWORLD, forceload_commands, wait_until_loaded
 from paths import DEFAULT, Toolchain
 
 
-def resave(world: Path, area: list[int], tc: Toolchain = DEFAULT) -> int:
+def resave(world: Path, area: list[int], tc: Toolchain = DEFAULT, dimensions: list[str] = (OVERWORLD,)) -> int:
+    """Force-loads `area` in each of `dimensions`."""
     server_dir = world.parent
     (server_dir / "eula.txt").write_text("eula=true\n")
     props = {**BASE_PROPERTIES, "level-name": world.name}
@@ -21,9 +22,10 @@ def resave(world: Path, area: list[int], tc: Toolchain = DEFAULT) -> int:
     server = Server(server_dir, tc=tc)
     try:
         server.wait_for(r"Done \(", timeout=600)
-        for cmd in forceload_commands(*area):
-            server.send(cmd)
-        wait_until_loaded(server, *area)
+        for dim in dimensions:
+            for cmd in forceload_commands(*area, dim):
+                server.send(cmd)
+            wait_until_loaded(server, *area, dim)
         server.query("save-all flush", r"Saved the game", timeout=300)
     finally:
         code = server.stop()

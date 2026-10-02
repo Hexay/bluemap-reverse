@@ -12,6 +12,7 @@ use crate::WorldArgs;
 
 #[derive(clap::Args)]
 pub struct Args {
+    /// World root (a reconstruction or any world)
     world: PathBuf,
     /// Write observations for `bmr seed` here
     #[arg(short, long)]

@@ -6,9 +6,11 @@ mod http;
 mod local;
 pub mod lowres;
 mod mirror;
+mod progress;
 pub mod settings;
 pub mod store;
 
 pub use http::Http;
 pub use local::LocalMap;
 pub use mirror::{MapSummary, Options, mirror};
+pub use progress::{OnProgress, Progress};

@@ -18,7 +18,7 @@ def main() -> None:
     original = WORLDS / fixture / "world"
     copy = WORK / "out" / f"{fixture}-copy" / "world"
     shutil.rmtree(copy.parent, ignore_errors=True)
-    subprocess.run([bmr_exe(),"copy-world", original, copy], check=True, cwd=ROOT)
+    subprocess.run([bmr_exe(),"copy-world", original, "-o", copy], check=True, cwd=ROOT)
     area = json.loads((ROOT / "fixtures" / fixture / "fixture.json").read_text())["area"]
     # 2-chunk margin: worldgen finishes chunks beyond the force-loaded area
     area = [area[0] - 32, area[1] - 32, area[2] + 32, area[3] + 32]

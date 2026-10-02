@@ -24,7 +24,7 @@ def run_case(bmr: str, name: str, args: list[str], update: bool) -> bool:
     ref = WORK / "ref" / name / "world"
     out = WORK / "out" / f"equiv-{name}" / "world"
     shutil.rmtree(out.parent, ignore_errors=True)
-    subprocess.run([bmr, "reverse", *args[:2], str(out), *args[2:]], check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
+    subprocess.run([bmr, "reverse", *args, "-o", str(out)], check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
     if update:
         shutil.rmtree(ref.parent, ignore_errors=True)
         shutil.copytree(out.parent, ref.parent)

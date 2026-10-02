@@ -22,12 +22,12 @@ def main() -> None:
     make_world(FIXTURE, False, tc)
     original = tc.worlds / FIXTURE / "world"
     out_dir = tc.work / "out" / "check-dimensions"
-    pulled, _ = pull_fixture(FIXTURE, tc, out_dir)
+    pulled, mirror_dir, _ = pull_fixture(FIXTURE, tc, out_dir)
     ok = True
     for map_id, dim in MAPS.items():
         report = out_dir / f"score-{map_id}.json"
         subprocess.run(
-            [bmr_exe(), "score", original, pulled, "--mirror", out_dir / "cache", "--map", map_id,
+            [bmr_exe(), "score", original, pulled, "--mirror", mirror_dir, "--map", map_id,
              "--dimension", dim, "--json", report],
             cwd=ROOT, check=True, stdout=subprocess.DEVNULL,
         )

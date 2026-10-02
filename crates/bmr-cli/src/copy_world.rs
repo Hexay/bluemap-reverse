@@ -11,7 +11,10 @@ pub const DEFAULT_TEMPLATE: &str = "work/worlds/template-void/world";
 
 #[derive(clap::Args)]
 pub struct Args {
+    /// World root to copy
     source: PathBuf,
+    /// Output world dir (must not exist)
+    #[arg(short, long)]
     out: PathBuf,
     /// World whose level.dat/data seed the output
     #[arg(long, default_value = DEFAULT_TEMPLATE)]

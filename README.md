@@ -10,7 +10,7 @@ No server, no Java, no BlueMap install, just one binary.
 [![CI](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml/badge.svg)](https://github.com/Hexay/bluemap-reverse/actions/workflows/ci.yml)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange?logo=rust)](https://www.rust-lang.org/)
-[![Minecraft 1.18+](https://img.shields.io/badge/minecraft-1.18%2B-62b47a)](#supported-versions)
+[![Minecraft 1.21.4+](https://img.shields.io/badge/minecraft-1.21.4%2B-62b47a)](#supported-versions)
 [![BlueMap 5.27](https://img.shields.io/badge/bluemap-5.27-2c6fbb)](https://bluemap.bluecolored.de/)
 
 [Install](#installation) · [Quick start](#quick-start) · [Accuracy](#accuracy) · [How it works](#how-it-works) ·
@@ -47,7 +47,8 @@ Extract `world.zip` into `.minecraft/saves/` and open it.
 
 Download the archive for your platform from the [latest release][latest] (Windows, Linux, macOS on Intel or
 Apple silicon), extract it and run `bmr` from that folder. The bundled `packs/` folder covers the
-[supported versions](#supported-versions) offline; other packs download on demand.
+[supported versions](#supported-versions) offline; other packs download on demand. The Linux build needs
+glibc 2.35+ and OpenSSL 3 (`libssl3`), both standard from Ubuntu 22.04 and Debian 12.
 
 To build it yourself, see [Building from source](#building-from-source).
 
@@ -57,19 +58,23 @@ To build it yourself, see [Building from source](#building-from-source).
 bmr pull https://map.example.com/ -o world.zip            # mirror + check + reconstruct + zip
 bmr pull https://map.example.com/ --map world_nether      # only one of the site's maps
 bmr pull https://map.example.com/ --schem build.schem     # also a schematic (overworld, else the first map)
-bmr schem <world> part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
+bmr schem <world> -o part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
 ```
+
+Downloads (site mirrors, packs) are kept in a per-user data dir: `%LOCALAPPDATA%\bluemap-reverse` on Windows,
+`~/Library/Application Support/bluemap-reverse` on macOS, `~/.local/share/bluemap-reverse` (or
+`$XDG_DATA_HOME`) elsewhere. Set `BMR_HOME` or pass `--cache-dir <dir>` to put it somewhere else.
 
 ### Packs
 
 A pack (~0.3 MB) holds what reconstruction needs for one Minecraft + BlueMap version: block signatures, biome
 tints, the block registry and an empty world template. `pull` fingerprints the site's texture list, picks the
-matching pack from `./packs`, `packs/` next to the binary or the [online index][packs-release], and downloads it
-if needed.
+matching pack from `packs/` next to the binary, `./packs`, the data dir or the [online index][packs-release], and
+downloads it into the data dir if needed.
 
 ```sh
 bmr pack list                    # installed and available packs
-bmr pack fetch <mc-version|all>  # download ahead of time
+bmr pack fetch <mc-version|all>  # download ahead of time (into the data dir)
 bmr pull … --offline             # never touch the index
 ```
 
@@ -83,6 +88,8 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 | `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
 | `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |
+| `--cache-dir <dir>` | `$BMR_HOME` or the data dir | Where mirrors (`<dir>/cache`) and downloaded packs (`<dir>/packs`) go. |
+| `-q`, `--quiet` | off | Only results, warnings and errors. |
 | `--offline` | off | Use installed packs only. |
 | `--force` | off | Use a pack even when it doesn't fit the site. |
 
@@ -111,7 +118,7 @@ Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27)
 
 ## How it works
 
-1. **Mirror.** Download the site's settings, textures and hires/lowres tiles into `work/cache/<site>`.
+1. **Mirror.** Download the site's settings, textures and hires/lowres tiles into `<data dir>/cache/<site>`.
 2. **Decode.** Parse BlueMap's PRBM tile meshes into faces with textures, tints, light and positions.
 3. **Invert.** Match each block's faces against signatures learned from BlueMap's render of every block state,
    then apply game rules to pick between candidates.
@@ -141,8 +148,8 @@ Prebuilt packs, all for BlueMap 5.27:
 | 1.21.8 | `bmr-mc1.21.8-bluemap5.27.pack` |
 | 1.21.4 | `bmr-mc1.21.4-bluemap5.27.pack` |
 
-Packs for any other 1.18+ version can be built unattended in about two minutes
-([docs/development.md](docs/development.md#packs)).
+These are the versions tested end to end. Packs for any other 1.18+ version can be built unattended in about
+two minutes ([docs/development.md](docs/development.md#packs)), but are untested.
 
 ## Building from source
 

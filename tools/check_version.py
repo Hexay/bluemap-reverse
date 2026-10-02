@@ -29,7 +29,7 @@ def main() -> None:
     original = tc.worlds / FIXTURE / "world"
 
     out_dir = tc.work / "out" / "check"
-    pulled, pull_log = pull_fixture(FIXTURE, tc, out_dir)
+    pulled, mirror_dir, pull_log = pull_fixture(FIXTURE, tc, out_dir)
     expected = f"bmr-mc{tc.mc}-bluemap{tc.bluemap}.pack"
     # the ranking line marked with an arrow and naming a .pack (the progress lines have arrows too)
     chosen = next((l for l in pull_log.splitlines() if ".pack:" in l and "→" in l.split(".pack:")[0]), "")
@@ -38,7 +38,7 @@ def main() -> None:
 
     report = out_dir / "score.json"
     subprocess.run(
-        [bmr_exe(), "score", original, pulled, "--mirror", out_dir / "cache", "--blocks", tc.blocks_json, "--json", report],
+        [bmr_exe(), "score", original, pulled, "--mirror", mirror_dir, "--blocks", tc.blocks_json, "--json", report],
         cwd=ROOT, check=True, stdout=subprocess.DEVNULL,
     )
     r = json.loads(report.read_text())

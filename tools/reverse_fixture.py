@@ -24,7 +24,7 @@ def main() -> None:
     shutil.rmtree(out.parent, ignore_errors=True)
     spec = json.loads((FIXTURES / fixture / "fixture.json").read_text())
     dim = ["--dimension", spec["dimension"]] if "dimension" in spec else []
-    subprocess.run([bmr_exe(), "reverse", "--mirror", mirror, out, *dim, *extra], check=True, cwd=ROOT)
+    subprocess.run([bmr_exe(), "reverse", "--mirror", mirror, "-o", out, *dim, *extra], check=True, cwd=ROOT)
 
     RESULTS.mkdir(exist_ok=True)
     report = RESULTS / f"{fixture}.json"

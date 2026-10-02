@@ -9,37 +9,57 @@ use bmr_pack::{Index, Pack, Source};
 
 use crate::{LibraryArgs, WorldArgs};
 use crate::pack_source::{IndexArgs, candidates, download, fetch_index, find_packs};
+use crate::paths::DataArgs;
 
 #[derive(clap::Subcommand)]
 pub enum Cmd {
     /// Build a pack from work/cache/debug + work/worlds/debug + the void template
     Build(Box<BuildArgs>),
     /// Show a pack's versions and size breakdown
-    Info { pack: PathBuf },
+    Info {
+        /// Pack file
+        pack: PathBuf,
+    },
     /// Write the groups of states that render identically (indistinguishable from tiles) as JSON
-    Lookalikes { pack: PathBuf, out: PathBuf },
+    Lookalikes {
+        /// Pack file
+        pack: PathBuf,
+        /// Output .json file
+        #[arg(short, long)]
+        out: PathBuf,
+    },
     /// Write index.json for the packs in a folder (publish it next to them)
     Index {
+        /// Folder of .pack files
         #[arg(default_value = "packs")]
         dir: PathBuf,
     },
     /// Installed and indexed packs
-    List(IndexArgs),
-    /// Download packs from the index: a Minecraft version, or `all`
+    List {
+        #[command(flatten)]
+        index: IndexArgs,
+        #[command(flatten)]
+        data: DataArgs,
+    },
+    /// Download packs from the index into the data dir
     Fetch {
+        /// Minecraft version, or `all`
         mc_version: String,
         #[command(flatten)]
         index: IndexArgs,
+        #[command(flatten)]
+        data: DataArgs,
     },
 }
 
 #[derive(clap::Args)]
 pub struct BuildArgs {
-    /// Output file [default: packs/bmr-mc<version>-bluemap<version>.pack]
+    /// Output file [default: packs/bmr-mcMC-bluemapBLUEMAP.pack]
     #[arg(short, long)]
     out: Option<PathBuf>,
+    /// Minecraft version the debug world was generated with
     #[arg(long, default_value = "26.3")]
-    mc_version: String,
+    mc: String,
     #[command(flatten)]
     library: LibraryArgs,
     #[command(flatten)]
@@ -52,8 +72,8 @@ pub fn run(cmd: Cmd) -> Result<()> {
         Cmd::Info { pack } => info(&pack),
         Cmd::Lookalikes { pack, out } => lookalikes(&pack, &out),
         Cmd::Index { dir } => index(&dir),
-        Cmd::List(a) => list(&a),
-        Cmd::Fetch { mc_version, index } => fetch(&mc_version, &index),
+        Cmd::List { index, data } => list(&index, &data.data_dir()?),
+        Cmd::Fetch { mc_version, index, data } => fetch(&mc_version, &index, &data.data_dir()?),
     }
 }
 
@@ -62,7 +82,7 @@ fn build(a: BuildArgs) -> Result<()> {
     let registry = a.world_args.registry()?.context("pack build needs the block registry (tools/setup.py)")?;
     let (lib_map, lib_world) = a.library.library_sources(&registry)?;
     let biomes = a.library.biomes_or_warn(&registry);
-    let pack = Pack::build(&lib_map, &lib_world, registry, &a.library.template, &a.mc_version, biomes.as_ref().map(|(m, w)| (m, w)))?;
+    let pack = Pack::build(&lib_map, &lib_world, registry, &a.library.template, &a.mc,biomes.as_ref().map(|(m, w)| (m, w)))?;
     let out = a.out.unwrap_or_else(|| {
         PathBuf::from("packs").join(format!("bmr-mc{}-bluemap{}.pack", pack.meta.mc_version, pack.meta.bluemap_version))
     });
@@ -126,8 +146,8 @@ fn index(dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn list(a: &IndexArgs) -> Result<()> {
-    let (all, notes) = candidates(a);
+fn list(a: &IndexArgs, data_dir: &Path) -> Result<()> {
+    let (all, notes) = candidates(a, data_dir);
     for c in &all {
         let where_ = match &c.source {
             Source::Installed(p) => p.display().to_string(),
@@ -139,20 +159,20 @@ fn list(a: &IndexArgs) -> Result<()> {
     Ok(())
 }
 
-fn fetch(mc_version: &str, a: &IndexArgs) -> Result<()> {
+fn fetch(mc_version: &str, a: &IndexArgs, data_dir: &Path) -> Result<()> {
     let index = fetch_index(&a.pack_index)?;
     let wanted: Vec<_> = index.usable().filter(|e| mc_version == "all" || e.mc_version == mc_version).collect();
     if wanted.is_empty() {
         let have: Vec<&str> = index.usable().map(|e| e.mc_version.as_str()).collect();
         bail!("no pack for Minecraft {mc_version} in the index (has: {})", have.join(", "));
     }
-    let installed = find_packs();
+    let installed = find_packs(data_dir);
     for e in wanted {
         if installed.iter().any(|p| p.file_name().is_some_and(|n| n.to_string_lossy() == e.file)) {
             println!("ok      {}", e.file);
             continue;
         }
-        println!("fetched {}", download(&a.pack_index, e)?.display());
+        println!("fetched {}", download(&a.pack_index, e, data_dir)?.display());
     }
     Ok(())
 }

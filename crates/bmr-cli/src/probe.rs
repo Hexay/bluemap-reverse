@@ -6,6 +6,7 @@ use crate::WorldArgs;
 
 #[derive(clap::Args)]
 pub struct Args {
+    /// World root
     world: PathBuf,
     /// One or more x,y,z positions
     #[arg(required = true, allow_hyphen_values = true)]

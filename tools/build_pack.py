@@ -63,7 +63,7 @@ def main() -> None:
         code = subprocess.call(
             [
                 bmr_exe(), "pack", "build",
-                "--mc-version", tc.mc,
+                "--mc", tc.mc,
                 "--library-mirror", tc.cache / "debug",
                 "--library-world", tc.worlds / "debug" / "world",
                 "--template", tc.worlds / "template-void" / "world",

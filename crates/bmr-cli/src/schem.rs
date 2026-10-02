@@ -10,8 +10,10 @@ use crate::WorldArgs;
 
 #[derive(clap::Args)]
 pub struct Args {
+    /// World root
     world: PathBuf,
     /// Output .schem file
+    #[arg(short, long)]
     out: PathBuf,
     /// Columns x0,z0,x1,z1 (inclusive) [default: every region file of the world]
     // no num_args: clap counts it before splitting on commas, so "--area=a,b,c,d" would be one value

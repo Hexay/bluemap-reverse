@@ -10,6 +10,7 @@ use bmr_fill::Profile;
 use bmr_invert::timings::Timings;
 
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
+use crate::ui::progress;
 use crate::{LibraryArgs, MirrorArgs, WorldArgs};
 
 #[derive(clap::Args)]
@@ -17,6 +18,7 @@ pub struct Args {
     #[command(flatten)]
     mirror: MirrorArgs,
     /// Output world dir (must not exist)
+    #[arg(short, long)]
     out: PathBuf,
     #[command(flatten)]
     library: LibraryArgs,
@@ -47,9 +49,10 @@ pub struct OptionArgs {
     /// Halo around each region window, in blocks
     #[arg(long, default_value_t = 32)]
     halo: i32,
-    /// Build height [default: the dimension's]
+    /// Lowest block y [default: the dimension's]
     #[arg(long, allow_hyphen_values = true)]
     min_y: Option<i32>,
+    /// Highest block y [default: the dimension's]
     #[arg(long, allow_hyphen_values = true)]
     max_y: Option<i32>,
     /// The map's BlueMap `remove-caves-below-y`, not published by the site [default: BlueMap's for the
@@ -93,7 +96,7 @@ pub fn run(a: Args) -> Result<()> {
     let style = lib_world.palette_style()?.context("library world has no palettes")?;
     let lib = t.time("library", || Library::build(&lib_map, &lib_world, &registry))?;
     t.extend("library", lib.stats.timings.clone());
-    println!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
+    progress!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
     let biome_tints = t.time("biome_tints", || match a.library.biomes_or_warn(&registry) {
         Some((m, w)) => bmr_invert::tints::learn(&m, &w),
         None => Ok(Vec::new()),

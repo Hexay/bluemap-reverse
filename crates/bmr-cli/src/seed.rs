@@ -1,6 +1,7 @@
 //! `bmr seed`: crack the world seed from observed structure starts (docs/seed.md).
 
 use std::path::PathBuf;
+use std::process::ExitCode;
 
 use anyhow::{Context, Result};
 use bmr_seed::{Observation, crack, default_max_misses};
@@ -27,15 +28,19 @@ struct Input {
     structures: Vec<Observation>,
 }
 
-pub fn run(a: Args) -> Result<()> {
+/// Exit status when the crack finishes without a single world seed.
+const NO_SEED: u8 = 3;
+
+pub fn run(a: Args) -> Result<ExitCode> {
     let bytes = std::fs::read(&a.observations).with_context(|| format!("reading {}", a.observations.display()))?;
     let input: Input = serde_json::from_slice(&bytes)?;
     let mc = a.mc.or(input.mc).context("Minecraft version unknown: pass --mc")?;
     let max_misses = a.max_misses.unwrap_or_else(|| default_max_misses(input.structures.len()));
     let report = crack(&mc, &input.structures, max_misses)?;
+    let status = if report.world_seed.is_some() { ExitCode::SUCCESS } else { ExitCode::from(NO_SEED) };
     if a.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
-        return Ok(());
+        return Ok(status);
     }
     println!(
         "{} observations, <={:.0} bits, <={} misses, {} low-bit survivors",
@@ -58,5 +63,5 @@ pub fn run(a: Args) -> Result<()> {
         }
         (None, false) => println!("no single world seed: add structures in more biomes"),
     }
-    Ok(())
+    Ok(status)
 }

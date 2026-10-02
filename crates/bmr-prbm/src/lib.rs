@@ -1,5 +1,6 @@
-//! BlueMap hires tile (PRBM) decoding, texture table, OBJ debug export.
+//! BlueMap hires tile (PRBM) decoding, texture table, OBJ debug export, render diff.
 
+pub mod diff;
 pub mod obj;
 mod parse;
 mod reader;

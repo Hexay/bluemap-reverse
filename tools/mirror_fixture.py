@@ -51,18 +51,21 @@ def serving(base: Path, tc: Toolchain = DEFAULT):
         server.wait(30)
 
 
-def render(fixture: str, tc: Toolchain = DEFAULT, force: bool = False) -> Path:
-    """Configure + render `fixture`; returns its BlueMap dir. Exits on a failed render."""
-    base = configure(fixture, tc)
+def render(fixture: str, tc: Toolchain = DEFAULT, force: bool = False, world: Path | None = None,
+           name: str | None = None) -> Path:
+    """Configure + render `fixture` (or `world` with its map config, see render_serve.configure); returns the
+    BlueMap dir. Exits on a failed render."""
+    base = configure(fixture, tc, world, name)
     if bluemap(base, *(["-r", "-f"] if force else ["-r"]), tc=tc).wait():
         sys.exit("render failed")
     return base
 
 
-def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False) -> int:
-    """Render + serve + fetch; returns bmr's exit code. Output: tc.cache / fixture."""
-    base = render(fixture, tc, force_render)
-    out = tc.cache / fixture
+def mirror(fixture: str, tc: Toolchain = DEFAULT, force_render: bool = False, world: Path | None = None,
+           name: str | None = None) -> int:
+    """Render + serve + fetch; returns bmr's exit code. Output: tc.cache / (name or fixture)."""
+    base = render(fixture, tc, force_render, world, name)
+    out = tc.cache / (name or fixture)
     shutil.rmtree(out, ignore_errors=True)
     with serving(base, tc):
         return subprocess.call([bmr_exe(), "fetch", URL, "--out", out, "--concurrency", "8", "--delay-ms", "0"], cwd=ROOT)

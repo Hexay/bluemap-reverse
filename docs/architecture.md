@@ -128,7 +128,7 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
 | 7 | invert v2: liquids, connected blocks, variants, redstone power, block entities, double chests | Done |
 | 8 | `bmr-fill`: priors, biome recovery from tints | Done |
 | 9 | `bmr-seed`: structures → lower 48 bits, cubiomes → upper 16; regen + merge | Done |
-| 10 | Render round-trip (re-render our output, diff tiles face-by-face) + blocklight/AO inference for hidden light sources and cavities | Open |
+| 10 | Render round-trip (re-render our output, diff tiles face-by-face) + blocklight/AO inference for hidden light sources and cavities | Measuring (`tools/roundtrip.py`); inference open |
 
 ## Known ambiguities (accept, then use priors)
 
@@ -209,6 +209,20 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
   format 5); nether from surface markers voted per 4×4×4 cell; end by distance from the main island.
   Vanilla 2.5% → 94.3%, nether 0 → 73.6%, end 100%. Cave biomes (underground) take their column's surface
   biome. Every rendered chunk is written, even if empty (else the game generates it with template biomes).
+
+### Render round-trip (2026-10-02)
+
+- `tools/roundtrip.py` copies a reconstruction, resaves it in the server (bmr writes no light), renders it with
+  the fixture's map config and diffs it against the original mirror (`bmr diff-render`, `bmr-prbm/src/diff.rs`).
+  Faces pair by geometry; faces looking into columns the original didn't render are skipped (the
+  reconstruction ends there, so BlueMap draws its outer walls). Reports in `docs/results/<fixture>-roundtrip.json`.
+- `superflat`: every face pairs, identical except sunlight on the underside of the bedrock floor (light below
+  the world, unseen).
+- `vanilla-edited`: 99.82% of original faces pair, 87% identical. Above the cave cutoff (y 55) almost nothing
+  is missing or extra; below it the reconstruction draws ~95k extra faces (31k bedrock undersides at y -64,
+  stone/deepslate around filled caves), because cave culling keys on sky light, which our fill changes.
+  Sunlight differs on 11.6% of paired faces, AO on 1.2%, blocklight on 0.15% (hidden light sources): the
+  inputs for the inference half of phase 10.
 
 ### Seed recovery bindings
 

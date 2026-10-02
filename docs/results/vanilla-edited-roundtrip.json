@@ -1,0 +1,355 @@
+{
+  "edge_faces": 294072,
+  "original_faces": 951564,
+  "reconstructed_faces": 1047802,
+  "paired": 949874,
+  "identical": 828065,
+  "aspects": {
+    "ao": {
+      "faces": 11068,
+      "mean_delta": 43.855920973376705
+    },
+    "blocklight": {
+      "faces": 1415,
+      "mean_delta": 2.1915194346289755
+    },
+    "sunlight": {
+      "faces": 110195,
+      "mean_delta": 6.9688824356821994
+    },
+    "texture": {
+      "faces": 120,
+      "mean_delta": null
+    },
+    "tint": {
+      "faces": 1150,
+      "mean_delta": null
+    },
+    "uv": {
+      "faces": 0,
+      "mean_delta": null
+    }
+  },
+  "missing": [
+    [
+      "minecraft:block/stone",
+      830
+    ],
+    [
+      "minecraft:block/water_still",
+      290
+    ],
+    [
+      "minecraft:block/diorite",
+      110
+    ],
+    [
+      "minecraft:block/sand",
+      106
+    ],
+    [
+      "minecraft:block/granite",
+      90
+    ],
+    [
+      "minecraft:block/andesite",
+      88
+    ],
+    [
+      "minecraft:block/kelp_plant",
+      58
+    ],
+    [
+      "minecraft:block/dirt",
+      30
+    ],
+    [
+      "minecraft:block/tall_seagrass_top",
+      20
+    ],
+    [
+      "minecraft:block/coal_ore",
+      12
+    ],
+    [
+      "minecraft:block/iron_ore",
+      10
+    ],
+    [
+      "minecraft:block/water_flow",
+      10
+    ],
+    [
+      "minecraft:block/deepslate",
+      8
+    ],
+    [
+      "minecraft:block/copper_ore",
+      6
+    ],
+    [
+      "minecraft:block/gravel",
+      6
+    ]
+  ],
+  "extra": [
+    [
+      "minecraft:block/bedrock",
+      32894
+    ],
+    [
+      "minecraft:block/stone",
+      31438
+    ],
+    [
+      "minecraft:block/deepslate",
+      23190
+    ],
+    [
+      "minecraft:block/water_flow",
+      7140
+    ],
+    [
+      "minecraft:block/sand",
+      654
+    ],
+    [
+      "minecraft:block/water_still",
+      608
+    ],
+    [
+      "minecraft:block/granite",
+      424
+    ],
+    [
+      "minecraft:block/dirt",
+      416
+    ],
+    [
+      "minecraft:block/andesite",
+      392
+    ],
+    [
+      "minecraft:block/diorite",
+      350
+    ],
+    [
+      "minecraft:block/kelp",
+      120
+    ],
+    [
+      "minecraft:block/gravel",
+      94
+    ],
+    [
+      "minecraft:block/deepslate_top",
+      60
+    ],
+    [
+      "minecraft:block/cut_sandstone",
+      46
+    ],
+    [
+      "minecraft:block/copper_ore",
+      24
+    ]
+  ],
+  "cells": [
+    {
+      "pos": [
+        -15,
+        48,
+        128
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 36,
+      "aspects": [
+        "sunlight"
+      ]
+    },
+    {
+      "pos": [
+        -156,
+        48,
+        68
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 36,
+      "aspects": [
+        "sunlight"
+      ]
+    },
+    {
+      "pos": [
+        -153,
+        26,
+        -106
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "sunlight"
+      ]
+    },
+    {
+      "pos": [
+        -147,
+        43,
+        -138
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 18,
+      "aspects": [
+        "sunlight"
+      ]
+    },
+    {
+      "pos": [
+        -146,
+        43,
+        -139
+      ],
+      "missing": 0,
+      "extra": 0,
+      "differing": 18,
+      "aspects": [
+        "sunlight"
+      ]
+    },
+    {
+      "pos": [
+        -145,
+        44,
+        -140
+      ],
+      "missing": 2,
+      "extra": 4,
+      "differing": 12,
+      "aspects": [
+        "ao",
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        23,
+        -39
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        60,
+        24,
+        -39
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        61,
+        22,
+        -40
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        61,
+        23,
+        -40
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        74,
+        27,
+        -33
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        75,
+        26,
+        -34
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        75,
+        27,
+        -34
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        76,
+        28,
+        -34
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "blocklight"
+      ]
+    },
+    {
+      "pos": [
+        122,
+        37,
+        -6
+      ],
+      "missing": 0,
+      "extra": 2,
+      "differing": 16,
+      "aspects": [
+        "sunlight"
+      ]
+    }
+  ]
+}

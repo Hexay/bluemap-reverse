@@ -220,11 +220,16 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
   reconstruction ends there, so BlueMap draws its outer walls). Reports in `docs/results/<fixture>-roundtrip.json`.
 - `superflat`: every face pairs, identical except sunlight on the underside of the bedrock floor (light below
   the world, unseen).
-- `vanilla-edited`: 99.82% of original faces pair, 87% identical. Above the cave cutoff (y 55) almost nothing
-  is missing or extra; below it the reconstruction draws ~95k extra faces (31k bedrock undersides at y -64,
-  stone/deepslate around filled caves), because cave culling keys on sky light, which our fill changes.
-  Sunlight differs on 11.6% of paired faces, AO on 1.2%, blocklight on 0.15% (hidden light sources): the
-  inputs for the inference half of phase 10.
+- `vanilla-edited`: 99.82% of original faces pair, 87% identical; above the cave cutoff (y 55) almost nothing
+  is missing or extra. The ~98k extra faces below it were mostly air gaps the fill ran down to bedrock under
+  seabeds (one open cell at the top made the whole gap air). Fix: air gaps turn solid below their lowest
+  evidence and the cutoff (`bmr-fill/src/columns.rs`, `dark_below`): extra faces 98k → 59k, vanilla occupied
+  74.4% → 75.2%, solid IoU 94.1% → 95.2%; superflat loses 4 cells (dark air inside builds now reads solid).
+- Left: 31k bedrock undersides at y -64 and sunlight on 11.6% of paired faces are relight artifacts of the
+  round trip (light below the world), not fill errors. AO 1.3% and blocklight 0.15% (hidden light sources)
+  are the inputs for the inference half of phase 10.
+- `nether`: 99.91% pair, 96.7% identical; 41k extra faces at y 48..95 (air where the original has netherrack,
+  near the roof mask) and blocklight on 2.9% (hidden lava). `end`: 99.99% identical.
 
 ### Seed recovery bindings
 

@@ -2,7 +2,8 @@
 //! Streaming per column instead of a 3D flood: memory scales with columns, not voxels.
 //! A gap is one connected unseen volume vertically, so its evidence applies to all of it:
 //! liquid evidence without solid → liquid; solid evidence outweighing open → solid; else air.
-//! Cave caveat: below `remove-caves-below-y`, dark air also loses faces, so dark caves read as solid.
+//! Cave caveat: below `remove-caves-below-y`, dark air also loses faces, so dark caves read as solid
+//! (`dark_below`).
 
 use bmr_invert::evidence::Evidence;
 use bmr_invert::face::Liquid;
@@ -118,7 +119,14 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
                         // open to the sky: anything in it would show its top face
                         push(ylo, yhi, Fill::Air);
                     } else {
-                        push(ylo, yhi, classify(ce, ylo, yhi));
+                        match classify(ce, ylo, yhi) {
+                            Fill::Air => {
+                                let cut = dark_below(ce, ylo, yhi, p.cave_y);
+                                push(cut, yhi, Fill::Air);
+                                push(ylo, cut - 1, Fill::Solid);
+                            }
+                            fill => push(ylo, yhi, fill),
+                        }
                     }
                 }
             }
@@ -143,6 +151,14 @@ pub fn ring(r: i32) -> impl Iterator<Item = (i32, i32)> {
     (-r..=r).flat_map(move |dx| (-r..=r).map(move |dz| (dx, dz))).filter(move |(dx, dz)| dx.abs().max(dz.abs()) == r)
 }
 
+/// Lowest y of an air gap that stays air. Below `cave_y` BlueMap drops unlit faces, so cells under the
+/// gap's lowest open/liquid evidence are unknown, not empty: rock is far likelier than a dark void, and
+/// leaving them air carved shafts down to bedrock under every seabed (render round-trip, 2026-10-02).
+fn dark_below(ce: &ColumnEvidence, ylo: i32, yhi: i32, cave_y: i32) -> i32 {
+    let lowest = ce.open.iter().chain(ce.liquid.iter().map(|(y, _)| y)).filter(|y| (ylo..=yhi).contains(*y)).min();
+    lowest.map_or(yhi + 1, |&y| y).min(cave_y).max(ylo)
+}
+
 fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Fill {
     let inside = |y: &i32| (ylo..=yhi).contains(y);
     let solid = ce.solid.iter().filter(|y| inside(y)).count();
@@ -154,3 +170,7 @@ fn classify(ce: &ColumnEvidence, ylo: i32, yhi: i32) -> Fill {
         _ => Fill::Air,
     }
 }
+
+#[cfg(test)]
+#[path = "columns_tests.rs"]
+mod tests;

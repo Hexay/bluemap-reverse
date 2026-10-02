@@ -213,7 +213,7 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
 ### Render round-trip (2026-10-02)
 
 - `tools/roundtrip.py` copies a reconstruction, resaves it in the server (bmr writes no light), renders it with
-  the fixture's map config and diffs it against the original mirror (`bmr diff-render`, `bmr-prbm/src/diff.rs`).
+  the fixture's map config and diffs it against the original mirror (`bmr diff-render`, `bmr-prbm/src/diff/`).
   Faces pair by geometry; faces looking into columns the original didn't render are skipped (the
   reconstruction ends there, so BlueMap draws its outer walls). Reports in `docs/results/<fixture>-roundtrip.json`.
 - `superflat`: every face pairs, identical except sunlight on the underside of the bedrock floor (light below

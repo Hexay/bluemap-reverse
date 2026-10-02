@@ -70,6 +70,10 @@ fn liquid_faces_classify_by_plane() {
     assert_eq!(horizontal(WATER, 56).liquid_dir(), Some((0, 1, 0)));
     assert_eq!(horizontal(WATER, 0).liquid_dir(), Some((0, -1, 0)));
     assert_eq!(side(WATER, (0, 0, -1)).liquid_dir(), Some((0, 0, -1)));
+    // flowing surface: one corner at full height (the nether lava case from the render round-trip)
+    let mut sloped = horizontal("minecraft:block/lava_still", 56);
+    sloped.verts[1][1] = 64;
+    assert_eq!(sloped.liquid_dir(), Some((0, 1, 0)));
     assert_eq!(horizontal("minecraft:block/lava_flow", 56).liquid(), Some(Liquid::Lava));
     assert_eq!(horizontal(STONE, 56).liquid(), None);
 }

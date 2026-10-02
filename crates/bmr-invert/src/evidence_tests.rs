@@ -48,6 +48,17 @@ fn missing_cullable_face_means_solid_neighbour_drawn_face_means_open() {
 }
 
 #[test]
+fn a_drawn_face_overrules_a_missing_one() {
+    let lib = library(vec![entry("minecraft:stone", cube(STONE))]);
+    let mut s = Scene::default();
+    // (0,0,0) misses its face towards (1,0,0); (2,0,0) draws its face towards it
+    s.block((0, 0, 0), 0, &[(1, 0, 0)]).block((2, 0, 0), 0, &[]);
+    let ev = s.collect(&lib);
+    assert!(ev.open.contains(&(1, 0, 0)));
+    assert!(ev.solid.is_empty());
+}
+
+#[test]
 fn interior_faces_say_nothing_about_neighbours() {
     let candle = vec![side("minecraft:block/candle", (1, 0, 0)), horizontal("minecraft:block/candle", 32)];
     let lib = library(vec![entry("minecraft:candle", candle)]);

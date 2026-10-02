@@ -76,13 +76,14 @@ impl FaceKey {
 
     /// Direction a liquid face faces. Liquid surfaces sit below the cell top (14/16 for a lone source)
     /// so they are classified by plane, not by `boundary_dir`: horizontal at y=0 is the bottom, any
-    /// other horizontal face is the surface; vertical faces always lie on a cell side.
+    /// other horizontal face is the surface; vertical faces always lie on a cell side; anything else is a
+    /// flowing liquid's sloped surface.
     pub fn liquid_dir(&self) -> Option<Cell> {
         let same = |a: usize| self.verts.iter().all(|v| v[a] == self.verts[0][a]);
         if same(1) {
             return Some(if self.verts[0][1] == 0 { (0, -1, 0) } else { (0, 1, 0) });
         }
-        self.boundary_dir()
+        self.boundary_dir().or(Some((0, 1, 0)))
     }
 
     /// Covers a whole outer plane of the cell.

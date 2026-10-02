@@ -41,6 +41,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Nether caves just under the hidden roof band were filled with rock when one neighbouring block's face was
+  drawn and another's missing; a drawn face now wins.
+- Flowing lava and water surfaces (sloped) were read as "more liquid above", filling Nether caves with lava up
+  to the roof band.
 - Release archives include the cubiomes license (`LICENSE-cubiomes`).
 - A malformed PRBM tile with an oversized group table is an error instead of an integer overflow.
 - Every command-line flag has help text; rustdoc warnings in bmr-cli.

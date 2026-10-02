@@ -4,13 +4,13 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29240990,
-    "name": 29243360
+    "exact": 29240988,
+    "name": 29243358
   },
   "occupied": {
-    "total": 10540768,
-    "exact": 7931262,
-    "name": 7933632
+    "total": 10540760,
+    "exact": 7931252,
+    "name": 7933622
   },
   "rendered": {
     "total": 223054,
@@ -25,7 +25,7 @@
   },
   "solid": {
     "original": 10037765,
-    "reconstructed": 10538197,
+    "reconstructed": 10538189,
     "both": 10035194
   },
   "surface": {
@@ -55,7 +55,7 @@
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:stone",
-      "count": 244853
+      "count": 244849
     },
     {
       "original": "minecraft:diorite",
@@ -140,7 +140,7 @@
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 16825
+      "count": 16834
     },
     {
       "original": "minecraft:coal_ore",

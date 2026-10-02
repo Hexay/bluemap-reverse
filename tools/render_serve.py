@@ -1,8 +1,13 @@
 """Render a fixture world with BlueMap CLI and/or serve it on WEB_HOST:WEB_PORT.
 
 Usage: py -3 tools/render_serve.py <fixture> [--no-render] [--no-serve] [--force-render] [--mc 1.21.11]
-Layout: <toolchain>/bluemap/<fixture>/{config,data,web}; map id = fixture name.
+                                   [--world <dir> --name <out-name> [--relight]] [--port N]
+Layout: <toolchain>/bluemap/<name>/{config,data,web}; name defaults to the fixture; map id = fixture name.
 Map settings are BlueMap defaults (what public maps run) unless fixture.json has a "bluemap" object.
+--world renders another world (e.g. a reconstruction) with the fixture's map config; give it its own --name so
+it gets its own webroot. Map ids stay the fixture's, so a camera URL hash works on both sites.
+--relight first resaves --world in the server over the fixture area: bmr writes no light data, and BlueMap
+skips/darkens unlit chunks.
 """
 import argparse
 import json
@@ -34,11 +39,14 @@ def bluemap(cwd: Path, *args: str, tc: Toolchain = DEFAULT) -> subprocess.Popen:
     return subprocess.Popen(cmd, cwd=cwd)
 
 
-def configure(fixture: str, tc: Toolchain = DEFAULT) -> Path:
-    world = tc.worlds / fixture / "world"
+def configure(fixture: str, tc: Toolchain = DEFAULT, world: Path | None = None, name: str | None = None,
+              port: int = WEB_PORT) -> Path:
+    """BlueMap dir <bluemap_root>/<name or fixture> rendering `world` (default: the fixture's) with the
+    fixture's map config, webserver on `port`. Returns the BlueMap dir."""
+    world = Path(world).resolve() if world else tc.worlds / fixture / "world"
     if not world.exists():
         sys.exit(f"no world at {world}; run make_world.py {fixture} first")
-    base = tc.bluemap_root / fixture
+    base = tc.bluemap_root / (name or fixture)
     cfg = base / "config"
     if not (cfg / "core.conf").exists():
         base.mkdir(parents=True, exist_ok=True)
@@ -47,7 +55,7 @@ def configure(fixture: str, tc: Toolchain = DEFAULT) -> Path:
     set_conf(cfg / "core.conf", "metrics", "false")
     set_conf(cfg / "core.conf", "render-thread-count", str(os.cpu_count() or 1))
     set_conf(cfg / "webserver.conf", "ip", json.dumps(WEB_HOST))
-    set_conf(cfg / "webserver.conf", "port", str(WEB_PORT))
+    set_conf(cfg / "webserver.conf", "port", str(port))
 
     spec = json.loads((FIXTURES / fixture / "fixture.json").read_text())
     maps = cfg / "maps"
@@ -75,13 +83,27 @@ def main() -> None:
     ap.add_argument("--no-render", action="store_true")
     ap.add_argument("--no-serve", action="store_true")
     ap.add_argument("--force-render", action="store_true")
+    ap.add_argument("--world", type=Path, help="render this world instead of the fixture's (needs --name)")
+    ap.add_argument("--name", help="BlueMap dir / webroot name (default: the fixture)")
+    ap.add_argument("--relight", action="store_true", help="resave --world in the server first (computes light)")
+    ap.add_argument("--port", type=int, default=WEB_PORT)
     ap.add_argument("--mc", default=DEFAULT.mc)
     ap.add_argument("--bluemap", default=DEFAULT.bluemap)
     args = ap.parse_args()
+    if args.world and not args.name:
+        ap.error("--world needs --name, or it would overwrite the fixture's own render")
     from setup import resolve  # lazy: network lookup only for non-default toolchains
 
     tc = resolve(args.mc, args.bluemap)
-    base = configure(args.fixture, tc)
+    if args.relight:
+        if not args.world:
+            ap.error("--relight needs --world")
+        from resave_world import resave
+
+        area = json.loads((FIXTURES / args.fixture / "fixture.json").read_text())["area"]
+        if resave(args.world.resolve(), area, tc):
+            sys.exit("relight failed")
+    base = configure(args.fixture, tc, args.world, args.name, args.port)
     flags = []
     if not args.no_render:
         flags.append("-r")
@@ -89,7 +111,7 @@ def main() -> None:
             flags.append("-f")
     if not args.no_serve:
         flags.append("-w")
-        print(f"serving http://{WEB_HOST}:{WEB_PORT}/ (Ctrl+C to stop)", flush=True)
+        print(f"serving http://{WEB_HOST}:{args.port}/ (Ctrl+C to stop)", flush=True)
     if not flags:
         return
     proc = bluemap(base, *flags, tc=tc)

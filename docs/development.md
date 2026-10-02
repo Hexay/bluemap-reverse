@@ -31,6 +31,8 @@ py -3 tools/up.py [fixture] [--force]   # download JDK 25 / MC 26.3 server / Blu
   `rendered_alike`.
 - Dimensions: `nether` and `end` fixtures (a fixture's `dimension`, rendered with BlueMap's default map for it);
   `py -3 tools/check_dimensions.py` pulls a three-map site into one world and scores each dimension.
+- LZ4 regions: `superflat-lz4` is `superflat` saved with `region-file-compression=lz4`;
+  `bmr score work/worlds/superflat/world work/worlds/superflat-lz4/world` must be 100%.
 - Biomes: the `biomes` fixture (one patch per overworld biome, `py -3 tools/gen_biomes.py`, commands generated
   per version) is where packs learn biome tints; `bmr reverse` learns them from `work/cache/biomes` directly.
 

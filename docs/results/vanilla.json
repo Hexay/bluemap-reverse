@@ -4,13 +4,13 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29250935,
-    "name": 29253305
+    "exact": 29251679,
+    "name": 29254049
   },
   "occupied": {
-    "total": 10540067,
-    "exact": 7940506,
-    "name": 7942876
+    "total": 10541062,
+    "exact": 7942245,
+    "name": 7944615
   },
   "rendered": {
     "total": 223054,
@@ -20,13 +20,13 @@
   "rendered_alike": 223032,
   "exposed": {
     "total": 419224,
-    "exact": 368582,
-    "name": 368668
+    "exact": 368614,
+    "name": 368700
   },
   "solid": {
     "original": 10037765,
-    "reconstructed": 10538103,
-    "both": 10035801
+    "reconstructed": 10540922,
+    "both": 10037625
   },
   "surface": {
     "total": 82944,
@@ -50,7 +50,7 @@
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:stone",
-      "count": 257354
+      "count": 257348
     },
     {
       "original": "minecraft:andesite",
@@ -145,7 +145,7 @@
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 15275
+      "count": 15332
     },
     {
       "original": "minecraft:iron_ore",

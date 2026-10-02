@@ -41,7 +41,8 @@ All notable changes to this project are documented here. The format follows
 - Without `--regen`, unseen space is filled in layers following the evidence down each column (water over rock
   over an air pocket, …) instead of one guess per gap, and below the overworld cave cutoff (y 55) it is rock
   under the last sign of an opening, instead of air down to bedrock. Found by the render round-trip (shafts
-  under seabeds, flooded ravines filled with rock). Vanilla test world: all blocks 74.4% → 75.3%.
+  under seabeds, flooded ravines filled with rock). Enclosed air beside known water is water. Vanilla test
+  world: all blocks 74.4% → 75.3%.
 
 ### Fixed
 

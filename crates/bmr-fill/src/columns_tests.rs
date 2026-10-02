@@ -26,11 +26,11 @@ fn lit_cave_between_drawn_floor_and_ceiling_stays_air() {
 }
 
 #[test]
-fn air_above_the_cutoff_is_kept() {
-    // open evidence at 70 only: air down to the cutoff, rock under it
+fn void_under_a_floating_block_stays_air() {
+    // block at 71 over void (skyblock, the debug world): its bottom face drawn, nothing below in the
+    // unculled range, so the space is open all the way down
     let ce = ColumnEvidence { open: vec![70], ..Default::default() };
-    let got = column_gaps(&[71], ce);
-    assert!(got.contains(&(55, 70, Fill::Air)) && got.contains(&(-64, 54, Fill::Solid)), "{got:?}");
+    assert_eq!(column_gaps(&[71], ce)[1], (-64, 70, Fill::Air));
 }
 
 #[test]

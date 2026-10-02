@@ -45,6 +45,9 @@ All notable changes to this project are documented here. The format follows
   drawn and another's missing; a drawn face now wins.
 - Flowing lava and water surfaces (sloped) were read as "more liquid above", filling Nether caves with lava up
   to the roof band.
+- Fire and spawners lost faces to look-alike neighbours their own geometry spills into, and the cells around
+  them were filled with rock; Nether render round-trip extra faces 7.9k → 253.
+- Open space under floating blocks (sky islands, builds over void) is no longer filled with rock.
 - Release archives include the cubiomes license (`LICENSE-cubiomes`).
 - A malformed PRBM tile with an oversized group table is an error instead of an integer overflow.
 - Every command-line flag has help text; rustdoc warnings in bmr-cli.

@@ -4,11 +4,11 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9827617,
-    "name": 9827693
+    "exact": 9827621,
+    "name": 9827697
   },
   "occupied": {
-    "total": 111469,
+    "total": 111465,
     "exact": 108686,
     "name": 108762
   },
@@ -17,7 +17,7 @@
     "exact": 55188,
     "name": 55264
   },
-  "rendered_alike": 55493,
+  "rendered_alike": 55494,
   "exposed": {
     "total": 55213,
     "exact": 54914,
@@ -25,7 +25,7 @@
   },
   "solid": {
     "original": 111462,
-    "reconstructed": 111449,
+    "reconstructed": 111445,
     "both": 111442
   },
   "surface": {
@@ -202,11 +202,6 @@
     {
       "original": "minecraft:turtle_egg[eggs=2,hatch=2]",
       "reconstructed": "minecraft:turtle_egg[eggs=3,hatch=2]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:waxed_weathered_copper_bars[east=false,north=false,south=false,waterlogged=false,west=false]",
-      "reconstructed": "minecraft:weathered_copper_bars[east=false,north=false,south=false,waterlogged=true,west=false]",
       "count": 1
     }
   ],

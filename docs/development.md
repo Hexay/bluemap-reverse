@@ -55,6 +55,7 @@ bmr pack lookalikes <pack> -o out.json  # groups of states BlueMap draws identic
 bmr reverse --mirror <dir> -o <world>   # reconstruct (needs work/cache/debug + work/worlds/debug, see Fixtures)
 bmr reverse … --zip out.zip             # also package the world folder (extracts to <folder>/, drop into saves/)
 bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
+bmr explain --mirror <dir> x,z          # a column's matched blocks + fill evidence
 bmr schem <world> -o out.schem [--area=x0,z0,x1,z1] [--y=y0,y1] [--no-trim] [--verify]
                                         # Sponge v3 .schem for WorldEdit/FAWE; trims to non-air by default
 py -3 tools/check_schem.py out.schem    # independent spec validator (own NBT parser)

@@ -12,17 +12,51 @@ pub type Matched = Option<(usize, How)>;
 /// Remove faces a matched block overhangs into its neighbours, re-match those neighbours.
 /// Returns the number of cells that turned out to hold nothing but overhang.
 pub fn credit(lib: &Library, cells: &mut FxHashMap<Cell, CellFaces>, matched: &mut FxHashMap<Cell, Matched>) -> usize {
-    let mut touched = FxHashSet::default();
+    let mut claims: Vec<(Cell, FaceKey, Cell)> = Vec::new();
     for (&cell, m) in matched.iter() {
         let Some((entry, _)) = m else { continue };
         for (off, key) in &lib.entries[*entry].overhang {
             let n = step(cell, *off);
-            if let Some(obs) = cells.get_mut(&n)
-                && let Some(i) = obs.keys.iter().position(|k| k == key)
-            {
-                obs.keys.swap_remove(i);
-                touched.insert(n);
+            if cells.get(&n).is_some_and(|obs| obs.keys.contains(key)) {
+                claims.push((n, *key, cell));
             }
+        }
+    }
+    // A cell made only of overhang (a floor fire's sides land in the air beside it and match as wall fire) must
+    // not claim: it would strip the real block's own faces. Its faces are explained by a matched neighbour's
+    // claim, or by a bigger observed neighbour still unmatched (that block's own extra faces may be what blocks
+    // it; two lone wall-fire planes side by side must not explain each other away).
+    let size = |c: Cell| cells[&c].keys.len();
+    let mut claimed: FxHashMap<Cell, Vec<(FaceKey, Cell)>> = FxHashMap::default();
+    for (n, key, source) in &claims {
+        claimed.entry(*n).or_default().push((*key, *source));
+    }
+    let pure_by = |counts: &dyn Fn(Cell, Cell) -> bool| -> FxHashSet<Cell> {
+        let unmatched_bigger = |s: Cell, src: Cell| matches!(matched.get(&src), Some(None)) && size(src) > size(s);
+        let explained = |s: Cell, k: &FaceKey| {
+            claimed.get(&s).is_some_and(|c| c.iter().any(|(ck, src)| ck == k && counts(s, *src)))
+                || lib.overhang_from(k).iter().any(|&(dx, dy, dz)| unmatched_bigger(s, step(s, (-dx, -dy, -dz))))
+        };
+        claims.iter().map(|c| c.2).filter(|&s| cells[&s].keys.iter().all(|k| explained(s, k))).collect()
+    };
+    let candidates = pure_by(&|_, _| true);
+    // Cells can explain each other away (a spawner's inner faces land in all its neighbours, and each lone face
+    // claims one of the spawner's back): between two such cells, one that shows more of its matched state's
+    // signature is the real block; on a tie both stay (isolated wall-fire planes, which each match exactly).
+    let coverage = |c: Cell| {
+        let sig = matched[&c].map_or(&[][..], |(e, _)| &lib.entries[e].sig[..]);
+        cells[&c].keys.iter().filter(|k| sig.contains(k)).count() as f32 / sig.len().max(1) as f32
+    };
+    let pure = pure_by(&|s, src| !candidates.contains(&src) || coverage(src) >= coverage(s));
+    let mut touched = FxHashSet::default();
+    for (n, key, source) in claims {
+        if pure.contains(&source) {
+            continue;
+        }
+        let obs = cells.get_mut(&n).expect("claimed cells are observed");
+        if let Some(i) = obs.keys.iter().position(|k| *k == key) {
+            obs.keys.swap_remove(i);
+            touched.insert(n);
         }
     }
     let mut emptied = 0;
@@ -46,7 +80,7 @@ pub fn strip_foreign(
     cells: &mut FxHashMap<Cell, CellFaces>,
     matched: &mut FxHashMap<Cell, Matched>,
 ) -> usize {
-    let stripped: Vec<(Cell, Vec<FaceKey>)> = matched
+    let stripped: Vec<(Cell, Vec<Vec<FaceKey>>)> = matched
         .iter()
         .filter(|(_, m)| m.is_none())
         .filter_map(|(&n, _)| {
@@ -54,13 +88,23 @@ pub fn strip_foreign(
             let foreign = |k: &FaceKey| {
                 lib.overhang_from(k).iter().any(|&(dx, dy, dz)| cells.contains_key(&step(n, (-dx, -dy, -dz))))
             };
+            // fewest faces first: a neighbour's plane landing on this block's own plane (a row of fires) is an
+            // exact duplicate, and stripping every foreign-looking face would take the block's own sides too
+            let mut duplicates_dropped = Vec::with_capacity(keys.len());
+            for k in keys {
+                if !(foreign(k) && duplicates_dropped.contains(k)) {
+                    duplicates_dropped.push(*k);
+                }
+            }
             let own: Vec<FaceKey> = keys.iter().copied().filter(|k| !foreign(k)).collect();
-            (!own.is_empty() && own.len() < keys.len()).then_some((n, own))
+            let attempts: Vec<Vec<FaceKey>> =
+                [duplicates_dropped, own].into_iter().filter(|a| !a.is_empty() && a.len() < keys.len()).collect();
+            (!attempts.is_empty()).then_some((n, attempts))
         })
         .collect();
     let mut fixed = 0;
-    for (n, own) in stripped {
-        if candidates(lib, &signature(own.clone())).is_some() {
+    for (n, attempts) in stripped {
+        if let Some(own) = attempts.into_iter().find(|a| candidates(lib, &signature(a.clone())).is_some()) {
             cells.get_mut(&n).expect("observed").keys = own;
             rematch(lib, cells, matched, n);
             fixed += 1;

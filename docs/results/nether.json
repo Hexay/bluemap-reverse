@@ -4,29 +4,29 @@
   "columns": 82944,
   "all": {
     "total": 21233664,
-    "exact": 20157644,
-    "name": 20157727
+    "exact": 20158956,
+    "name": 20159039
   },
   "occupied": {
-    "total": 6058112,
-    "exact": 4982092,
-    "name": 4982175
+    "total": 6056646,
+    "exact": 4981938,
+    "name": 4982021
   },
   "rendered": {
     "total": 520283,
-    "exact": 520206,
-    "name": 520282
+    "exact": 520207,
+    "name": 520283
   },
-  "rendered_alike": 520206,
+  "rendered_alike": 520207,
   "exposed": {
     "total": 530936,
-    "exact": 466775,
-    "name": 466851
+    "exact": 466738,
+    "name": 466814
   },
   "solid": {
     "original": 5847401,
-    "reconstructed": 5909645,
-    "both": 5698934
+    "reconstructed": 5908009,
+    "both": 5698764
   },
   "surface": {
     "total": 82944,
@@ -40,12 +40,12 @@
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:netherrack",
-      "count": 210527
+      "count": 209245
     },
     {
       "original": "minecraft:netherrack",
       "reconstructed": "minecraft:air",
-      "count": 116950
+      "count": 117105
     },
     {
       "original": "minecraft:basalt[axis=y]",
@@ -75,7 +75,7 @@
     {
       "original": "minecraft:soul_soil",
       "reconstructed": "minecraft:netherrack",
-      "count": 59139
+      "count": 59130
     },
     {
       "original": "minecraft:gravel",
@@ -115,7 +115,7 @@
     {
       "original": "minecraft:nether_quartz_ore",
       "reconstructed": "minecraft:netherrack",
-      "count": 20959
+      "count": 20952
     },
     {
       "original": "minecraft:magma_block",
@@ -125,7 +125,7 @@
     {
       "original": "minecraft:soul_soil",
       "reconstructed": "minecraft:air",
-      "count": 14915
+      "count": 14924
     },
     {
       "original": "minecraft:soul_sand",
@@ -182,11 +182,6 @@
     {
       "original": "minecraft:lava[level=3]",
       "reconstructed": "minecraft:lava[level=0]",
-      "count": 1
-    },
-    {
-      "original": "minecraft:spawner",
-      "reconstructed": "minecraft:air",
       "count": 1
     }
   ],

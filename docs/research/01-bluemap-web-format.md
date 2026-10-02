@@ -46,8 +46,10 @@ Missing tile → **HTTP 204** (built-in `MapStorageRequestHandler`, `sql.php`, a
   client's Accept-Encoding allows, else recompresses to gzip / sends raw). Explicit `…​.prbm.gz` request to the
   built-in server always returns gzip bytes. Nginx: `gzip_static always;` + `error_page 404 = @empty` (204)
   — https://bluemap.bluecolored.de/wiki/webserver/ExternalWebserversFile.html
-- Scraper rule: send `Accept-Encoding: gzip`, sniff magic bytes (`1f 8b` gzip, `28 b5 2f fd` zstd) and
-  decompress yourself regardless of headers.
+- Scraper rule: send `Accept-Encoding: gzip`, sniff magic bytes and decompress yourself regardless of headers
+  (`bmr-compress`). Measured on 5.27 (2026-10-02): with `Accept-Encoding: gzip` the built-in server re-encodes
+  every storage compression to gzip; stored bytes are `1f 8b` gzip, `78 9c` zlib (`deflate`), `28 b5 2f fd`
+  zstd, `LZ4Block` lz4-java blocks (`lz4`, same framing as chunk compression 4), raw for `none`.
 - **SQL storage** (`sql.php`, built-in server): identical URLs; blob returned with `Content-Encoding` from the
   row's compression key. Browser-visible difference: none, except static-host-only files don't exist.
 - File-storage extras that a static host may leak (not requested by webapp, not served by built-in server):

@@ -45,14 +45,17 @@ ureq = { version = "3", default-features = false, features = ["native-tls"] }
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.11"
 serde_json = "1"
-# pack files (bmr-pack): compact serde binary; bincode 3.0.0 is an empty tombstone release
-# LZ4 region chunks (bmr-world): block API only; checked-decode turns malformed input into errors, not panics
+# lz4-java blocks (bmr-compress): block API only; checked-decode turns malformed input into errors, not panics
 lz4_flex = { version = "0.14", default-features = false, features = ["std", "safe-encode", "safe-decode", "checked-decode"] }
 twox-hash = { version = "2.1", default-features = false, features = ["xxhash32"] }
+# zstd tiles (bmr-compress): pure Rust decoder, no C build
+ruzstd = { version = "0.9", default-features = false, features = ["std"] }
 lzma-rust2 = { version = "0.21", default-features = false, features = ["std", "encoder", "optimization", "xz"] }
+# pack files (bmr-pack): compact serde binary; bincode 3.0.0 is an empty tombstone release
 postcard = { version = "1.1", default-features = false, features = ["use-std"] }
 # deflate via flate2 only: the default features pull C builds (bzip2, zstd) and crypto we don't need
 zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
+bmr-compress = { path = "crates/bmr-compress" }
 bmr-cubiomes = { path = "crates/bmr-cubiomes" }
 bmr-fetch = { path = "crates/bmr-fetch" }
 bmr-fill = { path = "crates/bmr-fill" }

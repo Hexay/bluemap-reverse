@@ -104,86 +104,23 @@ fn external_mcc_chunk_is_an_error() {
     assert!(e.contains(".mcc"), "{e}");
 }
 
-/// One lz4-java block holding `data`; level nibble 6 = 64 KiB blocks, lz4-java's default.
-fn lz4_block(method: u8, data: &[u8]) -> Vec<u8> {
-    let payload = if method == lz4::LZ4 { lz4_flex::block::compress(data) } else { data.to_vec() };
-    let mut b = lz4::MAGIC.to_vec();
-    b.push(method | 6);
-    for v in [payload.len() as u32, data.len() as u32, lz4::checksum(data)] {
-        b.extend(v.to_le_bytes());
-    }
-    b.extend(payload);
-    b
-}
-
-fn lz4_end() -> Vec<u8> {
-    let mut b = lz4::MAGIC.to_vec();
-    b.push(lz4::RAW | 6);
-    b.extend([0; 12]);
-    b
-}
-
 fn lz4_region(stream: &[u8]) -> Vec<u8> {
     region_with((1, 2), stream.len() as u32 + 1, 4, stream)
 }
 
-/// 150 KB over three 64 KiB blocks: LZ4, raw (lz4-java's choice for incompressible blocks), LZ4.
-fn lz4_sample() -> (Vec<u8>, Vec<u8>) {
-    let nbt: Vec<u8> = (0..150_000u32).map(|i| (i / 3 % 251) as u8).collect();
-    let mut stream = lz4_block(lz4::LZ4, &nbt[..65536]);
-    stream.extend(lz4_block(lz4::RAW, &nbt[65536..131072]));
-    stream.extend(lz4_block(lz4::LZ4, &nbt[131072..]));
-    (nbt, stream)
-}
-
-fn set_le(b: &mut [u8], at: usize, v: u32) {
-    b[at..at + 4].copy_from_slice(&v.to_le_bytes());
-}
-
+/// Stream-level LZ4 cases live in bmr-compress; these check the region reader routes type 4 there.
 #[test]
 fn lz4_java_chunks_read() {
-    let (nbt, mut stream) = lz4_sample();
-    assert!(stream.len() < nbt.len() - 50_000, "LZ4 blocks should compress");
-    let unterminated = read_all("lz4_noend", &lz4_region(&stream)).unwrap();
-    stream.extend(lz4_end());
-    let got = read_all("lz4", &lz4_region(&stream)).unwrap();
+    let nbt: Vec<u8> = (0..150_000u32).map(|i| (i / 3 % 251) as u8).collect();
+    let got = read_all("lz4", &lz4_region(&bmr_compress::lz4_block::compress(&nbt))).unwrap();
     assert_eq!(got, vec![((1, 2), nbt)]);
-    assert_eq!(unterminated, got);
 }
 
 #[test]
-fn corrupt_lz4_streams_are_errors() {
-    let (_, stream) = lz4_sample();
-    type Case = (&'static str, fn(&mut Vec<u8>), &'static str);
-    let cases: [Case; 7] = [
-        ("magic", |s| s[3] = b'X', "bad block magic"),
-        ("header", |s| s.truncate(lz4::HEADER - 1), "truncated block header"),
-        ("payload", |s| s.truncate(s.len() - 10), "truncated block payload"),
-        ("checksum", |s| s[17] ^= 1, "checksum mismatch"),
-        ("method", |s| s[8] = 0x30 | 6, "unknown block method"),
-        ("over_level", |s| set_le(s, 13, 65537), "bad block lengths"),
-        ("over_ratio", |s| set_le(s, 9, 65536 / 256 - 1), "bad block lengths"),
-    ];
-    for (name, corrupt, want) in cases {
-        let mut s = stream.clone();
-        corrupt(&mut s);
-        let e = err_of(&format!("lz4_{name}"), &lz4_region(&s));
-        assert!(e.contains(want), "{name}: {e}");
-    }
-}
-
-#[test]
-fn lz4_declared_length_mismatches_are_errors() {
-    let mut s = lz4_block(lz4::RAW, b"raw block");
-    set_le(&mut s, 13, 8);
-    assert!(err_of("lz4_rawlen", &lz4_region(&s)).contains("bad block lengths 9/8"));
-
-    let mut s = lz4_block(lz4::LZ4, &[1; 1000]);
-    set_le(&mut s, 13, 1001);
-    let e = err_of("lz4_long", &lz4_region(&s));
-    assert!(e.contains("decompressed to 1000 bytes, header says 1001"), "{e}");
-    set_le(&mut s, 13, 999);
-    assert!(err_of("lz4_short", &lz4_region(&s)).contains("lz4: "));
+fn corrupt_lz4_chunk_is_an_error() {
+    let mut s = bmr_compress::lz4_block::compress(b"chunk nbt");
+    s[3] = b'X';
+    assert!(err_of("lz4_magic", &lz4_region(&s)).contains("bad block magic"));
 }
 
 #[test]

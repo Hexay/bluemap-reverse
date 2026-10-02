@@ -1,18 +1,18 @@
 //! Anvil `.mca` container: 1024 chunk slots, 4 KiB sectors, per-chunk compression byte.
 //! <https://minecraft.wiki/w/Region_file_format>
 
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::Path;
 
 use anyhow::{Context, Result, bail, ensure};
+use bmr_compress::Format;
 use flate2::Compression;
-use flate2::read::{GzDecoder, ZlibDecoder};
 use flate2::write::ZlibEncoder;
 use rayon::prelude::*;
 
-mod lz4;
-
 const SECTOR: usize = 4096;
+/// Vanilla chunk NBT is a few hundred KiB at most.
+const MAX_CHUNK_NBT: usize = 64 << 20;
 
 /// Chunk NBT keyed by local (x, z) in 0..32.
 pub type RegionChunks = Vec<((u8, u8), Vec<u8>)>;
@@ -78,15 +78,14 @@ fn read_chunk(data: &[u8], offset: usize) -> Result<Vec<u8>> {
     let body = &data[offset + 5..offset + 4 + len];
     // bit 7 = payload stored externally in c.<x>.<z>.mcc (oversized chunks)
     ensure!(kind & 0x80 == 0, "external .mcc chunk not supported yet");
-    let mut out = Vec::new();
-    match kind {
-        1 => GzDecoder::new(body).read_to_end(&mut out)?,
-        2 => ZlibDecoder::new(body).read_to_end(&mut out)?,
+    let format = match kind {
+        1 => Format::Gzip,
+        2 => Format::Zlib,
         3 => return Ok(body.to_vec()),
-        4 => return lz4::decompress(body),
+        4 => Format::Lz4Block,
         k => bail!("unsupported chunk compression {k}"),
     };
-    Ok(out)
+    format.decompress(body, MAX_CHUNK_NBT)
 }
 
 #[cfg(test)]

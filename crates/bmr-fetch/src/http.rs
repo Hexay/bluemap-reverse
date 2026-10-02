@@ -1,11 +1,9 @@
 //! HTTP GET relative to a site root, with retries, politeness delay and magic-byte decompression.
 
-use std::io::Read;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{Context, Result, bail};
-use flate2::read::GzDecoder;
+use anyhow::{Result, bail};
 use ureq::Agent;
 use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
@@ -70,35 +68,8 @@ impl Http {
             _ => {}
         }
         let body = resp.into_body().with_config().limit(MAX_BODY).read_to_vec()?;
-        decompress(body).map(Some)
-    }
-}
-
-/// Servers disagree on Content-Encoding for stored `.gz` files, so trust the bytes, not the headers.
-fn decompress(bytes: Vec<u8>) -> Result<Vec<u8>> {
-    match bytes.get(..4) {
-        Some([0x1f, 0x8b, ..]) => {
-            let mut out = Vec::with_capacity(bytes.len() * 4);
-            GzDecoder::new(&bytes[..]).read_to_end(&mut out).context("gunzip")?;
-            Ok(out)
-        }
-        // TODO: zstd/lz4/deflate storage compressions (docs/research/01 §1) — add when a site needs them
-        Some([0x28, 0xb5, 0x2f, 0xfd]) => bail!("zstd-compressed response not supported yet"),
-        _ => Ok(bytes),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use flate2::{Compression, write::GzEncoder};
-    use std::io::Write;
-
-    #[test]
-    fn gzip_and_raw() {
-        let mut enc = GzEncoder::new(Vec::new(), Compression::default());
-        enc.write_all(b"\x01\x07prbm").unwrap();
-        assert_eq!(decompress(enc.finish().unwrap()).unwrap(), b"\x01\x07prbm");
-        assert_eq!(decompress(b"{}".to_vec()).unwrap(), b"{}");
+        // BlueMap's own server re-encodes to gzip for us, but SQL (sql.php) and static hosts may send any storage
+        // compression, with or without a matching Content-Encoding: trust the bytes, not the headers.
+        bmr_compress::decompress_any(body, MAX_BODY as usize).map(Some)
     }
 }

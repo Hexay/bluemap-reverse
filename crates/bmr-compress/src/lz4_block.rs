@@ -1,25 +1,48 @@
-//! Chunk compression type 4: lz4-java's `LZ4BlockOutputStream` framing, not the standard LZ4 frame format.
-//! Blocks of: "LZ4Block", token (method | log2(block size) - 10), compressed len, original len, checksum (i32 LE).
+//! lz4-java's `LZ4BlockOutputStream` framing (Minecraft chunk compression 4, BlueMap's `lz4` storage), not the
+//! standard LZ4 frame format. Blocks of: "LZ4Block", token (method | log2(block size) - 10), compressed len,
+//! original len, checksum (i32 LE); an empty block ends the stream.
 //! <https://github.com/lz4/lz4-java/blob/master/src/java/net/jpountz/lz4/LZ4BlockInputStream.java>
 
 use anyhow::{Context, Result, anyhow, ensure};
 use twox_hash::XxHash32;
 
-pub(super) const MAGIC: &[u8; 8] = b"LZ4Block";
-pub(super) const HEADER: usize = MAGIC.len() + 1 + 4 + 4 + 4;
-pub(super) const RAW: u8 = 0x10;
-pub(super) const LZ4: u8 = 0x20;
+pub const MAGIC: &[u8; 8] = b"LZ4Block";
+pub const HEADER: usize = MAGIC.len() + 1 + 4 + 4 + 4;
+pub const RAW: u8 = 0x10;
+pub const LZ4: u8 = 0x20;
 const SEED: u32 = 0x9747_b28c;
-/// Vanilla chunk NBT is a few hundred KiB at most.
-pub(super) const MAX_CHUNK_NBT: usize = 64 << 20;
+/// lz4-java's default block size, 64 KiB.
+const LEVEL: u8 = 6;
+const BLOCK: usize = 1 << (10 + LEVEL);
 
 /// lz4-java's `StreamingXXHash32.asChecksum()` keeps only the low 28 bits.
-pub(super) fn checksum(block: &[u8]) -> u32 {
+pub fn checksum(block: &[u8]) -> u32 {
     XxHash32::oneshot(SEED, block) & 0x0FFF_FFFF
 }
 
+fn header(out: &mut Vec<u8>, method: u8, compressed: usize, original: usize, check: u32) {
+    out.extend_from_slice(MAGIC);
+    out.push(method | LEVEL);
+    for v in [compressed as u32, original as u32, check] {
+        out.extend(v.to_le_bytes());
+    }
+}
+
+/// What lz4-java writes: 64 KiB blocks, each LZ4 unless that doesn't shrink it, then the end block.
+pub fn compress(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for block in data.chunks(BLOCK) {
+        let packed = lz4_flex::block::compress(block);
+        let (method, payload) = if packed.len() < block.len() { (LZ4, &packed[..]) } else { (RAW, block) };
+        header(&mut out, method, payload.len(), block.len(), checksum(block));
+        out.extend_from_slice(payload);
+    }
+    header(&mut out, RAW, 0, 0, 0);
+    out
+}
+
 /// Reads blocks up to the empty end block, or the end of input (lz4-java tolerates a missing end block).
-pub(super) fn decompress(mut data: &[u8]) -> Result<Vec<u8>> {
+pub fn decompress(mut data: &[u8], limit: usize) -> Result<Vec<u8>> {
     let mut out = Vec::new();
     while !data.is_empty() {
         ensure!(data.len() >= HEADER, "lz4: truncated block header");
@@ -45,7 +68,7 @@ pub(super) fn decompress(mut data: &[u8]) -> Result<Vec<u8>> {
                 && (method == LZ4 || compressed == original),
             "lz4: bad block lengths {compressed}/{original}"
         );
-        ensure!(out.len() + original <= MAX_CHUNK_NBT, "lz4: chunk over {MAX_CHUNK_NBT} bytes");
+        ensure!(out.len() + original <= limit, "lz4: output over {limit} bytes");
         let payload = data.get(HEADER..HEADER + compressed).context("lz4: truncated block payload")?;
         let start = out.len();
         if method == RAW {
@@ -60,3 +83,7 @@ pub(super) fn decompress(mut data: &[u8]) -> Result<Vec<u8>> {
     }
     Ok(out)
 }
+
+#[cfg(test)]
+#[path = "lz4_block_tests.rs"]
+mod tests;

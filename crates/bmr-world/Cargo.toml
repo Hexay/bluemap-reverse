@@ -10,10 +10,9 @@ description = "Minecraft Anvil world read/write, block registry and Sponge schem
 
 [dependencies]
 anyhow.workspace = true
+bmr-compress.workspace = true
 fastnbt.workspace = true
 flate2.workspace = true
-lz4_flex.workspace = true
-twox-hash.workspace = true
 rayon.workspace = true
 rustc-hash.workspace = true
 serde.workspace = true

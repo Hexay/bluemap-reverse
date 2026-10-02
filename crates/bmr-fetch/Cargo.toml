@@ -10,7 +10,7 @@ description = "Mirror a BlueMap web map's settings, textures and tiles to disk"
 
 [dependencies]
 anyhow.workspace = true
-flate2.workspace = true
+bmr-compress.workspace = true
 png.workspace = true
 rayon.workspace = true
 ureq.workspace = true

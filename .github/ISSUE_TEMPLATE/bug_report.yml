@@ -1,0 +1,56 @@
+name: Bug report
+description: A crash, wrong output, or a map that reconstructs badly.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: bmr version or commit
+      description: Output of `bmr --version`, plus the commit if you built from source.
+      placeholder: bmr 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Windows 11 / Ubuntu 24.04 / macOS 15
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and full output
+      description: The command you ran and everything it printed.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: site
+    attributes:
+      label: Minecraft and BlueMap version of the site
+      description: "`bmr pull` reports the BlueMap version and flags mismatches."
+      placeholder: Minecraft 1.21.4, BlueMap 5.27
+  - type: input
+    id: mods
+    attributes:
+      label: Mods or resource packs
+      description: Does the site use mods or resource packs? Leave blank if unknown.
+  - type: textarea
+    id: reconstruction
+    attributes:
+      label: Bad reconstruction details
+      description: For wrong blocks or biomes, coordinates of a spot that's wrong and the `bmr explain` output for it.
+      render: shell
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Expected vs. actual, screenshots. Only share map URLs you have permission to share.
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Responsible use
+      options:
+        - label: I own this map or have permission to reverse it.
+          required: true

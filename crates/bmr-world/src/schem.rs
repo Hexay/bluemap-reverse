@@ -1,5 +1,5 @@
 //! Sponge Schematic v3 export (`.schem`, read by WorldEdit/FAWE):
-//! https://github.com/SpongePowered/Schematic-Specification/blob/master/versions/schematic-3.md
+//! <https://github.com/SpongePowered/Schematic-Specification/blob/master/versions/schematic-3.md>
 //! Unnamed root → `Schematic` compound; `Blocks`/`Biomes` data are LEB128 varints ordered
 //! `x + z*W + y*W*L`; biomes are per block; the file is gzipped.
 

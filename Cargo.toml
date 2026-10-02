@@ -30,7 +30,7 @@ debug = true
 
 [workspace.dependencies]
 anyhow = "1"
-base64 = "0.22"
+base64 = "0.23"
 cc = "1"
 fastnbt = "2.6"
 clap = { version = "4", features = ["derive"] }

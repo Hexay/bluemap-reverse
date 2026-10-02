@@ -10,6 +10,8 @@ use flate2::read::{GzDecoder, ZlibDecoder};
 use flate2::write::ZlibEncoder;
 use rayon::prelude::*;
 
+mod lz4;
+
 const SECTOR: usize = 4096;
 
 /// Chunk NBT keyed by local (x, z) in 0..32.
@@ -81,7 +83,7 @@ fn read_chunk(data: &[u8], offset: usize) -> Result<Vec<u8>> {
         1 => GzDecoder::new(body).read_to_end(&mut out)?,
         2 => ZlibDecoder::new(body).read_to_end(&mut out)?,
         3 => return Ok(body.to_vec()),
-        // TODO: LZ4 (type 4, region-file-compression=lz4 servers)
+        4 => return lz4::decompress(body),
         k => bail!("unsupported chunk compression {k}"),
     };
     Ok(out)

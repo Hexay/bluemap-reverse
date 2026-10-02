@@ -69,6 +69,22 @@ fn unsupported_versions_are_rejected() {
     assert!(Generator::new((1, 17, 1)).is_none());
     assert!(Generator::new((0, 0, 0)).is_none());
     assert!(Generator::new((1, 18, 0)).is_some());
+    assert!(Generator::new((1, 21, 11)).is_some());
+    assert!(Generator::new((26, 3, 9)).is_some());
+    assert!(Generator::new((26, 4, 0)).is_none());
+    assert!(Generator::new((27, 0, 0)).is_none());
+    assert!(Generator::new((99, 0, 0)).is_none());
+}
+
+#[test]
+fn chunks_beyond_the_world_border_are_not_viable() {
+    let village = structure("villages");
+    let mut g = seeded(NUMERIC_SEED);
+    for c in [1_875_001, 1 << 27, (1 << 27) + 1, i32::MAX, -1_875_001, i32::MIN] {
+        assert!(!g.is_viable(village, (c, 0)), "{c}");
+        assert!(!g.is_viable(village, (0, c)), "{c}");
+    }
+    g.is_viable(village, (1_875_000, -1_875_000));
 }
 
 #[test]

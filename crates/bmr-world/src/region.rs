@@ -1,5 +1,5 @@
 //! Anvil `.mca` container: 1024 chunk slots, 4 KiB sectors, per-chunk compression byte.
-//! https://minecraft.wiki/w/Region_file_format
+//! <https://minecraft.wiki/w/Region_file_format>
 
 use std::io::{Read, Write};
 use std::path::Path;

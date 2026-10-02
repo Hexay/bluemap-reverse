@@ -4,29 +4,29 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29153968,
-    "name": 29156310
+    "exact": 29235996,
+    "name": 29238360
   },
   "occupied": {
-    "total": 10528628,
-    "exact": 7832100,
-    "name": 7834442
+    "total": 10542320,
+    "exact": 7927820,
+    "name": 7930184
   },
   "rendered": {
-    "total": 224149,
-    "exact": 221774,
-    "name": 224101
+    "total": 224270,
+    "exact": 221871,
+    "name": 224220
   },
-  "rendered_alike": 224096,
+  "rendered_alike": 224215,
   "exposed": {
-    "total": 420694,
-    "exact": 363689,
-    "name": 363775
+    "total": 420599,
+    "exact": 369774,
+    "name": 369860
   },
   "solid": {
-    "original": 10038263,
-    "reconstructed": 10400469,
-    "both": 9910104
+    "original": 10038355,
+    "reconstructed": 10539750,
+    "both": 10035785
   },
   "surface": {
     "total": 82944,
@@ -40,134 +40,134 @@
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 420434
+      "count": 429942
     },
     {
       "original": "minecraft:tuff",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 343463
+      "count": 348335
     },
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:stone",
-      "count": 255766
+      "count": 265044
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:stone",
-      "count": 242801
+      "count": 245133
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:stone",
-      "count": 234585
+      "count": 236440
     },
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:stone",
-      "count": 231665
+      "count": 233982
     },
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 83568
+      "count": 84512
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 76933
-    },
-    {
-      "original": "minecraft:deepslate[axis=y]",
-      "reconstructed": "minecraft:air",
-      "count": 72306
+      "count": 78383
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:stone",
-      "count": 69072
+      "count": 72964
     },
     {
       "original": "minecraft:dirt",
       "reconstructed": "minecraft:stone",
-      "count": 59767
+      "count": 60165
     },
     {
       "original": "minecraft:deepslate[axis=y]",
       "reconstructed": "minecraft:stone",
-      "count": 56668
+      "count": 57552
     },
     {
       "original": "minecraft:bedrock",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 49287
+      "count": 50199
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:stone",
-      "count": 47452
+      "count": 47797
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:sand",
-      "count": 45038
+      "count": 45047
     },
     {
       "original": "minecraft:deepslate[axis=y]",
       "reconstructed": "minecraft:bedrock",
-      "count": 42349
+      "count": 43074
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 33355
+      "count": 33867
     },
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 23875
+      "count": 24309
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 23446
-    },
-    {
-      "original": "minecraft:stone",
-      "reconstructed": "minecraft:air",
-      "count": 22258
+      "count": 23786
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 21352
+      "count": 21813
     },
     {
       "original": "minecraft:copper_ore",
       "reconstructed": "minecraft:stone",
-      "count": 19760
+      "count": 19923
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 17962
+      "count": 17972
     },
     {
       "original": "minecraft:coal_ore",
       "reconstructed": "minecraft:stone",
-      "count": 15674
+      "count": 15739
     },
     {
       "original": "minecraft:iron_ore",
       "reconstructed": "minecraft:stone",
-      "count": 13866
+      "count": 14018
+    },
+    {
+      "original": "minecraft:deepslate_redstone_ore[lit=false]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 10404
+    },
+    {
+      "original": "minecraft:lava[level=0]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 10262
     }
   ],
   "rendered_confusions": [
     {
       "original": "minecraft:kelp_plant",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 20
+      "count": 22
     },
     {
       "original": "minecraft:bubble_column[drag=true]",

@@ -4,29 +4,29 @@
   "columns": 82944,
   "all": {
     "total": 21233664,
-    "exact": 20147588,
-    "name": 20147617
+    "exact": 20150937,
+    "name": 20151020
   },
   "occupied": {
-    "total": 6065660,
-    "exact": 4979584,
-    "name": 4979613
+    "total": 6065673,
+    "exact": 4982946,
+    "name": 4983029
   },
   "rendered": {
-    "total": 520308,
-    "exact": 520279,
-    "name": 520307
+    "total": 520283,
+    "exact": 520206,
+    "name": 520282
   },
-  "rendered_alike": 520279,
+  "rendered_alike": 520206,
   "exposed": {
-    "total": 530962,
-    "exact": 467044,
-    "name": 467072
+    "total": 530936,
+    "exact": 466944,
+    "name": 467020
   },
   "solid": {
-    "original": 5847413,
-    "reconstructed": 5918128,
-    "both": 5699881
+    "original": 5847401,
+    "reconstructed": 5918135,
+    "both": 5699863
   },
   "surface": {
     "total": 82944,
@@ -34,68 +34,73 @@
   },
   "biomes": {
     "total": 331776,
-    "hits": 244068
+    "hits": 244136
   },
   "confusions": [
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:netherrack",
-      "count": 216442
+      "count": 216413
     },
     {
       "original": "minecraft:netherrack",
       "reconstructed": "minecraft:air",
-      "count": 116093
+      "count": 116096
     },
     {
       "original": "minecraft:basalt[axis=y]",
       "reconstructed": "minecraft:netherrack",
-      "count": 108678
+      "count": 109826
     },
     {
       "original": "minecraft:bedrock",
       "reconstructed": "minecraft:netherrack",
-      "count": 90201
+      "count": 90234
     },
     {
       "original": "minecraft:netherrack",
       "reconstructed": "minecraft:bedrock",
-      "count": 73930
+      "count": 73866
     },
     {
       "original": "minecraft:soul_sand",
       "reconstructed": "minecraft:netherrack",
-      "count": 68865
+      "count": 68902
     },
     {
       "original": "minecraft:soul_soil",
       "reconstructed": "minecraft:netherrack",
-      "count": 59182
+      "count": 59205
     },
     {
       "original": "minecraft:blackstone",
       "reconstructed": "minecraft:netherrack",
-      "count": 58559
-    },
-    {
-      "original": "minecraft:basalt[axis=y]",
-      "reconstructed": "minecraft:blackstone",
-      "count": 30161
+      "count": 59162
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:netherrack",
-      "count": 29275
+      "count": 30356
+    },
+    {
+      "original": "minecraft:netherrack",
+      "reconstructed": "minecraft:basalt[axis=y]",
+      "count": 25862
+    },
+    {
+      "original": "minecraft:basalt[axis=y]",
+      "reconstructed": "minecraft:blackstone",
+      "count": 25430
     },
     {
       "original": "minecraft:netherrack",
       "reconstructed": "minecraft:blackstone",
-      "count": 27967
+      "count": 25274
     },
     {
       "original": "minecraft:netherrack",
       "reconstructed": "minecraft:soul_sand",
-      "count": 24773
+      "count": 24775
     },
     {
       "original": "minecraft:netherrack",
@@ -103,24 +108,19 @@
       "count": 23827
     },
     {
-      "original": "minecraft:netherrack",
-      "reconstructed": "minecraft:basalt[axis=y]",
-      "count": 23378
-    },
-    {
       "original": "minecraft:blackstone",
       "reconstructed": "minecraft:basalt[axis=y]",
-      "count": 21862
+      "count": 21643
     },
     {
       "original": "minecraft:nether_quartz_ore",
       "reconstructed": "minecraft:netherrack",
-      "count": 20889
+      "count": 20960
     },
     {
       "original": "minecraft:magma_block",
       "reconstructed": "minecraft:netherrack",
-      "count": 16370
+      "count": 16504
     },
     {
       "original": "minecraft:soul_soil",
@@ -135,7 +135,7 @@
     {
       "original": "minecraft:soul_soil",
       "reconstructed": "minecraft:bedrock",
-      "count": 8746
+      "count": 8747
     },
     {
       "original": "minecraft:soul_sand",
@@ -145,39 +145,44 @@
     {
       "original": "minecraft:nether_gold_ore",
       "reconstructed": "minecraft:netherrack",
-      "count": 7157
+      "count": 7167
     },
     {
       "original": "minecraft:basalt[axis=y]",
       "reconstructed": "minecraft:bedrock",
-      "count": 3752
+      "count": 3887
     },
     {
       "original": "minecraft:basalt[axis=y]",
       "reconstructed": "minecraft:air",
-      "count": 2391
+      "count": 2413
     },
     {
       "original": "minecraft:bedrock",
       "reconstructed": "minecraft:basalt[axis=y]",
-      "count": 2226
+      "count": 2240
     }
   ],
   "rendered_confusions": [
     {
       "original": "minecraft:lava[level=8]",
       "reconstructed": "minecraft:lava[level=0]",
-      "count": 18
+      "count": 50
     },
     {
       "original": "minecraft:lava[level=1]",
       "reconstructed": "minecraft:lava[level=0]",
-      "count": 7
+      "count": 20
     },
     {
       "original": "minecraft:lava[level=2]",
       "reconstructed": "minecraft:lava[level=0]",
-      "count": 3
+      "count": 5
+    },
+    {
+      "original": "minecraft:lava[level=3]",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 1
     },
     {
       "original": "minecraft:spawner",
@@ -189,22 +194,22 @@
     {
       "original": "minecraft:soul_sand_valley",
       "reconstructed": "minecraft:nether_wastes",
-      "count": 71238
+      "count": 71235
     },
     {
       "original": "minecraft:basalt_deltas",
       "reconstructed": "minecraft:nether_wastes",
-      "count": 6789
+      "count": 6764
     },
     {
       "original": "minecraft:nether_wastes",
       "reconstructed": "minecraft:soul_sand_valley",
-      "count": 4494
+      "count": 4493
     },
     {
       "original": "minecraft:nether_wastes",
       "reconstructed": "minecraft:basalt_deltas",
-      "count": 3640
+      "count": 3601
     },
     {
       "original": "minecraft:soul_sand_valley",

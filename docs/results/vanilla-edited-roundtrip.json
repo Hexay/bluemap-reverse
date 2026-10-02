@@ -1,24 +1,24 @@
 {
-  "edge_faces": 294072,
+  "edge_faces": 298720,
   "original_faces": 951564,
-  "reconstructed_faces": 1047802,
-  "paired": 949874,
-  "identical": 828065,
+  "reconstructed_faces": 1009062,
+  "paired": 949871,
+  "identical": 826906,
   "aspects": {
     "ao": {
-      "faces": 11068,
-      "mean_delta": 43.855920973376705
+      "faces": 12449,
+      "mean_delta": 46.541248293035586
     },
     "blocklight": {
       "faces": 1415,
       "mean_delta": 2.1915194346289755
     },
     "sunlight": {
-      "faces": 110195,
-      "mean_delta": 6.9688824356821994
+      "faces": 110098,
+      "mean_delta": 6.96963614234591
     },
     "texture": {
-      "faces": 120,
+      "faces": 104,
       "mean_delta": null
     },
     "tint": {
@@ -37,7 +37,7 @@
     ],
     [
       "minecraft:block/water_still",
-      290
+      293
     ],
     [
       "minecraft:block/diorite",
@@ -95,63 +95,63 @@
   "extra": [
     [
       "minecraft:block/bedrock",
-      32894
+      30688
     ],
     [
       "minecraft:block/stone",
-      31438
-    ],
-    [
-      "minecraft:block/deepslate",
-      23190
+      19452
     ],
     [
       "minecraft:block/water_flow",
-      7140
-    ],
-    [
-      "minecraft:block/sand",
-      654
+      5812
     ],
     [
       "minecraft:block/water_still",
-      608
+      611
     ],
     [
-      "minecraft:block/granite",
-      424
-    ],
-    [
-      "minecraft:block/dirt",
-      416
+      "minecraft:block/sand",
+      518
     ],
     [
       "minecraft:block/andesite",
-      392
+      446
+    ],
+    [
+      "minecraft:block/granite",
+      410
+    ],
+    [
+      "minecraft:block/dirt",
+      374
     ],
     [
       "minecraft:block/diorite",
-      350
+      360
     ],
     [
       "minecraft:block/kelp",
-      120
+      104
     ],
     [
       "minecraft:block/gravel",
-      94
+      72
     ],
     [
       "minecraft:block/deepslate_top",
-      60
+      70
+    ],
+    [
+      "minecraft:block/deepslate",
+      66
     ],
     [
       "minecraft:block/cut_sandstone",
       46
     ],
     [
-      "minecraft:block/copper_ore",
-      24
+      "minecraft:block/iron_ore",
+      32
     ]
   ],
   "cells": [

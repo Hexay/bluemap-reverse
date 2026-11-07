@@ -21,11 +21,12 @@ URL = f"http://{WEB_HOST}:{WEB_PORT}/"
 
 
 def bmr_exe():
-    """$BMR_EXE if set (a build in another target dir), else the release build if present, else debug."""
+    """$BMR_EXE if set (a build in another target dir), else the newer of the release and debug builds: a stale
+    release binary must not shadow the debug build being iterated on."""
     if os.environ.get("BMR_EXE"):
         return Path(os.environ["BMR_EXE"])
-    release = ROOT / "target" / "release" / f"bmr{EXE}"
-    return release if release.exists() else ROOT / "target" / "debug" / f"bmr{EXE}"
+    builds = [p for p in (ROOT / "target" / d / f"bmr{EXE}" for d in ("release", "debug")) if p.exists()]
+    return max(builds, key=lambda p: p.stat().st_mtime, default=ROOT / "target" / "debug" / f"bmr{EXE}")
 
 
 def wait_until_serving(timeout: float = 120) -> None:

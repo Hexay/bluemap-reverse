@@ -21,7 +21,7 @@ from pathlib import Path
 
 from make_world import fixture_dimensions
 from mirror_fixture import bmr_exe, mirror
-from paths import DEFAULT, FIXTURES, RESULTS, ROOT, WORK
+from paths import DEFAULT, FIXTURES, OUT, RESULTS, ROOT
 from render_serve import TEMPLATES
 from resave_world import resave, written_area
 
@@ -50,13 +50,13 @@ def main() -> None:
     fixture, name = args.fixture, f"{args.fixture}-roundtrip"
     spec = json.loads((FIXTURES / fixture / "fixture.json").read_text())
     dimensions = fixture_dimensions(spec)
-    recon = args.recon or WORK / "out" / f"{fixture}-rev" / "world"
+    recon = args.recon or OUT / f"{fixture}-rev" / "world"
     original = DEFAULT.cache / fixture
     for path, how in [(recon, "reverse_fixture.py"), (original, "mirror_fixture.py")]:
         if not path.exists():
             sys.exit(f"no {path}; run tools/{how} {fixture} first")
 
-    world = WORK / "out" / name / "world"
+    world = OUT / name / "world"
     shutil.rmtree(world.parent, ignore_errors=True)
     shutil.copytree(recon, world)
     if resave(world, relight_area(world, dimensions, spec["area"]), dimensions=dimensions):

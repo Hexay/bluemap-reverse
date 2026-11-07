@@ -9,14 +9,14 @@ import subprocess
 import sys
 
 from mirror_fixture import bmr_exe
-from paths import ROOT, WORK, WORLDS
+from paths import OUT, ROOT, WORK, WORLDS
 from resave_world import resave
 
 
 def main() -> None:
     fixture = sys.argv[1] if len(sys.argv) > 1 else "superflat"
     original = WORLDS / fixture / "world"
-    copy = WORK / "out" / f"{fixture}-copy" / "world"
+    copy = OUT / f"{fixture}-copy" / "world"
     shutil.rmtree(copy.parent, ignore_errors=True)
     subprocess.run([bmr_exe(),"copy-world", original, "-o", copy], check=True, cwd=ROOT)
     area = json.loads((ROOT / "fixtures" / fixture / "fixture.json").read_text())["area"]

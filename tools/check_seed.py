@@ -9,14 +9,14 @@ import subprocess
 import sys
 
 from mirror_fixture import bmr_exe
-from paths import ROOT, WORK
+from paths import OUT, ROOT
 
 
 def main() -> None:
     fixture, truth_name = sys.argv[1], sys.argv[2]
-    world = WORK / "out" / f"{fixture}-rev" / "world"
+    world = OUT / f"{fixture}-rev" / "world"
     truth = ROOT / "fixtures" / "seed" / f"{truth_name}.json"
-    obs = WORK / "out" / f"{fixture}-structures.json"
+    obs = OUT / f"{fixture}-structures.json"
     bmr = str(bmr_exe())
     subprocess.run([bmr, "structures", str(world), "--truth", str(truth), "-o", str(obs)], check=True)
     out = subprocess.run([bmr, "seed", str(obs)], capture_output=True, text=True, encoding="utf-8").stdout

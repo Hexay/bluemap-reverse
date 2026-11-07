@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 
-from paths import EXE, ROOT, WORK
+from paths import EXE, OUT, ROOT, WORK
 
 CASES = {
     "vanilla-regen": ["--mirror", "work/cache/vanilla", "--regen", "work/worlds/regen-vanilla/world"],
@@ -22,7 +22,7 @@ CASES = {
 
 def run_case(bmr: str, name: str, args: list[str], update: bool) -> bool:
     ref = WORK / "ref" / name / "world"
-    out = WORK / "out" / f"equiv-{name}" / "world"
+    out = OUT / f"equiv-{name}" / "world"
     shutil.rmtree(out.parent, ignore_errors=True)
     subprocess.run([bmr, "reverse", *args, "-o", str(out)], check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
     if update:

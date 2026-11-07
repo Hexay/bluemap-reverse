@@ -17,6 +17,8 @@ DOWNLOADS = WORK / "downloads"
 FIXTURES = ROOT / "fixtures"
 PACKS = ROOT / "packs"
 RESULTS = ROOT / "docs" / "results"
+# $BMR_OUT lets a worktree whose work/ is a symlink to the main checkout's keep its outputs apart
+OUT = Path(os.environ.get("BMR_OUT") or WORK / "out")
 
 MC_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 

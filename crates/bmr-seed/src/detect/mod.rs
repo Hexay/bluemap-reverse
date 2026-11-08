@@ -1,11 +1,17 @@
 //! Structures in a (reconstructed) world → observations for the cracker: marker-block clusters per structure
-//! type, filtered by shape, turned into candidate start chunks (rules.rs).
+//! type, filtered by shape, turned into candidate start chunks by bbox rules (rules.rs) or by template match
+//! (verified.rs).
 
+mod blocks;
 mod cluster;
 mod evaluate;
+mod huts;
+mod mansion;
 mod portal;
 mod rules;
 mod scan;
+mod template;
+mod verified;
 mod village;
 
 pub use evaluate::{SetScore, evaluate};
@@ -14,10 +20,9 @@ use anyhow::Result;
 use bmr_world::World;
 use serde::Serialize;
 
-use cluster::Bbox;
-
 use crate::observation::Observation;
 use rules::RULES;
+use verified::TEMPLATE_RULES;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Detection {
@@ -25,8 +30,11 @@ pub struct Detection {
     pub min: [i32; 3],
     pub max: [i32; 3],
     pub blocks: usize,
-    /// candidate start chunks; empty = the shape fits but no corner estimate lands on a chunk corner
+    /// candidate start chunks; empty = the shape fits but no start could be placed
     pub chunks: Vec<[i32; 2]>,
+    /// best template match (verified rules only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score: Option<f64>,
 }
 
 impl Detection {
@@ -42,27 +50,25 @@ pub struct Scan {
 }
 
 pub fn detect(world: &World) -> Result<Scan> {
-    let markers: Vec<Vec<String>> = RULES.iter().map(|r| (r.markers)()).collect();
+    let markers: Vec<Vec<String>> =
+        RULES.iter().map(|r| (r.markers)()).chain(TEMPLATE_RULES.iter().map(|r| (r.markers)())).collect();
     let marker_refs: Vec<Vec<&str>> = markers.iter().map(|m| m.iter().map(String::as_str).collect()).collect();
     let slices: Vec<&[&str]> = marker_refs.iter().map(Vec::as_slice).collect();
-    let scan = scan::marker_positions(world, &slices)?;
+    let mut scan = scan::marker_positions(world, &slices)?;
+    let verified_points = scan.positions.split_off(RULES.len());
 
     let mut out = Vec::new();
     for (rule, points) in RULES.iter().zip(scan.positions) {
         let mut found: Vec<Detection> = cluster::clusters(&points, rule.link)
             .into_iter()
             .filter(|c| c.points.len() >= rule.min_points && (rule.accepts)(&c.bbox))
-            .map(|c| {
-                let anchors =
-                    if rule.per_point { c.points.iter().map(|&p| Bbox::at(p)).collect() } else { vec![c.bbox] };
-                let estimates: Vec<(i32, i32)> = anchors.iter().flat_map(rule.corners).collect();
-                Detection {
-                    set: rule.set,
-                    min: c.bbox.min,
-                    max: c.bbox.max,
-                    blocks: c.points.len(),
-                    chunks: candidate_chunks(&estimates, rule.tolerance),
-                }
+            .map(|c| Detection {
+                set: rule.set,
+                min: c.bbox.min,
+                max: c.bbox.max,
+                blocks: c.points.len(),
+                chunks: candidate_chunks(&(rule.corners)(&c.bbox), rule.tolerance),
+                score: None,
             })
             .collect();
         if rule.set == "ocean_ruins" {
@@ -70,6 +76,17 @@ pub fn detect(world: &World) -> Result<Scan> {
         }
         out.extend(found);
     }
+    let clusters = TEMPLATE_RULES
+        .iter()
+        .zip(verified_points)
+        .flat_map(|(rule, points)| {
+            cluster::clusters(&points, rule.link)
+                .into_iter()
+                .filter(|c| c.points.len() >= rule.min_points && (rule.accepts)(&c.bbox))
+                .map(move |c| (rule, c))
+        })
+        .collect();
+    out.extend(verified::detect(world, clusters)?);
     Ok(Scan { detections: out, chunks: scan.chunks })
 }
 

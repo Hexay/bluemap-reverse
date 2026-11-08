@@ -18,6 +18,8 @@ pub struct SetScore {
     pub misplaced: usize,
     /// detections with no true start nearby
     pub false_positives: usize,
+    /// detections without candidate chunks (no observation, so neither right nor wrong)
+    pub unplaced: usize,
     /// average candidate chunks per correct detection
     pub options: f64,
 }
@@ -35,6 +37,10 @@ pub fn evaluate(
     for d in detections {
         let s = scores.entry(d.set.to_string()).or_default();
         s.detections += 1;
+        if d.chunks.is_empty() {
+            s.unplaced += 1;
+            continue;
+        }
         let starts = truth.iter().filter(|t| t.set == d.set).map(|t| t.chunks[0]);
         let center = [(d.min[0] + d.max[0]).div_euclid(32), (d.min[2] + d.max[2]).div_euclid(32)];
         let near: Vec<[i32; 2]> =

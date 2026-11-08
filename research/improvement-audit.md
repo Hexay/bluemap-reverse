@@ -5,8 +5,8 @@ docs/results/*.json + history.jsonl + bench.jsonl, docs/performance.md, docs/see
 research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
-A3, A4, A5 (`--seed`), F1a (`pull --crack-seed`), F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C8. Open:
-A6, A7, F1b (managed regen), F4, C2, C9.
+A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C8.
+Open: F1b (managed regen), F4, C2, C9.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's
@@ -90,12 +90,30 @@ have tractable losses without a seed.
   (deep ocean), the width of a water channel between land (river), and sand bordering ocean (beach, relaxing the
   per-4×4 `sandy_columns` majority at `:162-179`). Run this as a measured experiment and drop it if the
   classes still overlap.
+- **Result 2026-11-08 (positive, kept):** among biomes tied on colour, `biomes.rs::water_biome` picks by the
+  seabed: sand over 2% of the 20-block window → beach; water over 95% of the 68-block window → ocean, or deep
+  ocean when the mean floor is 24+ below sea level; else river. Lukewarm, cold and frozen oceans take the same
+  depth cut. Biome accuracy: vanilla 95.737 → 97.029, `biomes` 51.875 → 51.938; occupied unchanged everywhere.
+- **Structures not yet scored with this rule** (the run was stopped for memory). Offline, on that fixture's dumped
+  tints and surface biomes, the rule gets 17 148 more of 76 092 tinted columns right. The thresholds were chosen
+  on that data and vanilla together, so this is not a held-out figure. Cold and frozen oceans were not measured.
+- **Limits:** vanilla's 8 928 deep_lukewarm misses remain: its deep columns are not deeper than its shallow ones
+  (depth AUC 0.28–0.62), and a lower cut costs vanilla. At 24, 13 717 of 26 664 deep_lukewarm columns on
+  structures stay lukewarm; a cut of 22 fixes more there but gives back 13 columns on vanilla.
 
 ### A7. Nether roof band (masked y 90..127). Impact medium, effort M, research
 - **Evidence:** air→netherrack 3.45pp and netherrack→air 1.93pp. The fixed `roof_from: 108`
   (`profile.rs:35`) scores 88% in the band.
 - **Approach:** fit P(rock | y, distance to the nearest drawn rock under the mask, local ceiling slope) on the
   fixture instead of using one cut. The ceiling is truly hidden, so expect at most +1–2pp.
+- **Result 2026-11-08 (small positive, kept):** open columns within 3 steps of a column with rock reaching the
+  mask lower the cut by `4 - distance` (`columns.rs::roof_drop`). Nether occupied 82.913 → 82.945, exposed 88.063
+  → 88.274, solid IoU 94.091 → 94.144; other fixtures unchanged. Measured with
+  `crates/bmr-score/examples/roof_band.rs`. Leave-one-quadrant-out on the fixture: +0.033pp in total, positive in
+  3 of 4 quadrants (one fixture only: no second nether world exists).
+- **Dropped (held-out occupied, per-bucket cuts):** distance buckets −0.019pp, floor height −0.123, biome −0.239,
+  distance + biome −0.342; rock fraction within 8 or 24 columns +0.05 but more parameters than the ramp. Cells
+  of the band stay ambiguous at any feature tried: expect tenths of a pp at most, not the +1–2pp estimated above.
 
 ### Don't pursue
 Andesite, diorite, granite and tuff blobs, ores, hidden dry caves and buried aquifers are seed-only. That is

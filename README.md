@@ -107,7 +107,7 @@ Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27)
 | Test world | Drawn blocks | Drawn, look-alikes allowed | All blocks | Biomes |
 |---|--:|--:|--:|--:|
 | Superflat with builds | 99.86% | 100% | 99.92% | 100% |
-| Vanilla terrain, no seed | 98.94% | 99.99% | 75.3% | 95.7% |
+| Vanilla terrain, no seed | 98.94% | 99.99% | 75.3% | 97.0% |
 | Vanilla terrain, with seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
 | Blocks among neighbours¹ | 99.44% | 99.98% | 99.5% | 99.8% |
 | Nether | 99.99% | 99.99% | 82.9% | 96.0% |

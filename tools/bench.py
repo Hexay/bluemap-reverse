@@ -12,6 +12,7 @@ Example:
 import argparse
 import ctypes
 import json
+import os
 import shutil
 import statistics
 import subprocess
@@ -34,9 +35,21 @@ class ProcessMemoryCounters(ctypes.Structure):
     ]
 
 
-def process_stats(handle) -> tuple[float, int]:
+def wait_with_stats(proc: subprocess.Popen) -> tuple[bytes, int, float, int]:
+    """Wait for `proc`: (stderr, exit code, user+kernel CPU seconds, peak working set bytes)."""
+    if os.name == "nt":
+        _, err = proc.communicate()
+        return (err, proc.returncode, *windows_process_stats(proc._handle))
+    err = proc.stderr.read()
+    _, status, usage = os.wait4(proc.pid, 0)
+    proc.returncode = os.waitstatus_to_exitcode(status)
+    # ru_maxrss is KiB on Linux
+    return err, proc.returncode, usage.ru_utime + usage.ru_stime, usage.ru_maxrss * 1024
+
+
+def windows_process_stats(handle) -> tuple[float, int]:
     """(user+kernel CPU seconds, peak working set bytes) of an exited process."""
-    ft = [wintypes.FILETIME() for _ in range(4)]
+    ft =[wintypes.FILETIME() for _ in range(4)]
     ctypes.windll.kernel32.GetProcessTimes(int(handle), *[ctypes.byref(f) for f in ft])
     to_s = lambda f: ((f.dwHighDateTime << 32) | f.dwLowDateTime) / 1e7
     cpu = to_s(ft[2]) + to_s(ft[3])
@@ -50,11 +63,10 @@ def run_once(cmd: list[str], timings_path: Path) -> dict:
     t = time.perf_counter()
     proc = subprocess.Popen([c.replace("{timings}", str(timings_path)) for c in cmd], cwd=ROOT,
                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    _, err = proc.communicate()
+    err, code, cpu, peak = wait_with_stats(proc)
     wall = time.perf_counter() - t
-    if proc.returncode:
-        raise SystemExit(f"command failed ({proc.returncode}): {err.decode(errors='replace')[-2000:]}")
-    cpu, peak = process_stats(proc._handle)
+    if code:
+        raise SystemExit(f"command failed ({code}): {err.decode(errors='replace')[-2000:]}")
     stages = json.loads(timings_path.read_text()) if timings_path.exists() else {}
     return {"wall": wall, "cpu": cpu, "peak_mb": peak / 2**20, "stages": stages}
 

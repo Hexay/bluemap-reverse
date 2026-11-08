@@ -215,7 +215,7 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
 - Biomes without a seed (`bmr-fill/src/biomes.rs`): overworld from BlueMap's grass/foliage/water tints,
   matched per 4×4 column to a table packs learn from the `biomes` fixture (`bmr-invert/src/tints.rs`; pack
   format 5); nether from surface markers voted per 4×4×4 cell; end by distance from the main island.
-  Vanilla 2.5% → 94.3%, nether 0 → 73.6%, end 100%. Cave biomes (underground) take their column's surface
+  Vanilla 2.5% → 95.7%, nether 0 → 96.0% (`docs/results`), end 100%. Cave biomes (underground) take their column's surface
   biome. Every rendered chunk is written, even if empty (else the game generates it with template biomes).
 
 ### Render round-trip (2026-10-02)

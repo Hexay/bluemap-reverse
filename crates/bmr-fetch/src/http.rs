@@ -11,6 +11,7 @@ use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 use crate::progress::{OnProgress, Progress, emit};
 
 const RETRIES: u32 = 4;
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(60);
 /// Per response, compressed and decompressed: the largest real file is textures.json (tens of MB with mods).
 const MAX_BODY: u64 = 256 << 20;
 /// Longest `Retry-After` honoured; longer asks are capped (a mirror is resumable, a stall is not).
@@ -31,9 +32,14 @@ enum Failure {
 
 impl Http {
     pub fn new(base: &str, delay: Duration) -> Result<Self> {
+        Self::with_timeout(base, delay, DEFAULT_TIMEOUT)
+    }
+
+    /// `timeout` bounds one whole request including its body (a large download needs more than a tile).
+    pub fn with_timeout(base: &str, delay: Duration, timeout: Duration) -> Result<Self> {
         let agent = Agent::config_builder()
             .user_agent(concat!("bluemap-reverse/", env!("CARGO_PKG_VERSION")))
-            .timeout_global(Some(Duration::from_secs(60)))
+            .timeout_global(Some(timeout))
             .http_status_as_error(false)
             // OS store: the default (bundled webpki roots) makes SChannel reject cross-signed chains like GTS→GlobalSign.
             .tls_config(

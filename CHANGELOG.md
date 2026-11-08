@@ -9,6 +9,12 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - `bmr --version`.
+- `pull --regen-seed <seed|SITE.seed.json> --accept-eula`: generates the same-seed vanilla world for exactly the
+  rendered chunks with a real server and fills from it, without Python. Needs Java (`--java`, checked against
+  Mojang's metadata; never installed for you); the server jar is downloaded and sha1-verified into `<data>/minecraft`
+  unless `--server-jar` is given. The default path still needs no Java.
+- `tools/reverse_fixture.py` records biome accuracy in `history.jsonl` and writes `--regen` runs to
+  `<fixture>-regen.json`; `tools/bench.py` works on Linux.
 - Seed detection (`bmr structures`, `pull --crack-seed`) matches structure templates for villages, igloos, swamp
   huts and (new) woodland mansions: a candidate start is kept only when the town centre, igloo dome, hut or
   mansion entrance is actually there block for block, so house and player bells, snowy houses and spruce builds

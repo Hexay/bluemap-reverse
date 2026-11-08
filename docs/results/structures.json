@@ -4,180 +4,180 @@
   "columns": 1180672,
   "all": {
     "total": 453378048,
-    "exact": 412764836,
-    "name": 412816750
+    "exact": 414973825,
+    "name": 415014647
   },
   "occupied": {
-    "total": 150665797,
-    "exact": 110052585,
-    "name": 110104499
+    "total": 150839581,
+    "exact": 112435358,
+    "name": 112476180
   },
   "rendered": {
-    "total": 3372787,
-    "exact": 3321037,
-    "name": 3372428
+    "total": 3370284,
+    "exact": 3329638,
+    "name": 3369922
   },
-  "rendered_alike": 3372054,
+  "rendered_alike": 3369619,
   "exposed": {
-    "total": 6248518,
-    "exact": 5215632,
-    "name": 5221238
+    "total": 6246371,
+    "exact": 5281565,
+    "name": 5287094
   },
   "solid": {
-    "original": 141961553,
-    "reconstructed": 148845604,
-    "both": 140141360
+    "original": 141958871,
+    "reconstructed": 150792261,
+    "both": 141911551
   },
   "surface": {
     "total": 1180672,
-    "hits": 1177379
+    "hits": 1177274
   },
   "biomes": {
     "total": 7084032,
-    "hits": 325025
+    "hits": 3421386
   },
   "confusions": [
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 7322241
+      "count": 7454578
     },
     {
       "original": "minecraft:tuff",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 4858773
+      "count": 4939705
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:stone",
-      "count": 3182047
+      "count": 3334639
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:stone",
-      "count": 3060865
+      "count": 3199547
     },
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:stone",
-      "count": 2954341
+      "count": 3091059
     },
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:stone",
-      "count": 2908205
-    },
-    {
-      "original": "minecraft:stone",
-      "reconstructed": "minecraft:sand",
-      "count": 1437317
+      "count": 2955336
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:stone",
-      "count": 1367533
+      "count": 1403212
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 1050516
-    },
-    {
-      "original": "minecraft:deepslate[axis=y]",
-      "reconstructed": "minecraft:air",
-      "count": 974452
-    },
-    {
-      "original": "minecraft:deepslate[axis=y]",
-      "reconstructed": "minecraft:stone",
-      "count": 879451
-    },
-    {
-      "original": "minecraft:water[level=0]",
-      "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 866531
+      "count": 1068950
     },
     {
       "original": "minecraft:dirt",
       "reconstructed": "minecraft:stone",
-      "count": 828718
+      "count": 907288
+    },
+    {
+      "original": "minecraft:deepslate[axis=y]",
+      "reconstructed": "minecraft:stone",
+      "count": 893150
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:deepslate[axis=y]",
+      "count": 884299
     },
     {
       "original": "minecraft:bedrock",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 694880
+      "count": 706398
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:stone",
-      "count": 646576
+      "count": 680279
     },
     {
       "original": "minecraft:deepslate[axis=y]",
       "reconstructed": "minecraft:bedrock",
-      "count": 623311
+      "count": 633553
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 532482
+      "count": 540738
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:sand",
+      "count": 480879
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 402395
+      "count": 409347
     },
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 389079
+      "count": 395437
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 382618
-    },
-    {
-      "original": "minecraft:stone",
-      "reconstructed": "minecraft:air",
-      "count": 357177
+      "count": 388086
     },
     {
       "original": "minecraft:tuff_bricks",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 233665
+      "count": 235264
     },
     {
       "original": "minecraft:copper_ore",
       "reconstructed": "minecraft:stone",
-      "count": 222304
+      "count": 234861
     },
     {
       "original": "minecraft:lava[level=0]",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 220977
+      "count": 225923
     },
     {
       "original": "minecraft:coal_ore",
       "reconstructed": "minecraft:stone",
-      "count": 206204
+      "count": 218891
+    },
+    {
+      "original": "minecraft:iron_ore",
+      "reconstructed": "minecraft:stone",
+      "count": 194771
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 181598
     }
   ],
   "rendered_confusions": [
     {
       "original": "minecraft:bubble_column[drag=true]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 267
-    },
-    {
-      "original": "minecraft:water[level=1]",
-      "reconstructed": "minecraft:water[level=0]",
-      "count": 107
+      "count": 269
     },
     {
       "original": "minecraft:water[level=8]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 95
+      "count": 89
+    },
+    {
+      "original": "minecraft:water[level=1]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 86
     },
     {
       "original": "minecraft:cut_sandstone",
@@ -187,22 +187,22 @@
     {
       "original": "minecraft:water[level=2]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 46
+      "count": 38
     },
     {
       "original": "minecraft:water[level=3]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 34
+      "count": 26
     },
     {
       "original": "minecraft:water[level=4]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 24
+      "count": 19
     },
     {
       "original": "minecraft:water[level=5]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 18
+      "count": 17
     },
     {
       "original": "minecraft:water[level=6]",
@@ -220,53 +220,38 @@
       "count": 12
     },
     {
-      "original": "minecraft:birch_slab[type=bottom,waterlogged=true]",
-      "reconstructed": "minecraft:birch_slab[type=bottom,waterlogged=false]",
-      "count": 3
-    },
-    {
-      "original": "minecraft:oak_slab[type=bottom,waterlogged=true]",
-      "reconstructed": "minecraft:oak_slab[type=bottom,waterlogged=false]",
-      "count": 3
-    },
-    {
       "original": "minecraft:spruce_stairs[facing=west,half=top,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:sand",
-      "count": 3
-    },
-    {
-      "original": "minecraft:spruce_stairs[facing=west,half=top,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:spruce_planks",
-      "count": 3
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 6
     },
     {
       "original": "minecraft:oak_door[facing=east,half=lower,hinge=right,open=false,powered=false]",
       "reconstructed": "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
-      "count": 2
+      "count": 3
     },
     {
       "original": "minecraft:oak_door[facing=east,half=upper,hinge=right,open=false,powered=false]",
       "reconstructed": "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:birch_slab[type=bottom,waterlogged=true]",
+      "reconstructed": "minecraft:birch_slab[type=bottom,waterlogged=false]",
       "count": 2
     },
     {
-      "original": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "original": "minecraft:oak_leaves[distance=7,persistent=false,waterlogged=true]",
+      "reconstructed": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
+      "count": 2
+    },
+    {
+      "original": "minecraft:podzol[snowy=false]",
+      "reconstructed": "minecraft:dirt",
       "count": 2
     },
     {
       "original": "minecraft:spruce_slab[type=bottom,waterlogged=true]",
-      "reconstructed": "minecraft:air",
-      "count": 2
-    },
-    {
-      "original": "minecraft:spruce_slab[type=bottom,waterlogged=true]",
-      "reconstructed": "minecraft:spruce_slab[type=bottom,waterlogged=false]",
-      "count": 2
-    },
-    {
-      "original": "minecraft:spruce_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:spruce_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "reconstructed": "minecraft:water[level=0]",
       "count": 2
     },
     {
@@ -275,19 +260,161 @@
       "count": 2
     },
     {
-      "original": "minecraft:spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "original": "minecraft:tall_seagrass[half=lower]",
+      "reconstructed": "minecraft:water[level=0]",
       "count": 2
     },
     {
-      "original": "minecraft:spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]",
-      "count": 2
-    },
-    {
-      "original": "minecraft:birch_stairs[facing=east,half=bottom,shape=straight,waterlogged=true]",
-      "reconstructed": "minecraft:birch_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "original": "minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:dark_oak_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
       "count": 1
+    },
+    {
+      "original": "minecraft:jungle_stairs[facing=north,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:jungle_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:lava[level=2]",
+      "reconstructed": "minecraft:lava[level=0]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:mossy_stone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=true]",
+      "reconstructed": "minecraft:mossy_stone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
+      "count": 1
+    },
+    {
+      "original": "minecraft:oak_door[facing=west,half=lower,hinge=right,open=false,powered=false]",
+      "reconstructed": "minecraft:oak_door[facing=south,half=lower,hinge=left,open=true,powered=false]",
+      "count": 1
+    }
+  ],
+  "biome_confusions": [
+    {
+      "original": "minecraft:deep_lukewarm_ocean",
+      "reconstructed": "minecraft:lukewarm_ocean",
+      "count": 2460202
+    },
+    {
+      "original": "minecraft:deep_ocean",
+      "reconstructed": "minecraft:plains",
+      "count": 677430
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:plains",
+      "count": 132266
+    },
+    {
+      "original": "minecraft:beach",
+      "reconstructed": "minecraft:plains",
+      "count": 75403
+    },
+    {
+      "original": "minecraft:forest",
+      "reconstructed": "minecraft:birch_forest",
+      "count": 37211
+    },
+    {
+      "original": "minecraft:ocean",
+      "reconstructed": "minecraft:plains",
+      "count": 36472
+    },
+    {
+      "original": "minecraft:bamboo_jungle",
+      "reconstructed": "minecraft:jungle",
+      "count": 27431
+    },
+    {
+      "original": "minecraft:sparse_jungle",
+      "reconstructed": "minecraft:plains",
+      "count": 27251
+    },
+    {
+      "original": "minecraft:jungle",
+      "reconstructed": "minecraft:plains",
+      "count": 18917
+    },
+    {
+      "original": "minecraft:lush_caves",
+      "reconstructed": "minecraft:plains",
+      "count": 17765
+    },
+    {
+      "original": "minecraft:savanna",
+      "reconstructed": "minecraft:plains",
+      "count": 16704
+    },
+    {
+      "original": "minecraft:bamboo_jungle",
+      "reconstructed": "minecraft:sparse_jungle",
+      "count": 13684
+    },
+    {
+      "original": "minecraft:bamboo_jungle",
+      "reconstructed": "minecraft:forest",
+      "count": 12391
+    },
+    {
+      "original": "minecraft:beach",
+      "reconstructed": "minecraft:forest",
+      "count": 10566
+    },
+    {
+      "original": "minecraft:jungle",
+      "reconstructed": "minecraft:sparse_jungle",
+      "count": 10476
+    },
+    {
+      "original": "minecraft:lush_caves",
+      "reconstructed": "minecraft:lukewarm_ocean",
+      "count": 9861
+    },
+    {
+      "original": "minecraft:forest",
+      "reconstructed": "minecraft:plains",
+      "count": 8736
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:birch_forest",
+      "count": 8604
+    },
+    {
+      "original": "minecraft:bamboo_jungle",
+      "reconstructed": "minecraft:plains",
+      "count": 8009
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:ocean",
+      "count": 7849
+    },
+    {
+      "original": "minecraft:lush_caves",
+      "reconstructed": "minecraft:jungle",
+      "count": 7783
+    },
+    {
+      "original": "minecraft:stony_shore",
+      "reconstructed": "minecraft:plains",
+      "count": 3648
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:forest",
+      "count": 3341
+    },
+    {
+      "original": "minecraft:lush_caves",
+      "reconstructed": "minecraft:sparse_jungle",
+      "count": 3291
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:beach",
+      "count": 2397
     }
   ],
   "samples": []

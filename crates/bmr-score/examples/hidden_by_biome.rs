@@ -50,8 +50,7 @@ fn main() -> anyhow::Result<()> {
                                 continue;
                             }
                             let biome = ns.biome(x / 4, ly / 4, z / 4).unwrap_or("?").to_owned();
-                            *counts.entry((biome, bucket(depth))).or_default().entry(ob.name.clone()).or_default() +=
-                                1;
+                            *counts.entry((biome, bucket(depth))).or_default().entry(ob.name.clone()).or_default() += 1;
                         }
                     }
                 }

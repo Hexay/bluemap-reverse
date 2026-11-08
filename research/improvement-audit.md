@@ -5,8 +5,8 @@ docs/results/*.json + history.jsonl + bench.jsonl, docs/performance.md, docs/see
 research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
-A3, A4, A5 (`--seed`), F1a (`pull --crack-seed`), F2, F3, F5, F6, R1–R4, C1 (material tests), C8. Open: A6,
-A7, F1b (managed regen), F4, F7, R5, C2–C7, C9.
+A3, A4, A5 (`--seed`), F1a (`pull --crack-seed`), F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C8. Open:
+A6, A7, F1b (managed regen), F4, C2, C9.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's
@@ -149,7 +149,7 @@ occupied metric (the decision log, 2026-10-02, reaches the same conclusion). Blo
 - **Approach:** run windows in parallel and merge per-window `StateTable`s, capped by memory (each window is about
   375 MB peak).
 
-### F7. Liquid-inset tolerance in `diff-render`. Impact low, effort XS
+### F7. Liquid-inset tolerance in `diff-render`. Impact low, effort XS — done
 - **Evidence:** research/bluemap-5.29-delta.md:24,52-53. The next BlueMap release insets liquid faces by 0.001
   blocks, and the `bmr-prbm/src/diff` QUANT of 1/4096 will stop pairing them.
 
@@ -185,7 +185,7 @@ occupied metric (the decision log, 2026-10-02, reaches the same conclusion). Blo
   region.rs:74-77, nbt.rs:104-120), and R1 was found by reading the code, which suggests a fuzzer would find more.
 - **Approach:** add `cargo fuzz` targets and a weekly CI job that runs each for a few minutes.
 
-### R5. `check-heights` indexes the lowres image by grid coordinates. Impact low, effort XS
+### R5. `check-heights` indexes the lowres image by grid coordinates. Impact low, effort XS — done
 - **Evidence:** `bmr-cli/src/check_heights.rs:55-58` passes `(x - mx, z - mz)` into `img.color()`, which slices
   `rgba` without a bounds check (`lowres.rs:29-31`). A tile whose size differs from settings.json panics. The
   command is hidden.
@@ -211,7 +211,7 @@ non-empty sets or RwLock unwraps (`texture.rs:41-56`), which are fine.
 
 ### C2. CI has no accuracy regression gate (see CI gaps below). Impact high, effort M
 
-### C3. Files close to the 300-line cap. Impact low now, effort S each
+### C3. Files close to the 300-line cap. Impact low now, effort S each — done (`face.rs`, `library.rs` split)
 No `.rs` or `.py` file is over 300 lines; the largest is 294. The ones close to the cap:
 
 | Lines | File |
@@ -228,24 +228,24 @@ No `.rs` or `.py` file is over 300 lines; the largest is 294. The ones close to 
 Split `face.rs` (key/quantisation vs owner/evidence helpers) and `library.rs` before the next feature lands in
 them. `material.rs` (203 lines) will grow with A2–A4, so plan for `material/{layers,copy}.rs`.
 
-### C4. Duplicated "default state for a block name". Impact low, effort XS
+### C4. Duplicated "default state for a block name". Impact low, effort XS — done
 - **Evidence:** the same closure appears in `bmr-fill/src/material.rs:41-44` and `bmr-fill/src/lib.rs:81-84`, and
   the same lookup in `bmr-world/src/nbt.rs:66`.
 - **Approach:** add `BlockRegistry::default_state(name) -> BlockState` to bmr-world.
 
-### C5. Coordinate math scattered across crates. Impact low, effort S
+### C5. Coordinate math scattered across crates. Impact low, effort S — done
 - **Evidence:** there are about 25 inline `div_euclid(16|32|512)` calls in 12 files (bmr-world
   sparse/schem/world_write/chunk, bmr-cli window/schem/probe/explain/reconstruct, bmr-invert tints/library,
   bmr-fill regen, bmr-score compare). `region_of` is defined locally in `bmr-cli/src/window.rs:33`.
 - **Approach:** add a `bmr_world::coords` module with `chunk_of`, `region_of`, `section_of` and `local`.
 
-### C6. Dimension ids as bare strings. Impact low, effort S
+### C6. Dimension ids as bare strings. Impact low, effort S — done
 - **Evidence:** `"minecraft:the_nether"` and similar appear in `bmr-fill/src/profile.rs:29,37`,
   `bmr-cli/src/pull/plan.rs:37` and `bmr-cli/src/main.rs:103,153`.
 - **Approach:** parse once into a `Dimension` enum in bmr-world. `Profile::for_dimension` currently treats any
   unknown string as the overworld.
 
-### C7. Three test-layout conventions. Impact low, effort XS
+### C7. Three test-layout conventions. Impact low, effort XS — done (convention in docs/development.md)
 The repo uses `#[path = "x_tests.rs"]` siblings (bmr-invert, bmr-prbm, bmr-fill), `mod tests;` directories
 (`bmr-world/src/region/tests.rs`, `bmr-prbm/src/diff/tests.rs`) and inline `mod tests {}` (the rest). Pick one.
 Sibling files fit the 300-line rule best.

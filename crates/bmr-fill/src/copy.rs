@@ -75,10 +75,7 @@ pub fn copy_nearest<'d>(
         }
     }
 
-    let picks: Vec<Pick> = (g.ylo..)
-        .zip(picks)
-        .map(|(y, p)| p.unwrap_or_else(|| Pick::Default(default(y))))
-        .collect();
+    let picks: Vec<Pick> = (g.ylo..).zip(picks).map(|(y, p)| p.unwrap_or_else(|| Pick::Default(default(y)))).collect();
     let mut out: Vec<Run> = Vec::new();
     let mut last: Option<&Pick> = None;
     for y in (g.ylo..=g.yhi).rev() {

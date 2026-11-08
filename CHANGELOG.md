@@ -23,6 +23,9 @@ All notable changes to this project are documented here. The format follows
 - `--window-jobs N` (`reverse`, `pull`): region windows are reconstructed N at a time (default 4). With the
   faster fill and allocator below, reverse of the structures test map went from 41 s to about 9–18 s
   (identical output).
+- `--seed <n>` (`reverse`, `pull`): with the world seed, unseen bedrock floor/roof and the deepslate transition
+  are computed exactly as vanilla's surface rules do (native, no Java; exact on every gradient cell of the
+  test worlds). All blocks: vanilla 75.3% → 76.9%, Nether 82.9% → 85.7%.
 - `pull --crack-seed`: detects structures in the reconstructed overworld, cracks the world seed and writes
   the report (observations, candidates) to `OUT.seed.json`; replaces the manual `structures` → `seed` steps.
 - `--area x0,z0,x1,z1` on `pull` and `fetch`: mirror only the tiles around a block box (plus the reconstruction

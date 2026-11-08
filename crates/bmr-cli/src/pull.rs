@@ -213,8 +213,9 @@ fn crack_seed(maps: &[Planned], world_dir: &Path, pack: &Pack, out: &Path, t: &m
     let report = out.with_extension("seed.json");
     let seed = t.time("seed", || crate::seed::crack_world(&world, &pack.meta.mc_version, &report))?;
     match seed {
-        Some(_) => println!(
-            "      seed report {}; with the seed, --regen fills hidden terrain exactly (docs/seed.md)",
+        Some(s) => println!(
+            "      seed report {}; re-run with --seed {s} for exact bedrock and deepslate layers, or --regen to \
+             fill hidden terrain exactly (docs/seed.md)",
             report.display()
         ),
         None => println!("      seed report {}", report.display()),

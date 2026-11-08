@@ -1,6 +1,8 @@
 //! What a dimension looks like to the fill: its build height, how BlueMap renders it by default (sites do
 //! not publish their map config), and the block hidden volumes default to.
 
+use crate::gradient::Gradients;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Overworld,
@@ -20,6 +22,8 @@ pub struct Profile {
     /// Inside the mask, above open space: rock from this height up (the nether roof's usual underside;
     /// measured on the nether fixture, where it gets 88% of those cells right vs ~55% for all rock).
     pub roof_from: i32,
+    /// The world seed's exact bedrock and deepslate (`with_seed`); else the majority by height.
+    pub gradients: Option<Gradients>,
 }
 
 impl Profile {
@@ -33,12 +37,37 @@ impl Profile {
                 cave_y: -10_000,
                 mask: Some((90, 127)),
                 roof_from: 108,
+                gradients: None,
             },
-            "minecraft:the_end" => {
-                Self { kind: Kind::End, min_y: 0, max_y: 255, cave_y: -10_000, mask: None, roof_from: 0 }
-            }
-            _ => Self { kind: Kind::Overworld, min_y: -64, max_y: 319, cave_y: 55, mask: None, roof_from: 0 },
+            "minecraft:the_end" => Self {
+                kind: Kind::End,
+                min_y: 0,
+                max_y: 255,
+                cave_y: -10_000,
+                mask: None,
+                roof_from: 0,
+                gradients: None,
+            },
+            _ => Self {
+                kind: Kind::Overworld,
+                min_y: -64,
+                max_y: 319,
+                cave_y: 55,
+                mask: None,
+                roof_from: 0,
+                gradients: None,
+            },
         }
+    }
+
+    /// Call after the heights are final: the bedrock floor gradient starts at `min_y`.
+    pub fn with_seed(self, seed: i64) -> Self {
+        Self { gradients: Some(Gradients::new(seed, &self)), ..self }
+    }
+
+    /// `default_block`, exact per cell when the seed is known.
+    pub fn block_at(&self, x: i32, y: i32, z: i32) -> &'static str {
+        self.gradients.map_or_else(|| self.default_block(y), |g| g.block(x, y, z))
     }
 
     pub fn masked(&self, y: i32) -> bool {

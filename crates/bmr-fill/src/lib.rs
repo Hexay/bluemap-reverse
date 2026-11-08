@@ -5,6 +5,7 @@
 mod biomes;
 mod columns;
 mod copy;
+pub mod gradient;
 mod liquid;
 mod material;
 mod note_block;

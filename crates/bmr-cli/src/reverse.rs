@@ -69,6 +69,10 @@ pub struct OptionArgs {
     /// 90,127 in the nether]
     #[arg(long)]
     mask_y: Option<String>,
+    /// World seed, a number or text as in server.properties (`bmr seed` finds it): unseen bedrock and
+    /// deepslate layers become exact instead of the majority by height
+    #[arg(long, allow_hyphen_values = true)]
+    seed: Option<String>,
     /// Print this many most frequent unmatched texture sets per window
     #[arg(long, default_value_t = 5)]
     show_unmatched: usize,
@@ -89,6 +93,10 @@ impl OptionArgs {
                     Some((lo.trim().parse()?, hi.trim().parse()?))
                 }
             };
+        }
+        if let Some(s) = &self.seed {
+            let seed = s.parse().unwrap_or_else(|_| i64::from(bmr_seed::java_random::string_hash(s)));
+            profile = profile.with_seed(seed);
         }
         Ok(Options {
             no_fill: self.no_fill,

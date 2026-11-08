@@ -66,7 +66,7 @@ pub fn solid_segments<'a>(
     let mut out = Vec::new();
     let mut resolved: FxHashMap<Column, Vec<(i32, i32, BlockState)>> = FxHashMap::default();
     for (g, _, l) in &layered {
-        let rest = by_height_runs(g.ylo, l.rest_hi, profile, l.base.as_deref(), &typical, rock_at(g.column));
+        let rest = by_height_runs(g.column, g.ylo, l.rest_hi, profile, l.base.as_deref(), &typical, rock_at(g.column));
         for (ylo, yhi, name) in l.runs.iter().cloned().chain(rest) {
             let state = named(&name);
             resolved.entry(g.column).or_default().push((ylo, yhi, state.clone()));
@@ -75,7 +75,7 @@ pub fn solid_segments<'a>(
     }
     let sources = Sources::new(&resolved, full_cubes);
     for g in deferred {
-        out.extend(copy_nearest(g, &sources, |y| default_at(y, profile, &typical, rock_at(g.column)), &named));
+        out.extend(copy_nearest(g, &sources, |y| default_at(g.column, y, profile, &typical, rock_at(g.column)), &named));
     }
     out
 }
@@ -185,8 +185,14 @@ pub fn biome_rock(biome: &str) -> Option<&'static str> {
 
 /// Unseen block at `y` with no other evidence: the map's typical block, else the biome's rock (not over
 /// the dimension's bedrock), else the profile's default.
-pub fn default_at<'t>(y: i32, profile: &Profile, typical: &'t Typical, rock: Option<&'static str>) -> &'t str {
-    typical.at(y).unwrap_or_else(|| match profile.default_block(y) {
+pub fn default_at<'t>(
+    (x, z): Column,
+    y: i32,
+    profile: &Profile,
+    typical: &'t Typical,
+    rock: Option<&'static str>,
+) -> &'t str {
+    typical.at(y).unwrap_or_else(|| match profile.block_at(x, y, z) {
         "minecraft:bedrock" => "minecraft:bedrock",
         d => rock.unwrap_or(d),
     })
@@ -195,6 +201,7 @@ pub fn default_at<'t>(y: i32, profile: &Profile, typical: &'t Typical, rock: Opt
 /// Default fill for [ylo, yhi], one cell at a time merged into runs: `base` if given (not over the
 /// dimension's bedrock), else `default_at`.
 fn by_height_runs(
+    column: Column,
     ylo: i32,
     yhi: i32,
     profile: &Profile,
@@ -204,10 +211,9 @@ fn by_height_runs(
 ) -> Vec<(i32, i32, String)> {
     let mut runs: Vec<(i32, i32, String)> = Vec::new();
     for y in (ylo..=yhi).rev() {
-        let default = profile.default_block(y);
         let name = match base {
-            Some(b) if default != "minecraft:bedrock" => b.to_owned(),
-            _ => default_at(y, profile, typical, rock).to_owned(),
+            Some(b) if profile.block_at(column.0, y, column.1) != "minecraft:bedrock" => b.to_owned(),
+            _ => default_at(column, y, profile, typical, rock).to_owned(),
         };
         match runs.last_mut() {
             Some(r) if r.2 == name => r.0 = y,

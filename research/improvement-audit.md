@@ -6,7 +6,7 @@ research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
 A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F1b (`pull --regen-seed`; no JRE download, by decision),
-F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C2 (CI gaps 1, 2, 5, 6), C3–C9. Open: F4.
+F2, F3, F4, F5, F6, F7, R1–R5, C1 (material tests), C2 (CI gaps 1, 2, 5, 6), C3–C9.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's
@@ -156,6 +156,23 @@ occupied metric (the decision log, 2026-10-02, reaches the same conclusion). Blo
 - **Approach:** `tools/build_pack.py --bluemap <v>` for a few widely deployed 5.x versions, then
   `tools/check_version.py` on each. Record which versions share signatures so that identical packs are not
   shipped.
+- **Status: done 2026-11-08.** Sweep at MC 1.21.1 with `bmr pack diff` (adjacent versions, built from one world):
+  - Same library: 5.2 = 5.3 = 5.4, and 5.14 = 5.16 = 5.20. 5.0 differs from 5.4 only in the azalea and
+    flowering_azalea overhang (diffed at MC 1.20.6).
+    5.20 → 5.27 changes only swamp grass tints (`swamp`, `mangrove_swamp`; diffed at 1.21.11).
+  - Changes: 5.7 (hanging signs, adds conduit), 5.8 (hanging signs; its pack lacks 256 states present in 5.7 and
+    5.12, e.g. pressure plates and open trapdoors, cause not investigated), 5.12 (spawners, UVs), 5.13 (hanging
+    signs, UVs, item textures in the site list), 5.14 (coral fans, fire, adds cherry signs).
+  - Not built: 5.1, 5.5, 5.6, 5.9–5.11, 5.15, 5.17–5.19, 5.21–5.26.
+  - Every version from 5.0 up is PRBM and works; there is no format boundary inside 5.x. 5.0–5.3 assets are named
+    `BlueMap-<v>-cli.jar`, which `Toolchain.bluemap_url` doesn't match (place the jar in `work/downloads` by hand).
+  - `check_version.py` passed (pack picked, server loads the output, occupied 99.92–99.93% on superflat) for
+    1.20.6+5.0, 1.21.1+5.4, 1.21.1+5.27, 1.21.4+5.7, 1.21.8+5.12, 1.21.11+5.20.
+  - Debug-world states recognised, matching pack vs 5.27 pack (`rendered_alike`): 1.21.1+5.4 26457 vs 25345,
+    1.21.4+5.7 27690 vs 26571, 1.21.8+5.12 27607 vs 26541, 1.21.11+5.20 29481 vs 29481.
+  - Shipped: 1.21.1+5.4, 1.21.4+5.7, 1.21.8+5.12 and 1.21.1+5.27 (no 1.21.1 pack existed). Not shipped: 1.21.11+5.20
+    (a 5.20 site picks the 1.21.11+5.27 pack, same score) and 1.20.6+5.0 (passes, but kept out to limit the set to
+    1.21.x; a judgment call, easy to add).
 
 ### F5. Seed detection for villages, igloos, swamp huts and mansions. Impact medium, effort M–L
 - **Evidence:** docs/seed.md:24-25 lists these as TODO. Maps without monuments or temples cannot be cracked today.

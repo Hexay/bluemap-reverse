@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Packs for older BlueMap: 1.21.1 + 5.4, 1.21.4 + 5.7 and 1.21.8 + 5.12, plus 1.21.1 + 5.27. BlueMap 5.13 and older
+  draw signs, spawners and coral fans differently, so the 5.27 pack misreads about 4% of block states on those
+  sites. 5.14 to 5.29 share the 5.27 packs.
+- `bmr pack diff <a> <b>` compares two packs state by state.
+- `tools/build_pack.py --jobs N` limits how many Minecraft servers run at once. Renders for a non-default BlueMap get
+  their own directory (`work/v/<mc>/bluemap-<v>/`), so several BlueMap versions of one Minecraft version coexist.
 - `cargo test` gate on reconstruction accuracy: a committed crop of the `context` fixture is reversed with the
   committed 26.3 pack and must stay above score floors (`tools/gen_accuracy_gate.py` regenerates the crop). Tests
   also check that committed packs load and match `packs/index.json`; releases smoke-test the built binaries.

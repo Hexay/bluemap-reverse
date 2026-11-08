@@ -79,12 +79,17 @@ class Toolchain:
         return self.work / "worlds"
 
     @property
+    def render_root(self) -> Path:
+        """Worlds depend only on Minecraft, renders also on BlueMap: non-default BlueMaps get their own tree."""
+        return self.work if self.bluemap == DEFAULT.bluemap else self.work / f"bluemap-{self.bluemap}"
+
+    @property
     def bluemap_root(self) -> Path:
-        return self.work / "bluemap"
+        return self.render_root / "bluemap"
 
     @property
     def cache(self) -> Path:
-        return self.work / "cache"
+        return self.render_root / "cache"
 
     @property
     def pack(self) -> Path:

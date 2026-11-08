@@ -1442,6 +1442,7 @@
     "minecraft:item/brewer_pottery_sherd",
     "minecraft:item/brewing_stand",
     "minecraft:item/brick",
+    "minecraft:item/broken_elytra",
     "minecraft:item/brown_bundle",
     "minecraft:item/brown_bundle_open_back",
     "minecraft:item/brown_bundle_open_front",
@@ -1453,6 +1454,7 @@
     "minecraft:item/brush",
     "minecraft:item/bucket",
     "minecraft:item/bundle",
+    "minecraft:item/bundle_filled",
     "minecraft:item/bundle_open_back",
     "minecraft:item/bundle_open_front",
     "minecraft:item/buried_ancient_city_map",
@@ -2287,13 +2289,31 @@
   ],
   "packs": [
     {
+      "file": "bmr-mc1.21.1-bluemap5.27.pack",
+      "size": 217224,
+      "sha256": "aa27d5629987c562aeecad814cb33085f3a469c96ec59bfaecd77acd7d53bb09",
+      "pack_format": 5,
+      "mc_version": "1.21.1",
+      "bluemap_version": "5.27",
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n97c//f9/3/X//w9wnz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Avv/ebQAAD/j/////fxeA7/8H/L/fD/j3/v//4/////+H////////3+fP///wPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+H/D///d93/f++R91KN7fozwwr//v///////////v/////38IAdB/1M+/mV031t3/q7/930Sh3L3dvvP7+/f/fxQKVVT/X9/37/tv588oBZJA3YH/G/X2////f9R8/hbX+v33yaP5vQv5NarY0yjg//f/7//v/+//Dw=="
+    },
+    {
+      "file": "bmr-mc1.21.1-bluemap5.4.pack",
+      "size": 212780,
+      "sha256": "66bdb6ed42140a35760ef1ff77eef20c884b07d9b7501454ad112dc39b0eba4c",
+      "pack_format": 5,
+      "mc_version": "1.21.1",
+      "bluemap_version": "5.4",
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n97c//f9/3/X//w9wnz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Avv/ebQAAD/j/////fxeA7/8H/L/fD/j3/v//4/////+H////////3+fP///wPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+ALD///d9AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID/fwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
       "file": "bmr-mc1.21.11-bluemap5.27.pack",
       "size": 244628,
       "sha256": "76334aa722f019d35975fd3436de82f28b2c8e429c067f579b38deff96ad1487",
       "pack_format": 5,
       "mc_version": "1.21.11",
       "bluemap_version": "5.27",
-      "textures": "9/v//9/7f/7//34B//+A//8P+P//////v9/v978//////////999vz/g//f7/////////////////////98P+B/w///////9/v8H/A/4/wf8/wP+v//+//9/v/8Dvv///3+/D/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+/P///zPwD8////////////7/f///8P+P8B3/f/////P77///9////////97///3z/83////////////////////////////fP//////////////9/v///////+//////1+//3///f///////v7///f9+D/f/////////2/////5v///+j+///+//7/9/sHAAAAAAAAAAAAAA=="
+      "textures": "9/v//9/7f/7//34B//+A//8P+P//////v9/v978//////////999vz/g//f7/////////////////////98P+B/w///////9/v8H/A/4/wf8/wP+v//+//9/v/8Dvv///3+/D/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+/P///zPwD8////////////7/f///8P+P8B3/f/////P77///9////////97///vd/wf///////////////////////////98///////////////3+////////7//////f7/ff//9///////+/v//9/34P///3///////f//v//m////6P7///7//v/3+8fAAAAAAAAAAAAAA=="
     },
     {
       "file": "bmr-mc1.21.4-bluemap5.27.pack",
@@ -2302,7 +2322,25 @@
       "pack_format": 5,
       "mc_version": "1.21.4",
       "bluemap_version": "5.27",
-      "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n978///9/3/X//z9znz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v////////+H////////3+fP///zPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+H/D///9/3/f++f91L/7fXz7M6//7///////////7/////x9CAPT/9fNvZveN9ff/6m//N18vd2+37/z+/v3///V69dX/1/f9+/7b+fNLvyRed+D/fr39//////Wfv8W1fv998mh+70J+/Sr29Av4////////////Bw=="
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n978///9/3/X//z9znz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v////////+H////////3+fP///zPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+H/D///9/3/f++f91L/7fvdwwr//v///////////v/////38IAdD/18+/md031t//q7/933y93L3dvvP7+/f//9fr1Vf/X9/37/tv588v/ZJ43YH/+/X2/////9d//hbX+v33yaP5vQv59avY0y/g////////////Hw=="
+    },
+    {
+      "file": "bmr-mc1.21.4-bluemap5.7.pack",
+      "size": 219160,
+      "sha256": "f4c230c568b6add489ae495186eb962ef4d1b89740ac48879b00bdb59151a795",
+      "pack_format": 5,
+      "mc_version": "1.21.4",
+      "bluemap_version": "5.7",
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P/X/////9/n978///9/3/X//z9znz/g//f5/////38AAAD4/793++f//98P+B/w////+/99/t8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v////////+H////////3+fP///zPwD8//uD////////7/Pv3f4P+D8B3/f/HwD+H7D///d9AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID/fwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "file": "bmr-mc1.21.8-bluemap5.12.pack",
+      "size": 222772,
+      "sha256": "733e12c56f74330939c3bd6f27a9fc77ff939e8a43eeb2081b4ba32ef3550b7e",
+      "pack_format": 5,
+      "mc_version": "1.21.8",
+      "bluemap_version": "5.12",
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P///////9/n978///9/3/X//999nz/g//f5/////////////793+////98P+B/w////+/99/v8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+fP///zPwD8////////////7/Pv3f4P+P8B3/f/HwD+H7D///d9AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID/fwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAADg/z8AIAAgACAAAA=="
     },
     {
       "file": "bmr-mc1.21.8-bluemap5.27.pack",
@@ -2311,7 +2349,7 @@
       "pack_format": 5,
       "mc_version": "1.21.8",
       "bluemap_version": "5.27",
-      "textures": "9/n//9/5f/7//z4B//+A//8P+P///////9/n978///9/3/X//999nz/g//f5/////////////793+////98P+B/w////+/99/v8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+fP///zPwD8////////////7/Pv3f4P+P8B3/f/HwD+H/D///9////////97///3z/s/////////////////////x9CAP///fNv/v//9f//////N9/v///37/z+//3///1+//3///f///7b+ftb//7f9+D/f/////////2/////5v9//uj+//9+/f7/9Hv/////////////Bw=="
+      "textures": "9/n//9/5f/7//z4B//+A//8P+P///////9/n978///9/3/X//999nz/g//f5/////////////793+////98P+B/w////+/99/v8H/A/4/wf8/wP+v3/+//9/n/8Dvv/e7X+fD/j/////fxeA7/8H/L/fD/j3/v/////////H////////3+fP///zPwD8////////////7/Pv3f4P+P8B3/f/HwD+H/D///9////////97///vd+w/////////////////////38IAfz/98+/+f//1///////33y////fv/P7//f///f7/ff//9////tv5+9v/ft/34P///3///////f//v//m///+aP7///79fv/0+/9////////////Hw=="
     },
     {
       "file": "bmr-mc26.3-bluemap5.27.pack",
@@ -2320,7 +2358,7 @@
       "pack_format": 5,
       "mc_version": "26.3",
       "bluemap_version": "5.27",
-      "textures": "////////////////////////////////v////////////////9/9/////////////////////////////////////////////////////////////////////////////////////////////////9/v/////////////////////////////////////////////////////////////w8A4P///7EPAADw////////////////3/////////////////////////////////////3//////////////////+//////////////////////////////////////////////5/////////////////8HAAAAAAAAAAAAAA=="
+      "textures": "////////////////////////////////v////////////////9/9/////////////////////////////////////////////////////////////////////////////////////////////////9/v/////////////////////////////////////////////////////////////w8A4P///7EPAADw/////////////d//f/////////////////////////////////////f//////////////////7//////////////////////////////////////////////n/////////////////8fAAAAAAAAAAAAAA=="
     }
   ]
 }

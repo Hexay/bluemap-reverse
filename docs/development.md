@@ -108,5 +108,7 @@ bmr copy-world <world> -o <out>         # round-trip a world through our reader 
   (prints time per stage).
 - Prove it end to end: `python3 tools/check_version.py --mc 1.21.11` (fixture world in that version → BlueMap →
   `bmr pull` → score → load in that version's server).
+- Worth shipping? `bmr pack diff <a> <b>` compares two packs state by state. Results per BlueMap version:
+  research/improvement-audit.md F4. On a small machine pass `--jobs 1` to `build_pack.py` (three servers otherwise).
 - Publish: `bmr pack index packs` writes `packs/index.json`; upload it with the packs to the GitHub release
   `packs` (the default `--pack-index`). `python3 tools/check_index.py` tests index → download → pull locally.

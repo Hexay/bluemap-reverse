@@ -20,6 +20,8 @@ pub enum Cmd {
         /// Pack file
         pack: PathBuf,
     },
+    /// Compare two packs state by state (is a build for another BlueMap version worth shipping?)
+    Diff { a: PathBuf, b: PathBuf },
     /// Write the groups of states that render identically (indistinguishable from tiles) as JSON
     Lookalikes {
         /// Pack file
@@ -70,6 +72,7 @@ pub fn run(cmd: Cmd) -> Result<()> {
     match cmd {
         Cmd::Build(a) => build(*a),
         Cmd::Info { pack } => info(&pack),
+        Cmd::Diff { a, b } => crate::pack_diff::diff(&a, &b),
         Cmd::Lookalikes { pack, out } => lookalikes(&pack, &out),
         Cmd::Index { dir } => index(&dir),
         Cmd::List { index, data } => list(&index, &data.data_dir()?),

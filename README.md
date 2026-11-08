@@ -144,17 +144,25 @@ The research behind each step lives in [`docs/research/`](docs/research).
 
 ## Supported versions
 
-Prebuilt packs, all for BlueMap 5.27:
+Prebuilt packs:
 
-| Minecraft | Pack |
-|---|---|
-| 26.3 | `bmr-mc26.3-bluemap5.27.pack` |
-| 1.21.11 | `bmr-mc1.21.11-bluemap5.27.pack` |
-| 1.21.8 | `bmr-mc1.21.8-bluemap5.27.pack` |
-| 1.21.4 | `bmr-mc1.21.4-bluemap5.27.pack` |
+| Minecraft | BlueMap | Pack |
+|---|---|---|
+| 26.3 | 5.27 | `bmr-mc26.3-bluemap5.27.pack` |
+| 1.21.11 | 5.27 | `bmr-mc1.21.11-bluemap5.27.pack` |
+| 1.21.8 | 5.27 | `bmr-mc1.21.8-bluemap5.27.pack` |
+| 1.21.8 | 5.12 | `bmr-mc1.21.8-bluemap5.12.pack` |
+| 1.21.4 | 5.27 | `bmr-mc1.21.4-bluemap5.27.pack` |
+| 1.21.4 | 5.7 | `bmr-mc1.21.4-bluemap5.7.pack` |
+| 1.21.1 | 5.27 | `bmr-mc1.21.1-bluemap5.27.pack` |
+| 1.21.1 | 5.4 | `bmr-mc1.21.1-bluemap5.4.pack` |
 
-These are the versions tested end to end. Packs for any other 1.18+ version can be built unattended in about
-two minutes ([docs/development.md](docs/development.md#packs)), but are untested.
+These are the versions tested end to end. BlueMap 5.14 to 5.29 draw every block state the same, so those sites
+use the 5.27 pack of their Minecraft version. Sites on BlueMap 5.13 or older draw some blocks differently (mainly
+signs, spawners and coral fans): `pull` picks the matching older pack when there is one, and otherwise the
+closest pack, which misreads those blocks. BlueMap 5.2 to 5.4 draw identically. Packs for any other 1.18+
+version can be built unattended in about two minutes ([docs/development.md](docs/development.md#packs)), but are
+untested.
 
 ## Building from source
 

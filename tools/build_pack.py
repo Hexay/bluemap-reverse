@@ -35,6 +35,7 @@ def main() -> None:
     ap.add_argument("--mc", required=True)
     ap.add_argument("--bluemap", default=DEFAULT.bluemap)
     ap.add_argument("--force", action="store_true", help="regenerate worlds and re-render")
+    ap.add_argument("--jobs", type=int, help="Minecraft servers at once (default: all three, ~6 GB of heap)")
     args = ap.parse_args()
     t0 = time.monotonic()
 
@@ -43,7 +44,7 @@ def main() -> None:
         print(f"Minecraft {tc.mc}, BlueMap {tc.bluemap}, Java {tc.java_major} -> {tc.work}")
         setup(tc)
 
-    with stage("worlds"), ThreadPoolExecutor() as pool:
+    with stage("worlds"), ThreadPoolExecutor(args.jobs) as pool:
         worlds = [pool.submit(make_world, name, args.force, tc, "2G", port)
                   for name, port in [("debug", 25601), ("template-void", 25602)]]
         worlds.append(pool.submit(make_biomes, tc, args.force, "2G", 25603))

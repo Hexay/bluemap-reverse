@@ -27,6 +27,7 @@ const BATCH_TIMEOUT: Duration = Duration::from_secs(1800);
 const STOP_TIMEOUT: Duration = Duration::from_secs(300);
 
 #[derive(clap::Args)]
+#[group(id = "RegenArgs")]
 pub struct Args {
     /// Generate the same-seed vanilla world for the rendered chunks with a real server (needs Java), then
     /// fill from it: the seed as number or text, or a `*.seed.json` report from --crack-seed

@@ -5,6 +5,7 @@ mod explain;
 mod fetch;
 mod obj;
 mod pack;
+mod pack_diff;
 mod pack_source;
 mod paths;
 mod probe;

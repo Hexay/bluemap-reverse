@@ -1,0 +1,185 @@
+{
+  "chunks": 361,
+  "partial_chunks_skipped": 1869,
+  "columns": 82944,
+  "all": {
+    "total": 31850496,
+    "exact": 31842775,
+    "name": 31843069
+  },
+  "occupied": {
+    "total": 10037666,
+    "exact": 10029945,
+    "name": 10030239
+  },
+  "rendered": {
+    "total": 222868,
+    "exact": 222572,
+    "name": 222851
+  },
+  "rendered_alike": 222845,
+  "exposed": {
+    "total": 419212,
+    "exact": 418891,
+    "name": 418982
+  },
+  "solid": {
+    "original": 10037587,
+    "reconstructed": 10037519,
+    "both": 10037440
+  },
+  "surface": {
+    "total": 82944,
+    "hits": 82876
+  },
+  "biomes": {
+    "total": 497664,
+    "hits": 497664
+  },
+  "confusions": [
+    {
+      "original": "minecraft:granite",
+      "reconstructed": "minecraft:andesite",
+      "count": 843
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:granite",
+      "count": 834
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:seagrass",
+      "count": 755
+    },
+    {
+      "original": "minecraft:andesite",
+      "reconstructed": "minecraft:diorite",
+      "count": 739
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:andesite",
+      "count": 666
+    },
+    {
+      "original": "minecraft:andesite",
+      "reconstructed": "minecraft:granite",
+      "count": 665
+    },
+    {
+      "original": "minecraft:granite",
+      "reconstructed": "minecraft:diorite",
+      "count": 516
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:tall_seagrass[half=lower]",
+      "count": 340
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:kelp_plant",
+      "count": 223
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 216
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:tall_seagrass[half=upper]",
+      "count": 189
+    },
+    {
+      "original": "minecraft:water[level=0]",
+      "reconstructed": "minecraft:bubble_column[drag=true]",
+      "count": 178
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:coal_ore",
+      "count": 163
+    },
+    {
+      "original": "minecraft:coal_ore",
+      "reconstructed": "minecraft:stone",
+      "count": 103
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:sand",
+      "count": 72
+    },
+    {
+      "original": "minecraft:water[level=8]",
+      "reconstructed": "minecraft:air",
+      "count": 65
+    },
+    {
+      "original": "minecraft:kelp[age=22]",
+      "reconstructed": "minecraft:kelp[age=21]",
+      "count": 63
+    },
+    {
+      "original": "minecraft:stone",
+      "reconstructed": "minecraft:sand",
+      "count": 63
+    },
+    {
+      "original": "minecraft:sand",
+      "reconstructed": "minecraft:stone",
+      "count": 62
+    },
+    {
+      "original": "minecraft:kelp[age=20]",
+      "reconstructed": "minecraft:kelp[age=21]",
+      "count": 61
+    },
+    {
+      "original": "minecraft:kelp[age=23]",
+      "reconstructed": "minecraft:kelp[age=21]",
+      "count": 53
+    },
+    {
+      "original": "minecraft:oak_leaves[distance=3,persistent=false,waterlogged=false]",
+      "reconstructed": "minecraft:oak_leaves[distance=2,persistent=false,waterlogged=false]",
+      "count": 39
+    },
+    {
+      "original": "minecraft:sand",
+      "reconstructed": "minecraft:diorite",
+      "count": 37
+    },
+    {
+      "original": "minecraft:tuff",
+      "reconstructed": "minecraft:andesite",
+      "count": 33
+    },
+    {
+      "original": "minecraft:diorite",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 31
+    }
+  ],
+  "rendered_confusions": [
+    {
+      "original": "minecraft:bubble_column[drag=true]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 17
+    },
+    {
+      "original": "minecraft:water[level=8]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 4
+    },
+    {
+      "original": "minecraft:water[level=1]",
+      "reconstructed": "minecraft:water[level=0]",
+      "count": 2
+    }
+  ],
+  "biome_confusions": [],
+  "samples": []
+}

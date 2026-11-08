@@ -1,0 +1,169 @@
+{
+  "chunks": 121,
+  "partial_chunks_skipped": 1012,
+  "columns": 25600,
+  "all": {
+    "total": 9830400,
+    "exact": 9830400,
+    "name": 9830400
+  },
+  "occupied": {
+    "total": 102624,
+    "exact": 102624,
+    "name": 102624
+  },
+  "rendered": {
+    "total": 51648,
+    "exact": 51648,
+    "name": 51648
+  },
+  "rendered_alike": 51648,
+  "exposed": {
+    "total": 51200,
+    "exact": 51200,
+    "name": 51200
+  },
+  "solid": {
+    "original": 102624,
+    "reconstructed": 102624,
+    "both": 102624
+  },
+  "surface": {
+    "total": 25600,
+    "hits": 25600
+  },
+  "biomes": {
+    "total": 153600,
+    "hits": 79680
+  },
+  "confusions": [],
+  "rendered_confusions": [],
+  "biome_confusions": [
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:ocean",
+      "count": 9280
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:snowy_beach",
+      "count": 4672
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:snowy_plains",
+      "count": 3968
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:savanna",
+      "count": 3904
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:birch_forest",
+      "count": 3456
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:badlands",
+      "count": 3264
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:stony_shore",
+      "count": 3072
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:taiga",
+      "count": 3008
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:sparse_jungle",
+      "count": 2816
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:forest",
+      "count": 2496
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:meadow",
+      "count": 2112
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:old_growth_pine_taiga",
+      "count": 1984
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:swamp",
+      "count": 1472
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:sulfur_caves",
+      "count": 1280
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:stony_peaks",
+      "count": 1216
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:cherry_grove",
+      "count": 1024
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:dappled_forest",
+      "count": 1024
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:pale_garden",
+      "count": 1024
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:dark_forest",
+      "count": 704
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:mangrove_swamp",
+      "count": 704
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:jungle",
+      "count": 640
+    },
+    {
+      "original": "minecraft:beach",
+      "reconstructed": "minecraft:plains",
+      "count": 512
+    },
+    {
+      "original": "minecraft:deep_dark",
+      "reconstructed": "minecraft:plains",
+      "count": 512
+    },
+    {
+      "original": "minecraft:deep_ocean",
+      "reconstructed": "minecraft:ocean",
+      "count": 512
+    },
+    {
+      "original": "minecraft:desert",
+      "reconstructed": "minecraft:savanna",
+      "count": 512
+    }
+  ],
+  "samples": []
+}

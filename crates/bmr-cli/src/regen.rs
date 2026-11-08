@@ -33,7 +33,7 @@ pub struct Args {
     /// fill from it: the seed as number or text, or a `*.seed.json` report from --crack-seed
     #[arg(long, allow_hyphen_values = true, conflicts_with = "regen", value_name = "SEED")]
     regen_seed: Option<String>,
-    /// Accept the Minecraft EULA (https://aka.ms/MinecraftEULA), required to run the server for --regen-seed
+    /// Accept the Minecraft EULA <https://aka.ms/MinecraftEULA>, required to run the server for --regen-seed
     #[arg(long)]
     accept_eula: bool,
     /// Java binary for --regen-seed [default: `java` on PATH]

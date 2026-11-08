@@ -58,7 +58,7 @@ lzma-rust2 = { version = "0.21", default-features = false, features = ["std", "e
 # pack files (bmr-pack): compact serde binary; bincode 3.0.0 is an empty tombstone release
 postcard = { version = "1.1", default-features = false, features = ["use-std"] }
 # deflate via flate2 only: the default features pull C builds (bzip2, zstd) and crypto we don't need
-zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 bmr-compress = { path = "crates/bmr-compress" }
 bmr-cubiomes = { path = "crates/bmr-cubiomes" }
 bmr-fetch = { path = "crates/bmr-fetch" }

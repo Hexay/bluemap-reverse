@@ -23,7 +23,7 @@ pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) 
     parse_region_where(&data, keep).with_context(|| path.display().to_string())
 }
 
-/// [`read_region_where`] on the bytes of a region file.
+/// `read_region_where` on the bytes of a region file.
 pub fn parse_region_where(data: &[u8], keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<RegionChunks> {
     if data.is_empty() {
         return Ok(Vec::new());

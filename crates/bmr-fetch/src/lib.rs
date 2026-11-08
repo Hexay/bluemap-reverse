@@ -1,5 +1,6 @@
 //! Scrape a BlueMap webroot into a local mirror (settings, textures.json, lowres PNGs, hires PRBM).
 
+pub mod area;
 mod discover;
 pub mod grid;
 mod http;
@@ -10,6 +11,7 @@ mod progress;
 pub mod settings;
 pub mod store;
 
+pub use area::BlockBox;
 pub use http::Http;
 pub use local::LocalMap;
 pub use mirror::{MapSummary, Options, mirror};

@@ -15,9 +15,9 @@ use plan::{OVERWORLD, Planned};
 use crate::fetch::DownloadArgs;
 use crate::pack_source::{IndexArgs, select_pack};
 use crate::paths::site_slug;
-use crate::reconstruct::{Inputs, reconstruct, report};
+use crate::reconstruct::{Inputs, Options, reconstruct, report};
 use crate::reverse::OptionArgs;
-use crate::schem::world_extent;
+use crate::schem::{with_heights, world_extent};
 use crate::ui::progress;
 
 #[derive(clap::Args)]
@@ -69,7 +69,7 @@ pub fn run(a: Args) -> Result<()> {
     let cache = a.download.data.mirror_dir(&a.url)?;
 
     progress!("[1/4] mirroring {} → {}", a.url, cache.display());
-    let fetch_opts = a.download.options(&a.url, cache.clone(), a.map.iter().cloned().collect());
+    let fetch_opts = a.download.options(&a.url, cache.clone(), a.map.iter().cloned().collect(), a.opts.halo);
     let summaries = t.time("fetch", || bmr_fetch::mirror(&fetch_opts))?;
     let ids: Vec<String> = summaries.iter().map(|s| s.id.clone()).collect();
     let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_deref())?;
@@ -131,7 +131,7 @@ pub fn run(a: Args) -> Result<()> {
     }
 
     for (i, m) in maps.iter().enumerate() {
-        let opts = a.opts.options(&m.dimension)?;
+        let opts = Options { area: a.download.area, ..a.opts.options(&m.dimension)? };
         let p = opts.profile;
         let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
         progress!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
@@ -187,7 +187,10 @@ pub fn run(a: Args) -> Result<()> {
         let m = &maps[0];
         let p = a.opts.options(&m.dimension)?.profile;
         let world = bmr_world::World::open(&world_dir, &m.dimension, Some(pack.registry.clone()))?;
-        let extent = world_extent(&world, [p.min_y, p.max_y])?;
+        let extent = match a.download.area {
+            Some(b) => with_heights(b, [p.min_y, p.max_y]),
+            None => world_extent(&world, [p.min_y, p.max_y])?,
+        };
         let s = t.time("schem", || bmr_world::export_schem(&world, extent, true, &m.id, schem))?;
         let size: [i32; 3] = std::array::from_fn(|i| s.area.max[i] - s.area.min[i] + 1);
         println!("      {} ({} {}x{}x{}, {:.1} MB)", schem.display(), m.id, size[0], size[1], size[2], size_mb(schem));

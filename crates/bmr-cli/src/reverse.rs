@@ -37,6 +37,9 @@ pub struct Args {
     world_args: WorldArgs,
 }
 
+/// Blocks of context loaded around each emitted window; `fetch --area` mirrors this far beyond the box.
+pub const DEFAULT_HALO: i32 = 32;
+
 /// Pipeline options shared by `reverse` and `pull`.
 #[derive(clap::Args)]
 pub struct OptionArgs {
@@ -47,8 +50,8 @@ pub struct OptionArgs {
     #[arg(long)]
     no_window: bool,
     /// Halo around each region window, in blocks
-    #[arg(long, default_value_t = 32)]
-    halo: i32,
+    #[arg(long, default_value_t = DEFAULT_HALO)]
+    pub halo: i32,
     /// Region windows reconstructed at the same time; each adds ~0.25 GB peak memory (structures fixture)
     #[arg(long, default_value_t = 4)]
     window_jobs: usize,
@@ -91,6 +94,7 @@ impl OptionArgs {
             no_fill: self.no_fill,
             no_window: self.no_window,
             halo: self.halo,
+            area: None,
             window_jobs: self.window_jobs.max(1),
             profile,
             show_unmatched: self.show_unmatched,

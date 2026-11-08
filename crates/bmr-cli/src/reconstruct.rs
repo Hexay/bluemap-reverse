@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
-use bmr_fetch::LocalMap;
+use bmr_fetch::{BlockBox, LocalMap};
 use bmr_fill::{Bounds, Profile};
 use bmr_invert::Library;
 use bmr_invert::face::Tex;
@@ -26,6 +26,8 @@ pub struct Options {
     /// Whole map in one pass (memory grows with the map).
     pub no_window: bool,
     pub halo: i32,
+    /// Only columns inside are written.
+    pub area: Option<BlockBox>,
     /// Windows in flight at once.
     pub window_jobs: usize,
     /// Build height, cave cut-off and render mask of the map's dimension.
@@ -84,8 +86,12 @@ impl Totals {
 /// summed over windows (CPU-like, not wall time, when windows overlap).
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let textures = bmr_invert::map_textures(inp.map)?;
-    let windows =
-        if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
+    let (area, halo) = (inp.opts.area, inp.opts.halo);
+    let windows = if inp.opts.no_window {
+        window::whole_map(inp.map, area, halo)
+    } else {
+        window::per_region(inp.map, halo, area)
+    };
     let open = if inp.extend { WorldWriter::extend } else { WorldWriter::create };
     let writer = open(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
 

@@ -2,8 +2,10 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
+use bmr_fetch::BlockBox;
 
 use crate::paths::DataArgs;
+use crate::reverse::DEFAULT_HALO;
 use crate::ui::{fetch_progress, progress};
 
 #[derive(clap::Args)]
@@ -31,15 +33,20 @@ pub struct DownloadArgs {
     /// Pause before each request per download worker (be gentle with other people's servers)
     #[arg(long, default_value_t = 25)]
     pub delay_ms: u64,
+    /// Only columns x0,z0,x1,z1 (inclusive, block coords); tiles are mirrored a reconstruction halo beyond
+    /// it (`pull --halo`, 32 for `fetch`) [default: the whole map]
+    #[arg(long, allow_hyphen_values = true)]
+    pub area: Option<BlockBox>,
 }
 
 impl DownloadArgs {
-    /// Mirror options for `url` into `out`; empty `maps` = every map.
-    pub fn options(&self, url: &str, out: PathBuf, maps: Vec<String>) -> bmr_fetch::Options {
+    /// Mirror options for `url` into `out`; empty `maps` = every map. The area is mirrored `margin` blocks wider.
+    pub fn options(&self, url: &str, out: PathBuf, maps: Vec<String>, margin: i32) -> bmr_fetch::Options {
         bmr_fetch::Options {
             base_url: url.to_owned(),
             out,
             maps,
+            area: self.area.map(|a| a.grow(margin)),
             concurrency: self.concurrency,
             delay: Duration::from_millis(self.delay_ms),
             progress: fetch_progress(),
@@ -52,7 +59,7 @@ pub fn run(a: Args) -> Result<()> {
         Some(out) => out,
         None => a.download.data.mirror_dir(&a.url)?,
     };
-    let opts = a.download.options(&a.url, out.clone(), a.maps);
+    let opts = a.download.options(&a.url, out.clone(), a.maps, DEFAULT_HALO);
     let t = Instant::now();
     for m in bmr_fetch::mirror(&opts)? {
         for (lod, present, empty) in m.layers {

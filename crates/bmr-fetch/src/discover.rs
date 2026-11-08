@@ -9,17 +9,21 @@ use crate::grid::{Tile, neighbours};
 use crate::store::Probed;
 
 /// `fetch` returns whether the tile exists. `on_wave` runs after each wave (persist progress).
-/// Resumable: neighbours of already-present tiles are re-queued, known tiles are never re-probed.
+/// Only tiles passing `keep` are probed (an `--area` clip); the rest stay unknown, not empty.
+/// Resumable: neighbours of already-present tiles are re-queued, known tiles are never re-probed, so a later
+/// run with another or no clip picks up where the fill stopped at the old border.
 /// A tile that fails stays unknown (retried on the next run) and the fill carries on around it; the layer
 /// then fails with the count, so a partial mirror is never mistaken for a complete one.
 pub fn discover(
     probed: &mut Probed,
     seeds: impl IntoIterator<Item = Tile>,
+    keep: impl Fn(&Tile) -> bool,
     fetch: impl Fn(Tile) -> Result<bool> + Sync,
     mut on_wave: impl FnMut(&Probed) -> Result<()>,
 ) -> Result<()> {
     let resumed: Vec<Tile> = probed.present.iter().flat_map(|&t| neighbours(t)).collect();
-    let mut frontier: BTreeSet<Tile> = seeds.into_iter().chain(resumed).filter(|t| !probed.known(t)).collect();
+    let mut frontier: BTreeSet<Tile> =
+        seeds.into_iter().chain(resumed).filter(|t| keep(t) && !probed.known(t)).collect();
     let mut failed = BTreeSet::new();
     let mut first_err = None;
 
@@ -42,7 +46,7 @@ pub fn discover(
             }
         }
         on_wave(probed)?;
-        frontier = next.into_iter().filter(|t| !probed.known(t) && !failed.contains(t)).collect();
+        frontier = next.into_iter().filter(|t| keep(t) && !probed.known(t) && !failed.contains(t)).collect();
     }
     match first_err {
         Some(e) => Err(e.context(format!("{} tile(s) failed to download; re-run to retry them", failed.len()))),
@@ -52,17 +56,47 @@ pub fn discover(
 
 #[cfg(test)]
 mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
     use super::*;
 
     #[test]
     fn fills_connected_region_only() {
         let exists = |(x, z): Tile| (0..3).contains(&x) && (0..2).contains(&z) || (x, z) == (10, 10);
         let mut p = Probed::default();
-        discover(&mut p, [(1, 1)], |t| Ok(exists(t)), |_| Ok(())).unwrap();
+        discover(&mut p, [(1, 1)], all, |t| Ok(exists(t)), |_| Ok(())).unwrap();
         assert_eq!(p.present.len(), 6);
         assert!(!p.present.contains(&(10, 10)));
         // perimeter of a 3×2 block
         assert_eq!(p.empty.len(), 10);
+    }
+
+    fn all(_: &Tile) -> bool {
+        true
+    }
+
+    #[test]
+    fn clip_probes_inside_only_and_a_later_run_completes_the_layer() {
+        let exists = |(x, z): Tile| (0..6).contains(&x) && (0..2).contains(&z);
+        let inside = |&(x, _): &Tile| x <= 2;
+        let mut clipped = Probed::default();
+        let probes = AtomicUsize::new(0);
+        let fetch = |t: Tile| {
+            probes.fetch_add(1, Ordering::Relaxed);
+            Ok(exists(t))
+        };
+        discover(&mut clipped, [(4, 0), (1, 0)], inside, fetch, |_| Ok(())).unwrap();
+        assert!(clipped.present.iter().chain(&clipped.empty).all(inside), "nothing outside the clip is probed");
+        assert_eq!(clipped.present.len(), 6);
+        assert!(!clipped.known(&(3, 0)), "the border stays unknown, not empty");
+
+        let mut fresh = Probed::default();
+        discover(&mut fresh, [(1, 0)], all, |t| Ok(exists(t)), |_| Ok(())).unwrap();
+        let (before, known) = (probes.load(Ordering::Relaxed), clipped.present.len() + clipped.empty.len());
+        discover(&mut clipped, [], all, fetch, |_| Ok(())).unwrap();
+        assert_eq!((&clipped.present, &clipped.empty), (&fresh.present, &fresh.empty));
+        let reprobed = probes.load(Ordering::Relaxed) - before;
+        assert_eq!(reprobed, fresh.present.len() + fresh.empty.len() - known, "known tiles are not re-probed");
     }
 
     #[test]
@@ -70,7 +104,7 @@ mod tests {
         let mut p = Probed::default();
         let fetch =
             |(x, z): Tile| if (x, z) == (1, 0) { anyhow::bail!("boom") } else { Ok((0..3).contains(&x) && z == 0) };
-        let err = discover(&mut p, [(0, 0)], fetch, |_| Ok(())).unwrap_err();
+        let err = discover(&mut p, [(0, 0)], all, fetch, |_| Ok(())).unwrap_err();
         assert!(format!("{err:#}").contains("1 tile(s) failed"), "{err:#}");
         // (2, 0) is only reachable through the failed tile; the rest of the layer still got probed
         assert_eq!(p.present.iter().copied().collect::<Vec<_>>(), [(0, 0)]);

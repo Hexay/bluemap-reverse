@@ -109,39 +109,50 @@ pub fn encode(entries: &[Entry], registry: Vec<(String, BlockInfo)>, template: V
 
 pub type Decoded = (Vec<Entry>, Vec<(String, BlockInfo)>, Vec<(String, Vec<u8>)>);
 
-/// Entries plus the registry and template, moved out of `body`.
-pub fn decode(body: Body) -> Decoded {
+/// Entries plus the registry and template, moved out of `body`. Every index is checked: a corrupt or
+/// hand-made pack is an error, not a panic.
+pub fn decode(body: Body) -> Result<Decoded> {
     let textures: Vec<Tex> = body.key_textures.iter().map(|n| Tex::intern(n)).collect();
     let keys: Vec<FaceKey> = body
         .keys
         .iter()
-        .map(|k| FaceKey { texture: textures[k.tex as usize], tinted: k.tinted, verts: k.verts })
-        .collect();
+        .map(|k| Ok(FaceKey { texture: *at(&textures, k.tex, "texture")?, tinted: k.tinted, verts: k.verts }))
+        .collect::<Result<_>>()?;
+    let key = |k: u32| at(&keys, k, "face key").copied();
     let entries = body
         .entries
         .into_iter()
         .map(|d| {
-            let (name, info) = &body.registry[d.block as usize];
-            let state = from_ordinal(name, info, d.state);
-            let sig: Vec<FaceKey> = body.sigs[d.sig as usize].iter().map(|&k| keys[k as usize]).collect();
-            Entry {
+            let (name, info) = at(&body.registry, d.block, "block")?;
+            let state = from_ordinal(name, info, d.state)?;
+            let sig: Vec<FaceKey> =
+                at(&body.sigs, d.sig, "signature")?.iter().map(|&k| key(k)).collect::<Result<_>>()?;
+            Ok(Entry {
                 default_distance: default_distance(&state, info),
                 full_cube: is_full_cube(&sig),
                 state,
                 sig,
-                uvs: body.uv_sets[d.uvs as usize].clone(),
+                uvs: at(&body.uv_sets, d.uvs, "uv set")?.clone(),
                 light: d.light,
-                overhang: d.overhang.into_iter().map(|(o, k)| ((o[0], o[1], o[2]), keys[k as usize])).collect(),
+                overhang: d
+                    .overhang
+                    .into_iter()
+                    .map(|(o, k)| Ok(((o[0], o[1], o[2]), key(k)?)))
+                    .collect::<Result<_>>()?,
                 liquid: match d.liquid {
                     1 => Some(Liquid::Water),
                     2 => Some(Liquid::Lava),
                     _ => None,
                 },
                 tint: d.tint,
-            }
+            })
         })
-        .collect();
-    (entries, body.registry, body.template)
+        .collect::<Result<_>>()?;
+    Ok((entries, body.registry, body.template))
+}
+
+fn at<'a, T>(table: &'a [T], i: u32, what: &str) -> Result<&'a T> {
+    table.get(i as usize).with_context(|| format!("corrupt pack: {what} index {i} out of range ({})", table.len()))
 }
 
 fn ordinal(state: &BlockState, info: &BlockInfo) -> Result<u32> {
@@ -153,14 +164,16 @@ fn ordinal(state: &BlockState, info: &BlockInfo) -> Result<u32> {
     })
 }
 
-fn from_ordinal(name: &str, info: &BlockInfo, mut ord: u32) -> BlockState {
+fn from_ordinal(name: &str, info: &BlockInfo, mut ord: u32) -> Result<BlockState> {
     let mut props = Vec::with_capacity(info.properties.len());
     for (prop, values) in info.properties.iter().rev() {
         let n = values.len() as u32;
+        anyhow::ensure!(n > 0, "corrupt pack: {name}: property {prop} has no values");
         props.push((prop.clone(), values[(ord % n) as usize].clone()));
         ord /= n;
     }
-    BlockState::new(name.to_owned(), props)
+    anyhow::ensure!(ord == 0, "corrupt pack: {name}: state ordinal out of range");
+    Ok(BlockState::new(name.to_owned(), props))
 }
 
 /// Interns texture names, face keys and signatures while encoding.
@@ -210,59 +223,5 @@ impl Tables {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn owned(pairs: &[(&str, &str)]) -> Vec<(String, String)> {
-        pairs.iter().map(|(a, b)| (a.to_string(), b.to_string())).collect()
-    }
-
-    #[test]
-    fn roundtrip_is_lossless() {
-        let stairs_props: Vec<(String, Vec<String>)> =
-            [("facing", ["north", "south"]), ("half", ["top", "bottom"]), ("waterlogged", ["true", "false"])]
-                .iter()
-                .map(|(p, vs)| (p.to_string(), vs.iter().map(|v| v.to_string()).collect()))
-                .collect();
-        let registry = vec![
-            (
-                "minecraft:oak_stairs".to_string(),
-                BlockInfo {
-                    properties: stairs_props,
-                    default: owned(&[("facing", "north"), ("half", "bottom"), ("waterlogged", "false")]),
-                },
-            ),
-            ("minecraft:stone".to_string(), BlockInfo { properties: vec![], default: vec![] }),
-        ];
-        let key = |t: &str, v: i16| FaceKey {
-            texture: Tex::intern(t),
-            tinted: false,
-            verts: [[0, 0, 0], [v, 0, 0], [v, v, 0], [0, v, 0]],
-        };
-        let stairs = BlockState::new(
-            "minecraft:oak_stairs".into(),
-            owned(&[("facing", "south"), ("half", "top"), ("waterlogged", "true")]),
-        );
-        let stone = BlockState::new("minecraft:stone".into(), vec![]);
-        let entry = |state, sig: Vec<FaceKey>, liquid, overhang, tint, default_distance| {
-            let uvs = (0..sig.len()).map(|i| [[i as i16, 0], [0, 1], [1, 1], [1, 0]]).collect();
-            Entry { state, sig, uvs, light: 3, liquid, overhang, tint, default_distance, full_cube: false }
-        };
-        let entries = vec![
-            entry(stone.clone(), vec![key("block/stone", 64)], None, vec![], None, 0),
-            entry(
-                stairs,
-                vec![key("block/oak_planks", 32), key("block/stone", 64)],
-                Some(Liquid::Water),
-                vec![((0, 1, 0), key("block/oak_planks", 16))],
-                Some([1, 2, 3]),
-                3,
-            ),
-            entry(stone, vec![key("block/stone", 64)], None, vec![], None, 0),
-        ];
-        let body = encode(&entries, registry, vec![]).unwrap();
-        assert_eq!(body.sigs.len(), 2, "identical signatures are stored once");
-        let (back, _, _) = decode(body);
-        assert_eq!(entries, back);
-    }
-}
+#[path = "format_tests.rs"]
+mod tests;

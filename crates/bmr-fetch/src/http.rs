@@ -3,20 +3,30 @@
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow};
 use ureq::Agent;
+use ureq::http::Response;
 use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
 use crate::progress::{OnProgress, Progress, emit};
 
-const RETRIES: u32 = 3;
-const MAX_BODY: u64 = 1 << 30;
+const RETRIES: u32 = 4;
+/// Per response, compressed and decompressed: the largest real file is textures.json (tens of MB with mods).
+const MAX_BODY: u64 = 256 << 20;
+/// Longest `Retry-After` honoured; longer asks are capped (a mirror is resumable, a stall is not).
+const MAX_RETRY_AFTER: Duration = Duration::from_secs(60);
 
 pub struct Http {
     agent: Agent,
     base: String,
     delay: Duration,
     progress: Option<OnProgress>,
+}
+
+/// Why one attempt failed: worth retrying (after the server's `Retry-After`, if it sent one) or not.
+enum Failure {
+    Transient(anyhow::Error, Option<Duration>),
+    Permanent(anyhow::Error),
 }
 
 impl Http {
@@ -51,25 +61,39 @@ impl Http {
             }
             match self.try_get(&url) {
                 Ok(v) => return Ok(v),
-                Err(e) if attempt < RETRIES => {
+                Err(Failure::Transient(e, wait)) if attempt < RETRIES => {
                     emit(self.progress.as_ref(), Progress::Retry { url: &url, attempt, of: RETRIES, error: &e });
-                    thread::sleep(Duration::from_millis(500 * attempt as u64));
+                    thread::sleep(wait.unwrap_or(Duration::from_millis(500 << attempt)));
                 }
-                Err(e) => return Err(e.context(url)),
+                Err(Failure::Transient(e, _) | Failure::Permanent(e)) => return Err(e.context(url)),
             }
         }
     }
 
-    fn try_get(&self, url: &str) -> Result<Option<Vec<u8>>> {
-        let resp = self.agent.get(url).header("Accept-Encoding", "gzip").call()?;
+    fn try_get(&self, url: &str) -> Result<Option<Vec<u8>>, Failure> {
+        let resp = self.agent.get(url).header("Accept-Encoding", "gzip").call().map_err(transport)?;
         match resp.status().as_u16() {
             204 | 404 => return Ok(None),
-            s if !(200..300).contains(&s) => bail!("HTTP {s}"),
+            s @ (408 | 429 | 500..) => return Err(Failure::Transient(anyhow!("HTTP {s}"), retry_after(&resp))),
+            s if !(200..300).contains(&s) => return Err(Failure::Permanent(anyhow!("HTTP {s}"))),
             _ => {}
         }
-        let body = resp.into_body().with_config().limit(MAX_BODY).read_to_vec()?;
+        let body = resp.into_body().with_config().limit(MAX_BODY).read_to_vec().map_err(transport)?;
         // BlueMap's own server re-encodes to gzip for us, but SQL (sql.php) and static hosts may send any storage
         // compression, with or without a matching Content-Encoding: trust the bytes, not the headers.
-        bmr_compress::decompress_any(body, MAX_BODY as usize).map(Some)
+        bmr_compress::decompress_any(body, MAX_BODY as usize).map(Some).map_err(Failure::Permanent)
     }
+}
+
+fn transport(e: ureq::Error) -> Failure {
+    match e {
+        ureq::Error::BodyExceedsLimit(_) => Failure::Permanent(anyhow!("response larger than {} MiB", MAX_BODY >> 20)),
+        e => Failure::Transient(e.into(), None),
+    }
+}
+
+/// `Retry-After` in seconds (the HTTP-date form is rare for rate limits and falls back to backoff).
+fn retry_after<B>(resp: &Response<B>) -> Option<Duration> {
+    let secs: u64 = resp.headers().get("retry-after")?.to_str().ok()?.trim().parse().ok()?;
+    Some(Duration::from_secs(secs).min(MAX_RETRY_AFTER))
 }

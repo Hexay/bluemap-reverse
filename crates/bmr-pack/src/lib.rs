@@ -134,7 +134,7 @@ impl Pack {
             .into_iter()
             .map(|(biome, tints)| BiomeTint { biome, tints })
             .collect();
-        let (entries, registry, template) = decode(body);
+        let (entries, registry, template) = decode(body).with_context(|| path.display().to_string())?;
         Ok(Self {
             library: Library::from_entries(entries, header.meta.data_version),
             meta: header.meta,

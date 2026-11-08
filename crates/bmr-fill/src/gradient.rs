@@ -80,11 +80,7 @@ enum Positional {
 
 impl Positional {
     fn world(seed: i64, legacy: bool) -> Self {
-        if legacy {
-            Self::Legacy(Legacy::new(seed).next_long())
-        } else {
-            Xoroshiro::from_seed(seed).fork_positional()
-        }
+        if legacy { Self::Legacy(Legacy::new(seed).next_long()) } else { Xoroshiro::from_seed(seed).fork_positional() }
     }
 
     /// `fromHashOf(id).forkPositional()`: Xoroshiro keys by the id's MD5, legacy by its `String.hashCode`.

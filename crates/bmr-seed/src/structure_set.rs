@@ -117,7 +117,8 @@ mod tests {
     #[ignore = "needs work/data from tools/setup.py"]
     fn matches_jar_data() {
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../work/data/structure_set-26.3");
-        let entries = std::fs::read_dir(dir).unwrap_or_else(|e| panic!("{dir}: {e}; run `python3tools/setup.py` first"));
+        let entries =
+            std::fs::read_dir(dir).unwrap_or_else(|e| panic!("{dir}: {e}; run `python3tools/setup.py` first"));
         let sets = vanilla("26.3").unwrap();
         let mut checked = 0;
         for e in entries.flatten() {

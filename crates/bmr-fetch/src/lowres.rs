@@ -30,44 +30,41 @@ impl LowresImage {
         Ok(Self { width, height: full / 2, rgba })
     }
 
-    fn px(&self, x: usize, row: usize) -> [u8; 4] {
+    fn px(&self, x: usize, row: usize) -> Option<[u8; 4]> {
+        if x >= self.width {
+            return None;
+        }
         let i = (row * self.width + x) * 4;
-        self.rgba[i..i + 4].try_into().unwrap()
+        self.rgba.get(i..i + 4)?.try_into().ok()
     }
 
-    pub fn color(&self, x: usize, z: usize) -> [u8; 4] {
+    /// `None` outside the colour half.
+    pub fn color(&self, x: usize, z: usize) -> Option<[u8; 4]> {
+        if z >= self.height {
+            return None;
+        }
         self.px(x, z)
     }
 
-    /// Top visible block y (0 where the column is empty).
-    pub fn block_height(&self, x: usize, z: usize) -> i16 {
-        let [_, g, b, _] = self.px(x, self.height + z);
-        i16::from_be_bytes([g, b])
+    /// Top visible block y (0 where the column is empty); `None` outside the image.
+    pub fn block_height(&self, x: usize, z: usize) -> Option<i16> {
+        if z >= self.height {
+            return None;
+        }
+        let [_, g, b, _] = self.px(x, self.height + z)?;
+        Some(i16::from_be_bytes([g, b]))
     }
 
     /// Pixel coords (x, z) in the colour half with alpha > 0, i.e. columns that have rendered geometry.
     pub fn visible_pixels(&self) -> Vec<(i32, i32)> {
         (0..self.height)
             .flat_map(|z| (0..self.width).map(move |x| (x, z)))
-            .filter(|&(x, z)| self.color(x, z)[3] > 0)
+            .filter(|&(x, z)| self.color(x, z).is_some_and(|c| c[3] > 0))
             .map(|(x, z)| (x as i32, z as i32))
             .collect()
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn huge_declared_png_is_refused_before_allocating() {
-        // fuzzer find (texture_png target, IHDR CRC fixed): 71 bytes declaring 16×218M pixels, a 3.4 GB buffer
-        let png = [
-            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 16, 13, 0, 0, 0, 1, 0, 0, 0, 0, 197,
-            17, 39, 0, 0, 37, 0, 14, 73, 68, 65, 84, 120, 94, 99, 248, 255, 159, 129, 20, 4, 0, 253, 78, 31, 225, 190,
-            27, 58, 22, 0, 40, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
-        ];
-        let e = LowresImage::decode(&png).err().expect("expected an error");
-        assert!(e.to_string().contains("png too large"), "{e:#}");
-    }
-}
+#[path = "lowres_tests.rs"]
+mod tests;

@@ -53,12 +53,11 @@ pub fn run(a: Args) -> Result<()> {
             images.entry(t).or_insert_with(|| map.tile_bytes(1, t).ok().and_then(|b| LowresImage::decode(&b).ok()));
         let (mx, mz) = grid.tile_min(t);
         let (px, pz) = ((x - mx) as usize, (z - mz) as usize);
-        match img {
-            Some(img) if img.color(px, pz)[3] > 0 => {
-                let lowres_y = img.block_height(px, pz) as i32;
-                if lowres_y == hires_y { ok += 1 } else { bad.push((x, z, hires_y, lowres_y)) }
-            }
-            _ => no_lowres += 1,
+        let lowres = img.as_ref().filter(|img| img.color(px, pz).is_some_and(|c| c[3] > 0));
+        match lowres.and_then(|img| img.block_height(px, pz)) {
+            Some(lowres_y) if lowres_y as i32 == hires_y => ok += 1,
+            Some(lowres_y) => bad.push((x, z, hires_y, lowres_y as i32)),
+            None => no_lowres += 1,
         }
     }
 

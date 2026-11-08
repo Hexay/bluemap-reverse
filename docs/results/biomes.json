@@ -34,15 +34,15 @@
   },
   "biomes": {
     "total": 153600,
-    "hits": 79680
+    "hits": 79776
   },
   "confusions": [],
   "rendered_confusions": [],
   "biome_confusions": [
     {
       "original": "minecraft:plains",
-      "reconstructed": "minecraft:ocean",
-      "count": 9280
+      "reconstructed": "minecraft:river",
+      "count": 9536
     },
     {
       "original": "minecraft:plains",
@@ -62,7 +62,7 @@
     {
       "original": "minecraft:plains",
       "reconstructed": "minecraft:birch_forest",
-      "count": 3456
+      "count": 3328
     },
     {
       "original": "minecraft:plains",
@@ -92,7 +92,7 @@
     {
       "original": "minecraft:plains",
       "reconstructed": "minecraft:meadow",
-      "count": 2112
+      "count": 1984
     },
     {
       "original": "minecraft:plains",
@@ -156,7 +156,7 @@
     },
     {
       "original": "minecraft:deep_ocean",
-      "reconstructed": "minecraft:ocean",
+      "reconstructed": "minecraft:river",
       "count": 512
     },
     {

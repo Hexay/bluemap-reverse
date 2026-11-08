@@ -34,7 +34,7 @@
   },
   "biomes": {
     "total": 7084032,
-    "hits": 3421386
+    "hits": 4977795
   },
   "confusions": [
     {
@@ -294,32 +294,17 @@
     {
       "original": "minecraft:deep_lukewarm_ocean",
       "reconstructed": "minecraft:lukewarm_ocean",
-      "count": 2460202
+      "count": 1262508
     },
     {
       "original": "minecraft:deep_ocean",
-      "reconstructed": "minecraft:plains",
-      "count": 677430
+      "reconstructed": "minecraft:ocean",
+      "count": 424256
     },
     {
-      "original": "minecraft:river",
-      "reconstructed": "minecraft:plains",
-      "count": 132266
-    },
-    {
-      "original": "minecraft:beach",
-      "reconstructed": "minecraft:plains",
-      "count": 75403
-    },
-    {
-      "original": "minecraft:forest",
-      "reconstructed": "minecraft:birch_forest",
-      "count": 37211
-    },
-    {
-      "original": "minecraft:ocean",
-      "reconstructed": "minecraft:plains",
-      "count": 36472
+      "original": "minecraft:lukewarm_ocean",
+      "reconstructed": "minecraft:deep_lukewarm_ocean",
+      "count": 31104
     },
     {
       "original": "minecraft:bamboo_jungle",
@@ -327,29 +312,54 @@
       "count": 27431
     },
     {
+      "original": "minecraft:forest",
+      "reconstructed": "minecraft:river",
+      "count": 26031
+    },
+    {
+      "original": "minecraft:beach",
+      "reconstructed": "minecraft:river",
+      "count": 24874
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:beach",
+      "count": 24226
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:river",
+      "count": 24096
+    },
+    {
+      "original": "minecraft:river",
+      "reconstructed": "minecraft:ocean",
+      "count": 22187
+    },
+    {
       "original": "minecraft:sparse_jungle",
-      "reconstructed": "minecraft:plains",
-      "count": 27251
+      "reconstructed": "minecraft:river",
+      "count": 21012
+    },
+    {
+      "original": "minecraft:forest",
+      "reconstructed": "minecraft:birch_forest",
+      "count": 16573
     },
     {
       "original": "minecraft:jungle",
-      "reconstructed": "minecraft:plains",
-      "count": 18917
-    },
-    {
-      "original": "minecraft:lush_caves",
-      "reconstructed": "minecraft:plains",
-      "count": 17765
-    },
-    {
-      "original": "minecraft:savanna",
-      "reconstructed": "minecraft:plains",
-      "count": 16704
+      "reconstructed": "minecraft:river",
+      "count": 14800
     },
     {
       "original": "minecraft:bamboo_jungle",
       "reconstructed": "minecraft:sparse_jungle",
       "count": 13684
+    },
+    {
+      "original": "minecraft:savanna",
+      "reconstructed": "minecraft:river",
+      "count": 13582
     },
     {
       "original": "minecraft:bamboo_jungle",
@@ -368,28 +378,23 @@
     },
     {
       "original": "minecraft:lush_caves",
+      "reconstructed": "minecraft:ocean",
+      "count": 10154
+    },
+    {
+      "original": "minecraft:lush_caves",
       "reconstructed": "minecraft:lukewarm_ocean",
       "count": 9861
     },
     {
-      "original": "minecraft:forest",
-      "reconstructed": "minecraft:plains",
-      "count": 8736
-    },
-    {
-      "original": "minecraft:river",
-      "reconstructed": "minecraft:birch_forest",
-      "count": 8604
-    },
-    {
-      "original": "minecraft:bamboo_jungle",
-      "reconstructed": "minecraft:plains",
-      "count": 8009
-    },
-    {
-      "original": "minecraft:river",
+      "original": "minecraft:beach",
       "reconstructed": "minecraft:ocean",
-      "count": 7849
+      "count": 9107
+    },
+    {
+      "original": "minecraft:plains",
+      "reconstructed": "minecraft:beach",
+      "count": 8829
     },
     {
       "original": "minecraft:lush_caves",
@@ -397,24 +402,19 @@
       "count": 7783
     },
     {
-      "original": "minecraft:stony_shore",
-      "reconstructed": "minecraft:plains",
-      "count": 3648
+      "original": "minecraft:sparse_jungle",
+      "reconstructed": "minecraft:beach",
+      "count": 7563
+    },
+    {
+      "original": "minecraft:bamboo_jungle",
+      "reconstructed": "minecraft:river",
+      "count": 7228
     },
     {
       "original": "minecraft:river",
-      "reconstructed": "minecraft:forest",
-      "count": 3341
-    },
-    {
-      "original": "minecraft:lush_caves",
-      "reconstructed": "minecraft:sparse_jungle",
-      "count": 3291
-    },
-    {
-      "original": "minecraft:plains",
-      "reconstructed": "minecraft:beach",
-      "count": 2397
+      "reconstructed": "minecraft:birch_forest",
+      "count": 6508
     }
   ],
   "samples": []

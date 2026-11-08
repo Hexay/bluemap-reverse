@@ -16,6 +16,9 @@ python3 tools/loop_timing.py --tests     # re-measure the loop
 
 Parsers of site, pack and region input have fuzz targets: see [fuzzing.md](fuzzing.md).
 
+Unit tests go in a sibling `x_tests.rs` (`#[cfg(test)] #[path = "x_tests.rs"] mod tests;`); a block under ~60
+lines may stay inline.
+
 ## Test loop
 
 ```

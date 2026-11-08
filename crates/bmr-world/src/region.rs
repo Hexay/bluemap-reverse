@@ -94,4 +94,5 @@ fn read_chunk(data: &[u8], offset: usize) -> Result<Vec<u8>> {
 }
 
 #[cfg(test)]
+#[path = "region_tests.rs"]
 mod tests;

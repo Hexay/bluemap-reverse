@@ -59,4 +59,5 @@ fn read_capped(reader: impl Read, limit: usize) -> Result<Vec<u8>> {
 }
 
 #[cfg(test)]
+#[path = "lib_tests.rs"]
 mod tests;

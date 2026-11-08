@@ -53,5 +53,7 @@ registry, face keys and signatures deduplicated (identical-looking states share 
 
 ## Next candidates
 
-- `invert.gather`: per-tile maps are merged into one map serially (~4 s of 26 s CPU on structures).
-- `fill.segments` (~6 s) and `fill.gaps` (~3.6 s) remain the largest serial stages per window.
+- 2026-11-08, structures fixture, 4 window jobs: wall 13.6 s and a flat profile (top self: `bmr_fill::complete`
+  8.7%, `solid_segments` 8.4%, `evidence::collect` 4.9%, AO 4.6%). The per-window serial stages
+  (`invert.gather`'s merge, `fill.segments`, `fill.gaps`) overlap across windows, so speeding one of them up
+  mostly helps `--window-jobs 1` (low-memory machines).

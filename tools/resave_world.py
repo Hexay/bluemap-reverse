@@ -1,7 +1,7 @@
 """Open an existing world in a headless server of the given version, force-load an area, save, stop.
 Proves the server accepts our chunks (a regenerated chunk would come back as template void).
 
-Usage: py -3 tools/resave_world.py <world_dir> --area=x0,z0,x1,z1 [--mc 1.21.11]
+Usage: python3tools/resave_world.py <world_dir> --area=x0,z0,x1,z1 [--mc 1.21.11]
 The server runs in the world's parent dir with level-name = the world folder name.
 """
 import argparse

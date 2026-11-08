@@ -3,10 +3,10 @@ working set. CPU time is the number to trust on a busy machine; wall time is rep
 If the command writes `--timings {timings}` JSON, per-stage medians are reported too.
 Appends a summary line to docs/results/bench.jsonl.
 
-Usage: py -3 tools/bench.py <label> [-n 3] [--clean DIR] -- <command...>
+Usage: python3tools/bench.py <label> [-n 3] [--clean DIR] -- <command...>
   {timings} in the command is replaced by a temp JSON path.
 Example:
-  py -3 tools/bench.py vanilla-regen -n 3 --clean work/out/bench -- target/release/bmr.exe reverse
+  python3tools/bench.py vanilla-regen -n 3 --clean work/out/bench -- target/release/bmr reverse
       --mirror work/cache/vanilla -o work/out/bench/world --regen work/worlds/regen-vanilla/world --timings {timings}
 """
 import argparse

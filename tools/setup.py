@@ -1,7 +1,7 @@
 """Download a toolchain's JDK, Minecraft server jar and BlueMap CLI into work/downloads and generate the
 vanilla data reports. Idempotent. Without arguments: the default (26.3) toolchain.
 
-Usage: py -3 tools/setup.py [--mc 1.21.11 [--bluemap 5.27]]
+Usage: python3tools/setup.py [--mc 1.21.11 [--bluemap 5.27]]
 """
 import argparse
 import hashlib

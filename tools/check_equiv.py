@@ -1,7 +1,7 @@
 """Output-equivalence guard for performance work: reconstruct each case, then require 100% identical
 voxels and biomes against stored reference reconstructions. Optimisations must not change results.
 
-Usage: py -3 tools/check_equiv.py [--update] [--bin target/release/bmr.exe]
+Usage: python3tools/check_equiv.py [--update] [--bin target/release/bmr]
 Cases: vanilla + regen (inversion, evidence, regen fill, biomes, writer) and vanilla-edited without the
 seed (prior fill: neighbour searches, deep-water floors) — the two fill paths differ in what crosses
 window borders.

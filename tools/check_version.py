@@ -2,7 +2,7 @@
 and serve it with that BlueMap, `bmr pull` it (the pack must be picked by fingerprint), score against
 the original, and load the output in that version's server (writer format + folder layout).
 
-Usage: py -3 tools/check_version.py --mc 1.21.11 [--bluemap 5.27]
+Usage: python3tools/check_version.py --mc 1.21.11 [--bluemap 5.27]
 """
 import argparse
 import json

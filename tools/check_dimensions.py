@@ -2,7 +2,7 @@
 served as BlueMap's three default maps, `bmr pull` without --map must reconstruct all three into one
 world. Scores each dimension against the original and loads the output in the server.
 
-Usage: py -3 tools/check_dimensions.py
+Usage: python3tools/check_dimensions.py
 """
 import json
 import subprocess

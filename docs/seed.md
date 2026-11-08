@@ -60,7 +60,7 @@ Observations: `{"mc": "26.3", "structures": [{"set": "shipwrecks", "chunks": [[x
 ## Tests
 
 - `cargo test -p bmr-seed --release` — unit tests plus `tests/truth.rs` on every `fixtures/seed/*.json`.
-- `py -3 tools/check_seed.py <fixture> <truth>` — end to end on a reversed fixture; per-type detection table.
-- New truth: `py -3 tools/structure_truth.py <name> [--seed S]` (no chunk gen; a coarse grid misses structures —
-  add `--merge --radius 1280 --step 128` near spawn). New fixture from it: `py -3 tools/structure_fixture.py <truth>
+- `python3 tools/check_seed.py <fixture> <truth>` — end to end on a reversed fixture; per-type detection table.
+- New truth: `python3 tools/structure_truth.py <name> [--seed S]` (no chunk gen; a coarse grid misses structures —
+  add `--merge --radius 1280 --step 128` near spawn). New fixture from it: `python3 tools/structure_fixture.py <truth>
   <fixture>`, then make_world → mirror_fixture → reverse_fixture.

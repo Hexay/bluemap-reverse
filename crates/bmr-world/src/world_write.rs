@@ -29,7 +29,7 @@ pub type TemplateFiles = Vec<(String, Vec<u8>)>;
 /// Everything of a template world except chunk data and the session lock.
 pub fn read_template(dir: &Path) -> Result<TemplateFiles> {
     if !dir.join("level.dat").exists() {
-        bail!("template {} has no level.dat (py -3 tools/make_world.py template-void)", dir.display());
+        bail!("template {} has no level.dat (python3tools/make_world.py template-void)", dir.display());
     }
     let mut out = Vec::new();
     collect(dir, "", &mut out)?;

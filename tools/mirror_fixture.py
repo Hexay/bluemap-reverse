@@ -1,7 +1,7 @@
 """Render a fixture with BlueMap, serve it, mirror it with `bmr fetch` into <toolchain>/cache/<fixture>,
 stop serving. The mirror is taken over HTTP on purpose: it is exactly what a public site would give us.
 
-Usage: py -3 tools/mirror_fixture.py <fixture> [--force-render] [--mc 1.21.11 [--bluemap 5.27]]
+Usage: python3tools/mirror_fixture.py <fixture> [--force-render] [--mc 1.21.11 [--bluemap 5.27]]
 """
 import argparse
 import os

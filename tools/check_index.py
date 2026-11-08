@@ -2,7 +2,7 @@
 superflat fixture with BlueMap, and `bmr pull` it from an empty folder: the right pack must be chosen from
 the index, downloaded, verified and used.
 
-Usage: py -3 tools/check_index.py   (needs the superflat fixture rendered: tools/up.py superflat)
+Usage: python3tools/check_index.py   (needs the superflat fixture rendered: tools/up.py superflat)
 """
 import functools
 import http.server

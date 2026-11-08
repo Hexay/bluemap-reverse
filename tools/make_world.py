@@ -1,6 +1,6 @@
 """Generate a fixture world: fresh server run, force-load the fixture area, apply its commands, save, stop.
 
-Usage: py -3 tools/make_world.py <fixture> [--force] [--mc 1.21.11 [--bluemap 5.27]]
+Usage: python3tools/make_world.py <fixture> [--force] [--mc 1.21.11 [--bluemap 5.27]]
 Output: <toolchain worlds>/<fixture>/world (default toolchain: work/worlds/<fixture>/world)
 """
 import argparse

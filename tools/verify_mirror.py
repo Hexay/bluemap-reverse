@@ -1,6 +1,6 @@
 """Compare a bmr fetch mirror against BlueMap's on-disk webroot for a fixture (byte-exact after gunzip).
 
-Usage: py -3 tools/verify_mirror.py <fixture> [mirror_dir=work/cache/<fixture>]
+Usage: python3tools/verify_mirror.py <fixture> [mirror_dir=work/cache/<fixture>]
 Exit 1 if any rendered file is missing from the mirror or differs.
 """
 import gzip

@@ -1,7 +1,7 @@
 """Independent Sponge Schematic v3 validator (stdlib NBT parser, shares nothing with bmr's fastnbt writer).
 Checks tag types and structure against the spec and that Blocks/Biomes data decode to W*H*L varints.
 
-Usage: py -3 tools/check_schem.py <file.schem> [--show N]   (prints the N most common block states)
+Usage: python3tools/check_schem.py <file.schem> [--show N]   (prints the N most common block states)
 """
 import argparse
 import gzip

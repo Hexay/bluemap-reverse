@@ -3,7 +3,7 @@ biome_parameters report), each with grass, oak leaves and water at fixed spots, 
 the grass / foliage / water tint BlueMap draws for every biome. Commands are generated per version (the
 biome list differs), so this fixture has no commands.txt.
 
-Usage: py -3 tools/gen_biomes.py [--mc 26.3] [--force]    (makes work/.../worlds/biomes)
+Usage: python3tools/gen_biomes.py [--mc 26.3] [--force]    (makes work/.../worlds/biomes)
 """
 import argparse
 import json

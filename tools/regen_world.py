@@ -1,7 +1,7 @@
 """Regenerate untouched terrain for a mirrored map from its seed (same MC version), covering the rendered area.
 bmr reverse --regen uses it for everything the tiles do not show (caves, ore blobs, deep floors, biomes).
 
-Usage: py -3 tools/regen_world.py <mirror_name> --seed <seed> [--level-type minecraft:normal] [--force]
+Usage: python3tools/regen_world.py <mirror_name> --seed <seed> [--level-type minecraft:normal] [--force]
 Output: work/worlds/regen-<mirror_name>/world
 """
 import argparse

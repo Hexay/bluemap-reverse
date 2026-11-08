@@ -1,8 +1,8 @@
 """Run RAM-heavy fixture work on the `testbox` ssh host (Linux, 31 GB) instead of this machine.
 
-Usage: py -3 tools/testbox.py sync                 # working tree (minus target/, work/, .git) → ~/bluemap_reverse
-       py -3 tools/testbox.py run "<command>"      # run in the remote checkout, with cargo on PATH
-       py -3 tools/testbox.py fetch <remote path> <local path>   # copy a file back (e.g. a truth json)
+Usage: python3tools/testbox.py sync                 # working tree (minus target/, work/, .git) → ~/bluemap_reverse
+       python3tools/testbox.py run "<command>"      # run in the remote checkout, with cargo on PATH
+       python3tools/testbox.py fetch <remote path> <local path>   # copy a file back (e.g. a truth json)
 First time: `run "bash tools/testbox_setup.sh"` (rustup, JDK, server, BlueMap, library fixtures).
 """
 import io

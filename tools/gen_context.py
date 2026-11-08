@@ -2,7 +2,7 @@
 panes, redstone, doors, double chests, attached blocks, culling, waterlogging, a jumble of every block) that
 the debug world, with every state isolated, cannot test. Deterministic (fixed seed).
 
-Usage: py -3 tools/gen_context.py        then: make_world.py context, mirror_fixture.py context
+Usage: python3tools/gen_context.py        then: make_world.py context, mirror_fixture.py context
 """
 import json
 import random

@@ -93,7 +93,7 @@ mod tests {
     #[ignore = "needs work/data from tools/setup.py"]
     fn covers_every_registered_type() {
         let dir = Path::new(REPORTS);
-        assert!(dir.exists(), "{REPORTS} missing: run `py -3 tools/setup.py` first");
+        assert!(dir.exists(), "{REPORTS} missing: run `python3tools/setup.py` first");
         let read =
             |f: &str| -> serde_json::Value { serde_json::from_slice(&std::fs::read(dir.join(f)).unwrap()).unwrap() };
         let registries = read("registries.json");

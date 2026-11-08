@@ -21,7 +21,7 @@ Minecraft server and BlueMap.
 ```sh
 cargo build                     # debug build: target/debug/bmr
 cargo test --workspace
-py -3 tools/up.py superflat     # build, render and serve a fixture world
+python3 tools/up.py superflat     # build, render and serve a fixture world
 ```
 
 [docs/development.md](docs/development.md) covers the test loop, fixtures, every command and building packs.
@@ -32,7 +32,7 @@ Start with [docs/architecture.md](docs/architecture.md) for the design.
 - Keep pull requests focused on one change.
 - `cargo test --workspace` must pass. CI runs it on Windows, Linux and macOS.
 - If you touch reconstruction (matcher, fill, biomes), reverse the affected fixtures with
-  `py -3 tools/reverse_fixture.py <fixture>` and include the before/after scores. Each run appends to
+  `python3 tools/reverse_fixture.py <fixture>` and include the before/after scores. Each run appends to
   `docs/results/history.jsonl`; commit that alongside the change.
 - After matcher changes, reverse both `debug` and `context` and compare `rendered_alike`.
 - Performance changes need numbers from `tools/bench.py` (see [docs/performance.md](docs/performance.md)).

@@ -1,7 +1,7 @@
 """End-to-end seed recovery on a reversed fixture: detect structures in the reconstruction, crack, compare with the
 truth seed. Exit code 0 only if the recovered world seed is the true one.
 
-Usage: py -3 tools/check_seed.py <fixture> <truth_name>
+Usage: python3tools/check_seed.py <fixture> <truth_name>
   needs work/out/<fixture>-rev/world (tools/reverse_fixture.py) and fixtures/seed/<truth_name>.json
 """
 import json

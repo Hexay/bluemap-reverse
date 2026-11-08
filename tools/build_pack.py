@@ -2,7 +2,7 @@
 from Mojang's metadata), generate reports, the debug, biomes and void-template worlds, render + mirror the
 debug and biomes worlds with that BlueMap, then `bmr pack build`. Resumable: finished steps are skipped (--force redoes worlds).
 
-Usage: py -3 tools/build_pack.py --mc 1.21.11 [--bluemap 5.27] [--force]
+Usage: python3tools/build_pack.py --mc 1.21.11 [--bluemap 5.27] [--force]
 Output: packs/bmr-mc<mc>-bluemap<bluemap>.pack
 Supports Minecraft 1.18+ (older chunk formats are not read).
 """

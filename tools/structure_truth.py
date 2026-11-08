@@ -1,7 +1,7 @@
 """Ground-truth structure starts for seed-cracker tests: a fresh server /locate's every surface-visible structure
 set from a grid of points. No chunks are generated, so a wide area takes minutes, not hours.
 
-Usage: py -3 tools/structure_truth.py <name> [--seed <seed>] [--radius 3072] [--step 512] [--force]
+Usage: python3tools/structure_truth.py <name> [--seed <seed>] [--radius 3072] [--step 512] [--force]
   no --seed: the server picks a random seed (tests the random-seed shortcut)
 Output: fixtures/seed/<name>.json  {"mc", "seed", "structures": [{"set", "chunk": [x, z]}]}
 """

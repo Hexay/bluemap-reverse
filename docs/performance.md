@@ -6,15 +6,15 @@ Numbers live in `docs/results/bench.jsonl` (one line per benchmark run); this fi
 
 | Command | What |
 |---|---|
-| `py -3 tools/bench.py <label> -n 5 --clean work/out/bench -- target/release/bmr.exe reverse … --timings {timings}` | median wall / **CPU** / peak memory + per-stage medians → `docs/results/bench.jsonl` |
-| `py -3 tools/profile.py <name> --build --clean work/out/prof -- target/profiling/bmr.exe reverse …` | samply sampling profile (UAC prompt), CPU-weighted self/inclusive top functions; open `work/prof/<name>.json.gz` in profiler.firefox.com for flame graphs |
-| `py -3 tools/check_equiv.py [--update]` | output guard: every optimisation must keep both reference reconstructions bit-identical (regen path + prior path) |
+| `python3 tools/bench.py <label> -n 5 --clean work/out/bench -- target/release/bmr reverse … --timings {timings}` | median wall / **CPU** / peak memory + per-stage medians → `docs/results/bench.jsonl` |
+| `perf record -F 499 -g --call-graph dwarf target/profiling/bmr reverse …` | Linux sampling profile (`cargo build --profile profiling`); `perf report --no-children` for self time |
+| `python3 tools/check_equiv.py [--update]` | output guard: every optimisation must keep both reference reconstructions bit-identical (regen path + prior path) |
 | `bmr reverse … ` | prints per-stage time and resident memory after each stage |
 
-- Trust **CPU time** over wall time: this machine's background load (OneDrive, IDE, WSL) swings wall time ±50%.
+- Trust **CPU time** over wall time: background load (other builds, sessions) swings wall time ±50%.
 - A/B against an older commit: `git worktree add work/bench-base <rev>` + `cargo build --release --target-dir target/bench-base`.
-- Profiling gotchas: samply needs the Windows Performance Toolkit (ADK) and admin; it cannot read our Rust
-  PDB, so the profiling build emits an MSVC `/MAP` via `cargo rustc` (RUSTFLAGS would hit build scripts).
+- Windows: `tools/profile.py` drives samply over ETW (needs the Windows Performance Toolkit and admin; it
+  cannot read our Rust PDB, so the profiling build emits an MSVC `/MAP` via `cargo rustc`).
 
 ## Decisions (each found by the profiler, verified by check_equiv)
 
@@ -55,5 +55,3 @@ registry, face keys and signatures deduplicated (identical-looking states share 
 
 - `invert.gather`: per-tile maps are merged into one map serially (~4 s of 26 s CPU on structures).
 - `fill.segments` (~6 s) and `fill.gaps` (~3.6 s) remain the largest serial stages per window.
-- Linux profiling: `perf record -F 499 -g --call-graph dwarf` on `target/profiling/bmr`; `tools/profile.py` is
-  Windows-only (samply via ETW).

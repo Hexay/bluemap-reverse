@@ -1,6 +1,6 @@
 """One command from nothing to a live local map: setup → make_world → render + serve.
 
-Usage: py -3 tools/up.py [fixture=superflat] [--force]   (--force regenerates the world and re-renders)
+Usage: python3tools/up.py [fixture=superflat] [--force]   (--force regenerates the world and re-renders)
 """
 import argparse
 import subprocess

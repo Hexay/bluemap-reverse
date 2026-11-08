@@ -1,7 +1,7 @@
 """Writer acceptance test: copy a fixture world through bmr's writer, load + resave it in a real server,
 score against the original. Expect ~100% (grass under solid blocks may decay to dirt during the resave).
 
-Usage: py -3 tools/check_writer.py [fixture=superflat]
+Usage: python3tools/check_writer.py [fixture=superflat]
 """
 import json
 import shutil

@@ -1,7 +1,7 @@
 """Render a fixture world with BlueMap CLI and/or serve it on WEB_HOST:WEB_PORT.
 
-Usage: py -3 tools/render_serve.py <fixture> [--no-render] [--no-serve] [--force-render] [--mc 1.21.11]
-                                   [--world <dir> --name <out-name> [--relight]] [--port N]
+Usage: python3 tools/render_serve.py <fixture> [--no-render] [--no-serve] [--force-render] [--mc 1.21.11]
+                                      [--world <dir> --name <out-name> [--relight]] [--port N]
 Layout: <toolchain>/bluemap/<name>/{config,data,web}; name defaults to the fixture; map id = fixture name.
 Map settings are BlueMap defaults (what public maps run) unless fixture.json has a "bluemap" object.
 --world renders another world (e.g. a reconstruction) with the fixture's map config; give it its own --name so

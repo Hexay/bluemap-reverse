@@ -8,7 +8,7 @@ chunks the server generates around it, so sky light leaks in sideways and lights
 world itself, written and relit the same way, differed from the site on 120k faces near the edge, and on 84
 texture variants once they were left out (2026-10-02).
 
-Usage: py -3 tools/roundtrip.py <fixture> [--recon <world>]
+Usage: python3tools/roundtrip.py <fixture> [--recon <world>]
 Needs the fixture's mirror (mirror_fixture.py) and reconstruction (reverse_fixture.py, default
 work/out/<fixture>-rev/world). The reconstruction is copied first: relighting resaves it in place.
 """

@@ -2,8 +2,8 @@
 (negatives) plus a 7x7-chunk patch around every known structure within --radius chunks. Generated with
 make_world.py's extra_areas, so a wide spread of structures costs a few thousand chunks instead of millions.
 
-Usage: py -3 tools/structure_fixture.py <truth_name> <fixture_name> [--radius 64]
-Then:  py -3 tools/make_world.py <fixture> && py -3 tools/mirror_fixture.py <fixture> && py -3 tools/reverse_fixture.py <fixture>
+Usage: python3tools/structure_fixture.py <truth_name> <fixture_name> [--radius 64]
+Then:  python3tools/make_world.py <fixture> && python3tools/mirror_fixture.py <fixture> && python3tools/reverse_fixture.py <fixture>
 """
 import argparse
 import json

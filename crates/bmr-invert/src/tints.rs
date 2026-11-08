@@ -4,6 +4,7 @@
 use anyhow::Result;
 use bmr_fetch::LocalMap;
 use bmr_world::World;
+use bmr_world::coords::{chunk_of, local, section_of};
 use rustc_hash::FxHashMap;
 
 use crate::face::{Tex, WorldFace, texture_ids, world_faces};
@@ -96,12 +97,8 @@ pub fn learn(map: &LocalMap, world: &World) -> Result<Vec<BiomeTint>> {
         chunks.extend(world.read_region(r)?);
     }
     let biome = |(x, y, z): (i32, i32, i32)| -> Option<&str> {
-        let c = chunks.get(&(x.div_euclid(16), z.div_euclid(16)))?;
-        c.section(y.div_euclid(16))?.biome(
-            (x.rem_euclid(16) / 4) as usize,
-            (y.rem_euclid(16) / 4) as usize,
-            (z.rem_euclid(16) / 4) as usize,
-        )
+        let c = chunks.get(&chunk_of(x, z))?;
+        c.section(section_of(y))?.biome(local(x) / 4, local(y) / 4, local(z) / 4)
     };
     let mut per_biome: FxHashMap<String, TintSum> = FxHashMap::default();
     for tile in map.tiles(0) {

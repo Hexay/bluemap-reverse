@@ -4,6 +4,7 @@
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use anyhow::Result;
+use bmr_world::coords::{chunk_of, local};
 use bmr_world::{BlockState, Chunk, ChunkPos, World};
 use rayon::prelude::*;
 
@@ -168,8 +169,8 @@ fn exposed(orig: &Chunks, pos: ChunkPos, chunk: &Chunk, lx: usize, y: i32, lz: u
         if (0..16).contains(&nx) && (0..16).contains(&nz) {
             return air(chunk.block(nx as usize, y, nz as usize));
         }
-        let npos = (pos.0 + nx.div_euclid(16), pos.1 + nz.div_euclid(16));
-        orig.get(&npos).is_some_and(|c| air(c.block(nx.rem_euclid(16) as usize, y, nz.rem_euclid(16) as usize)))
+        let (dcx, dcz) = chunk_of(nx, nz);
+        orig.get(&(pos.0 + dcx, pos.1 + dcz)).is_some_and(|c| air(c.block(local(nx), y, local(nz))))
     })
 }
 

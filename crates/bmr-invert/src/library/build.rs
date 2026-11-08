@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use anyhow::{Context, Result};
 use bmr_fetch::LocalMap;
+use bmr_world::coords::{chunk_of, local};
 use bmr_world::{BlockRegistry, BlockState, World};
 use rayon::prelude::*;
 use rustc_hash::FxHashMap;
@@ -55,8 +56,8 @@ impl Library {
                 let chunks = world.read_region(r)?;
                 data_version = data_version.or_else(|| chunks.values().next().map(|c| c.data_version));
                 for &(x, y, z) in by_anchor.keys() {
-                    let Some(chunk) = chunks.get(&(x.div_euclid(16), z.div_euclid(16))) else { continue };
-                    if let Some(s) = chunk.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize) {
+                    let Some(chunk) = chunks.get(&chunk_of(x, z)) else { continue };
+                    if let Some(s) = chunk.block(local(x), y, local(z)) {
                         states.insert((x, y, z), s.clone());
                     }
                 }

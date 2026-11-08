@@ -12,6 +12,7 @@
 
 use anyhow::Result;
 use bmr_invert::face::{Cell, Liquid};
+use bmr_world::coords::{chunk_of, local, section_of};
 use bmr_world::{BlockState, Chunk, ChunkPos, StateId, StateTable, World};
 use rayon::prelude::*;
 use rustc_hash::FxHashMap;
@@ -63,8 +64,8 @@ impl RegenWorld {
 
     /// One chunk lookup for a whole column (the fill walks columns).
     pub fn column(&self, x: i32, z: i32) -> Option<RegenColumn<'_>> {
-        let rc = self.chunks.get(&(x.div_euclid(16), z.div_euclid(16)))?;
-        Some(RegenColumn { rc, xz: (z.rem_euclid(16) as usize) * 16 + x.rem_euclid(16) as usize })
+        let rc = self.chunks.get(&chunk_of(x, z))?;
+        Some(RegenColumn { rc, xz: local(z) * 16 + local(x) })
     }
 }
 
@@ -77,14 +78,14 @@ pub struct RegenColumn<'a> {
 impl RegenColumn<'_> {
     pub fn id(&self, y: i32) -> Option<StateId> {
         let sections = &self.rc.chunk.sections;
-        let sy = y.div_euclid(16);
+        let sy = section_of(y);
         // sections are sorted and normally contiguous: index directly, search only if there is a hole
         let guess = (sy - sections.first()?.y) as usize;
         let i = match sections.get(guess) {
             Some(s) if s.y == sy => guess,
             _ => sections.binary_search_by_key(&sy, |s| s.y).ok()?,
         };
-        let idx = sections[i].index((y.rem_euclid(16) as usize) * 256 + self.xz);
+        let idx = sections[i].index(local(y) * 256 + self.xz);
         Some(self.rc.palette_ids[i][idx as usize])
     }
 }

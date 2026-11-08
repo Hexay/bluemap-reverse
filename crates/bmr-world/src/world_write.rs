@@ -9,6 +9,7 @@ use anyhow::{Context, Result, bail};
 use rayon::prelude::*;
 
 use crate::chunk::{Chunk, PaletteStyle};
+use crate::coords::region_of_chunk;
 use crate::dimension::Dimension;
 use crate::nbt_write::encode_chunk;
 use crate::region::write_region;
@@ -113,7 +114,7 @@ impl WorldWriter {
     pub fn write_chunks(&self, chunks: Vec<Chunk>) -> Result<usize> {
         let mut regions: BTreeMap<(i32, i32), Vec<Chunk>> = BTreeMap::new();
         for c in chunks {
-            regions.entry((c.x.div_euclid(32), c.z.div_euclid(32))).or_default().push(c);
+            regions.entry(region_of_chunk(c.x, c.z)).or_default().push(c);
         }
         let count = regions.len();
         regions.into_par_iter().try_for_each(|((rx, rz), chunks)| -> Result<()> {

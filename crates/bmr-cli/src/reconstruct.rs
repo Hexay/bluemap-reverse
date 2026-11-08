@@ -12,6 +12,7 @@ use bmr_invert::Library;
 use bmr_invert::face::Tex;
 use bmr_invert::timings::Timings;
 use bmr_invert::tints::BiomeTint;
+use bmr_world::coords::section_of;
 use bmr_world::{
     BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateTable, World, WorldWriter,
 };
@@ -154,7 +155,7 @@ fn run_window(win: &Window, inp: &Inputs, textures: &[Tex]) -> Result<(Vec<Chunk
 
     let layout = ChunkLayout {
         data_version: inp.lib.data_version,
-        sections: (o.profile.min_y.div_euclid(16), o.profile.max_y.div_euclid(16)),
+        sections: (section_of(o.profile.min_y), section_of(o.profile.max_y)),
         biome: "minecraft:plains".into(),
     };
     let mut builder = ChunkBuilder::new(layout, air);

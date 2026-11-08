@@ -6,6 +6,7 @@
 //! - faces outside the build height → it reaches them (whole 16-block sections)
 
 use bmr_invert::drawn::DrawnHeights;
+use bmr_world::coords::section_of;
 
 use crate::profile::Profile;
 
@@ -52,11 +53,11 @@ pub fn infer(defaults: Profile, drawn: &DrawnHeights, given: &Given) -> Inferred
     let mut changed = Vec::new();
     if let Some((lo, hi)) = drawn.range() {
         if given.min_y.is_none() && lo < p.min_y {
-            p.min_y = lo.div_euclid(16) * 16;
+            p.min_y = section_of(lo) * 16;
             changed.push("min-y");
         }
         if given.max_y.is_none() && hi > p.max_y {
-            p.max_y = hi.div_euclid(16) * 16 + 15;
+            p.max_y = section_of(hi) * 16 + 15;
             changed.push("max-y");
         }
     }

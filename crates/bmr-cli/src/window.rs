@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use bmr_fetch::grid::Tile;
 use bmr_fetch::{BlockBox, LocalMap};
 use bmr_world::ChunkPos;
+use bmr_world::coords::{chunk_of, region_of};
 
 pub type Region = (i32, i32);
 
@@ -31,10 +32,6 @@ impl Window {
     pub fn emits(&self, x: i32, z: i32) -> bool {
         self.region.is_none_or(|r| region_of(x, z) == r) && self.area.is_none_or(|a| a.contains(x, z))
     }
-}
-
-pub fn region_of(x: i32, z: i32) -> Region {
-    (x.div_euclid(512), z.div_euclid(512))
 }
 
 /// Every world column inside a rendered hires tile.
@@ -97,10 +94,7 @@ fn window(
     let grid = map.settings.hires_grid();
     let tiles = map.tiles(0).into_iter().filter(|&t| reach.touches(&grid, t)).collect();
     let halo_columns: Vec<_> = all_columns.iter().copied().filter(|&(x, z)| reach.contains(x, z)).collect();
-    let chunk_area = (
-        (reach.min[0].div_euclid(16), reach.min[1].div_euclid(16)),
-        (reach.max[0].div_euclid(16), reach.max[1].div_euclid(16)),
-    );
+    let chunk_area = (chunk_of(reach.min[0], reach.min[1]), chunk_of(reach.max[0], reach.max[1]));
     let mut w = Window { region, area, tiles, columns: Vec::new(), halo_columns, chunk_area: Some(chunk_area) };
     w.columns = w.halo_columns.iter().copied().filter(|&(x, z)| w.emits(x, z)).collect();
     w

@@ -5,6 +5,7 @@ use std::time::Instant;
 
 use anyhow::{Result, ensure};
 use bmr_fetch::BlockBox;
+use bmr_world::coords::{chunk_of, local, region_of_chunk};
 use bmr_world::{Area, World, export_schem, read_schem};
 
 use crate::WorldArgs;
@@ -89,13 +90,13 @@ fn verify(world: &World, area: &Area, path: &std::path::Path) -> Result<()> {
     for (i, got) in cells.iter().enumerate() {
         let (x, z, y) =
             (area.min[0] + (i % w) as i32, area.min[2] + (i / w % l) as i32, area.min[1] + (i / (w * l)) as i32);
-        let cp = (x.div_euclid(16), z.div_euclid(16));
+        let cp = chunk_of(x, z);
         if !chunks.contains_key(&cp) {
-            chunks.extend(world.read_region((cp.0.div_euclid(32), cp.1.div_euclid(32)))?);
+            chunks.extend(world.read_region(region_of_chunk(cp.0, cp.1))?);
         }
         let want = chunks
             .get(&cp)
-            .and_then(|c| c.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
+            .and_then(|c| c.block(local(x), y, local(z)))
             .filter(|b| !b.is_air())
             .map_or_else(|| "minecraft:air".to_owned(), ToString::to_string);
         if *got != want {

@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::coords::{local, section_of};
+
 /// Block state with properties sorted by key; `Display` gives the canonical
 /// `minecraft:oak_stairs[facing=south,half=bottom]` form used for comparison and reports.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -182,7 +184,7 @@ impl Chunk {
 
     /// World y, chunk-local x/z. `None` where no section exists (treat as air).
     pub fn block(&self, x: usize, y: i32, z: usize) -> Option<&BlockState> {
-        self.section(y.div_euclid(16)).map(|s| s.block(x, y.rem_euclid(16) as usize, z))
+        self.section(section_of(y)).map(|s| s.block(x, local(y), z))
     }
 
     pub fn y_range(&self) -> Option<(i32, i32)> {

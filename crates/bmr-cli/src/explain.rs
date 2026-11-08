@@ -8,6 +8,7 @@ use bmr_fetch::LocalMap;
 use bmr_invert::Library;
 use bmr_invert::face::{FaceKey, faces_by_cell, signature, texture_ids, world_faces};
 use bmr_invert::matcher::candidates;
+use bmr_world::coords::{chunk_of, local, region_of};
 
 use crate::{LibraryArgs, MirrorArgs, WorldArgs};
 
@@ -58,11 +59,9 @@ pub fn run(a: Args) -> Result<()> {
 
     if let Some(orig) = a.original {
         let world = a.world_args.open(&orig, &Some(registry))?;
-        let chunks = world.read_region((x.div_euclid(512), z.div_euclid(512)))?;
-        let truth = chunks
-            .get(&(x.div_euclid(16), z.div_euclid(16)))
-            .and_then(|c| c.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize))
-            .context("cell not in original")?;
+        let chunks = world.read_region(region_of(x, z))?;
+        let truth =
+            chunks.get(&chunk_of(x, z)).and_then(|c| c.block(local(x), y, local(z))).context("cell not in original")?;
         println!("true state: {truth}");
         let Some(e) = lib.entries.iter().find(|e| &e.state == truth) else {
             println!("  (not in library)");

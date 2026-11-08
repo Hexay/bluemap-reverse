@@ -3,6 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
+use bmr_world::coords::{chunk_of, local, region_of_chunk};
 use bmr_world::{Chunk, World};
 use rayon::prelude::*;
 
@@ -17,7 +18,7 @@ pub struct Blocks {
 
 impl Blocks {
     pub fn load(world: &World, chunks: &HashSet<[i32; 2]>) -> Result<Self> {
-        let regions: HashSet<(i32, i32)> = chunks.iter().map(|c| (c[0].div_euclid(32), c[1].div_euclid(32))).collect();
+        let regions: HashSet<(i32, i32)> = chunks.iter().map(|c| region_of_chunk(c[0], c[1])).collect();
         let regions: Vec<(i32, i32)> = regions.into_iter().collect();
         let keep = |(x, z): (i32, i32)| chunks.contains(&[x, z]);
         let loaded: Vec<_> = regions.par_iter().map(|&r| world.read_region_where(r, &keep)).collect::<Result<_>>()?;
@@ -28,8 +29,9 @@ impl Blocks {
 
 impl BlockSource for Blocks {
     fn name_at(&self, [x, y, z]: [i32; 3]) -> Option<&str> {
-        let chunk = self.chunks.get(&[x.div_euclid(16), z.div_euclid(16)])?;
-        let name = &chunk.block(x.rem_euclid(16) as usize, y, z.rem_euclid(16) as usize)?.name;
+        let (cx, cz) = chunk_of(x, z);
+        let chunk = self.chunks.get(&[cx, cz])?;
+        let name = &chunk.block(local(x), y, local(z))?.name;
         Some(name.strip_prefix("minecraft:").unwrap_or(name))
     }
 }

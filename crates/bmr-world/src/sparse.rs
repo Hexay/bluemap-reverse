@@ -4,6 +4,7 @@
 use rustc_hash::FxHashMap;
 
 use crate::chunk::{Chunk, Section};
+use crate::coords::{chunk_of, local, section_of};
 use crate::states::{StateId, StateTable};
 use crate::world::ChunkPos;
 
@@ -48,7 +49,7 @@ impl ChunkBuilder {
         let (lo, hi) = self.layout.sections;
         let air = self.air;
         self.chunks
-            .entry((x.div_euclid(16), z.div_euclid(16)))
+            .entry(chunk_of(x, z))
             .or_insert_with(|| (lo..=hi).map(|_| IdSection { palette: vec![air], blocks: Vec::new() }).collect())
     }
 
@@ -65,12 +66,12 @@ impl ChunkBuilder {
     /// Set `ylo..=yhi` of column (x, z); palette lookup once per touched section.
     pub fn fill_column(&mut self, (x, z): (i32, i32), ylo: i32, yhi: i32, id: StateId) {
         let (min_s, max_s) = self.layout.sections;
-        let (lx, lz) = (x.rem_euclid(16) as usize, z.rem_euclid(16) as usize);
+        let (lx, lz) = (local(x), local(z));
         let (ylo, yhi) = (ylo.max(min_s * 16), yhi.min(max_s * 16 + 15));
         let sections = self.sections(x, z);
         let mut y = ylo;
         while y <= yhi {
-            let sy = y.div_euclid(16);
+            let sy = section_of(y);
             let top = yhi.min(sy * 16 + 15);
             let s = &mut sections[(sy - min_s) as usize];
             let idx = s.index_of(id);
@@ -83,7 +84,7 @@ impl ChunkBuilder {
                 continue;
             }
             for yy in y..=top {
-                s.blocks[((yy.rem_euclid(16) as usize) * 16 + lz) * 16 + lx] = idx;
+                s.blocks[(local(yy) * 16 + lz) * 16 + lx] = idx;
             }
             y = top + 1;
         }

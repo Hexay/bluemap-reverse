@@ -19,6 +19,7 @@ use rustc_hash::FxHashMap;
 
 use crate::block_entities::block_entity_type;
 use crate::chunk::Chunk;
+use crate::coords::{chunk_of, region_of_chunk};
 use crate::world::{ChunkPos, World};
 use format::{Biomes, BlockEntity, Blocks, Metadata, Root, Schematic, block_id, intern, sorted, unix_millis, varints};
 pub use read::read_schem;
@@ -127,16 +128,12 @@ pub fn export_schem(world: &World, area: Area, trim: bool, name: &str, path: &Pa
 }
 
 fn load_chunks(world: &World, area: &Area) -> Result<FxHashMap<ChunkPos, Chunk>> {
-    let (cx0, cz0, cx1, cz1) = (
-        area.min[0].div_euclid(16),
-        area.min[2].div_euclid(16),
-        area.max[0].div_euclid(16),
-        area.max[2].div_euclid(16),
-    );
+    let (cx0, cz0) = chunk_of(area.min[0], area.min[2]);
+    let (cx1, cz1) = chunk_of(area.max[0], area.max[2]);
     let inside = |(x, z): ChunkPos| (cx0..=cx1).contains(&x) && (cz0..=cz1).contains(&z);
-    let regions: Vec<_> = (cx0.div_euclid(32)..=cx1.div_euclid(32))
-        .flat_map(|rx| (cz0.div_euclid(32)..=cz1.div_euclid(32)).map(move |rz| (rx, rz)))
-        .collect();
+    let (rx0, rz0) = region_of_chunk(cx0, cz0);
+    let (rx1, rz1) = region_of_chunk(cx1, cz1);
+    let regions: Vec<_> = (rx0..=rx1).flat_map(|rx| (rz0..=rz1).map(move |rz| (rx, rz))).collect();
     let per_region = regions.par_iter().map(|&r| world.read_region_where(r, &inside)).collect::<Result<Vec<_>>>()?;
     Ok(per_region.into_iter().flatten().collect())
 }

@@ -2,6 +2,7 @@
 
 mod block_entities;
 mod chunk;
+pub mod coords;
 mod dimension;
 mod nbt;
 mod nbt_check;

@@ -1,5 +1,6 @@
 use bmr_world::BlockInfo;
 
+use super::build::axis_anchor;
 use super::*;
 use crate::test_util::*;
 

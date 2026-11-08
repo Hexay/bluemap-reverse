@@ -88,7 +88,7 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 |---|---|---|
 | `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
 | `--area x0,z0,x1,z1` | whole map | `pull`/`fetch` only the blocks in this box (inclusive), e.g. one town on a big public map. |
-| `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
+| `--mask-y`, `--cave-y`, `--min-y`, `--max-y` | inferred from the tiles | Map settings the site doesn't publish. BlueMap's defaults (Nether roof y 90..127 hidden, overworld caves below y 55, the dimension's build height) unless the tiles contradict them: caves drawn deeper, faces inside the mask or outside the build height. A one-line report says which; the flags override it. |
 | `--seed <n>` | none | The world seed (number or text): unseen bedrock and deepslate layers are generated exactly as vanilla does. |
 | `--crack-seed` | off | Detect structures in the reconstructed overworld and crack the world seed (report in `OUT.seed.json`). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |

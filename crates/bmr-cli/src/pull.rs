@@ -130,9 +130,12 @@ pub fn run(a: Args) -> Result<()> {
         let _ = std::fs::remove_dir_all(world_dir.parent().context("world dir")?);
     }
 
+    let mut profiles = Vec::with_capacity(maps.len());
     for (i, m) in maps.iter().enumerate() {
-        let opts = Options { area: a.download.area, ..a.opts.options(&m.dimension)? };
+        let opts = t.time("settings", || a.opts.options_for_map(&m.map, &m.dimension))?;
+        let opts = Options { area: a.download.area, ..opts };
         let p = opts.profile;
+        profiles.push(p);
         let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
         progress!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
         let regen = a
@@ -185,7 +188,7 @@ pub fn run(a: Args) -> Result<()> {
     }
     if let Some(schem) = &a.schem {
         let m = &maps[0];
-        let p = a.opts.options(&m.dimension)?.profile;
+        let p = profiles[0];
         let world = bmr_world::World::open(&world_dir, &m.dimension, Some(pack.registry.clone()))?;
         let extent = match a.download.area {
             Some(b) => with_heights(b, [p.min_y, p.max_y]),

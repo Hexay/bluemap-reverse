@@ -201,6 +201,12 @@ Defined in `fixtures/*/fixture.json`; built by a real server + BlueMap (`tools/`
   dimension of one world (map id, else BlueMap's default sky colour: `pull/plan.rs`) and assumes BlueMap's
   default map for it (`bmr-fill/src/profile.rs`): overworld caves hidden below y 55; nether `render-mask`
   hides y 90..127 (the roof) and nothing is cave-culled; end is fully drawn.
+- Render settings (2026-11-08): one pass over the hires tiles before the fill (`bmr-invert/src/drawn.rs`)
+  corrects a default only where the faces contradict it (`bmr-fill/src/infer.rs`); flags win. Caves: a face
+  with sun- and blocklight 0, more than 5 blocks under its column's top full non-liquid top face (BlueMap's
+  `cave-detection-ocean-floor: -5` exempts sea floors: vanilla draws ~370k dark triangles below 55) and below the
+  cut-off. On the fixtures such faces stop exactly at y 55 (vanilla) and run 31..83 in the cave-drawn nether.
+  A higher cut-off or a mask where nothing is drawn cannot be told from unrendered terrain, so is not inferred.
 - The nether mask is not air: drawn faces next to it say nothing. Rock under the mask continues up into it;
   over open space the roof starts at y 108 (measured on the `nether` fixture: 88% of those cells right vs ~55%
   all-rock). Soul sand/soil are ~4 deep over netherrack; basalt/blackstone run deep. End bedrock is always

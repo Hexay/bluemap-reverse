@@ -138,7 +138,7 @@ pub fn run(a: Args) -> Result<()> {
     let generated = java
         .map(|java| {
             let maps =
-                maps.iter().map(|m| (m.dimension.as_str(), regen::rendered_chunks(&m.map, a.download.area))).collect();
+                maps.iter().map(|m| (m.dimension.id(), regen::rendered_chunks(&m.map, a.download.area))).collect();
             let site = regen::Site { data_dir: &data_dir, mirror: &cache, mc: &pack.meta.mc_version, maps };
             t.time("regen", || a.managed_regen.generate(&java, &site))
         })

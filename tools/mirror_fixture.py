@@ -43,6 +43,12 @@ def wait_until_serving(timeout: float = 120) -> None:
 @contextmanager
 def serving(base: Path, tc: Toolchain = DEFAULT):
     """BlueMap's webserver for the BlueMap dir `base`, up for the duration of the `with` block."""
+    try:
+        urllib.request.urlopen(URL + "settings.json", timeout=2)
+        # else the fetch silently mirrors whatever map that server has
+        sys.exit(f"something is already serving {URL} (a leftover render_serve.py?): stop it first")
+    except OSError:
+        pass
     server = bluemap(base, "-w", tc=tc)
     try:
         wait_until_serving()

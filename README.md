@@ -87,6 +87,7 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 |---|---|---|
 | `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
 | `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
+| `--crack-seed` | off | Detect structures in the reconstructed overworld and crack the world seed (report in `OUT.seed.json`). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |
 | `--data-dir <dir>` | `$BMR_HOME` or the data dir | Where mirrors (`<dir>/cache`) and downloaded packs (`<dir>/packs`) go. |
 | `-q`, `--quiet` | off | Only results, warnings and errors. |
@@ -105,8 +106,8 @@ Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27)
 | Superflat with builds | 99.86% | 100% | 99.92% | 100% |
 | Vanilla terrain, no seed | 98.94% | 99.99% | 75.3% | 95.7% |
 | Vanilla terrain, with seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
-| Blocks among neighbours¹ | 99.44% | 99.98% | 97.5% | 99.8% |
-| Nether | 99.99% | 99.99% | 82.3% | 73.6% |
+| Blocks among neighbours¹ | 99.44% | 99.98% | 99.5% | 99.8% |
+| Nether | 99.99% | 99.99% | 82.3% | 96.0% |
 | End | 100% | 100% | 97.6% | 100% |
 
 ¹ The `context` fixture: stairs, fences, redstone, doors and a jumble of every block.

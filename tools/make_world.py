@@ -71,7 +71,8 @@ def wait_until_loaded(server: Server, x0: int, z0: int, x1: int, z1: int, dimens
     deadline = time.monotonic() + timeout
     for x, z in [(x0, z0), (x0, z1), (x1, z0), (x1, z1)]:
         while True:
-            m = server.query(f"execute in {dimension} if loaded {x} 0 {z}", r"Test (passed|failed)")
+            # a server busy generating a large area can take minutes to answer
+            m = server.query(f"execute in {dimension} if loaded {x} 0 {z}", r"Test (passed|failed)", timeout=300)
             if m.group(1) == "passed":
                 break
             if time.monotonic() > deadline:

@@ -20,6 +20,11 @@ All notable changes to this project are documented here. The format follows
 
 - Ambient occlusion on the map's faces is read as evidence: it counts the solid blocks around each corner,
   which pins down hidden cells next to visible ones (rock beside dark caves, air pockets).
+- `--window-jobs N` (`reverse`, `pull`): region windows are reconstructed N at a time (default 4). With the
+  faster fill and allocator below, reverse of the structures test map went from 41 s to about 9–18 s
+  (identical output).
+- `pull --crack-seed`: detects structures in the reconstructed overworld, cracks the world seed and writes
+  the report (observations, candidates) to `OUT.seed.json`; replaces the manual `structures` → `seed` steps.
 
 ### Changed (breaking)
 
@@ -43,9 +48,22 @@ All notable changes to this project are documented here. The format follows
   under the last sign of an opening, instead of air down to bedrock. Found by the render round-trip (shafts
   under seabeds, flooded ravines filled with rock). Enclosed air beside known water is water. Vanilla test
   world: all blocks 74.4% → 75.3%.
+- Nether biomes are decided per 4×4 column (the nether's climate noise has no height component) and spread
+  to columns without markers, instead of per 4×4×4 cell with a vertical search. Nether test world: biomes
+  73.6% → 96.0%.
+- Flat worlds keep their own layers under builds: where most terrain surfaces sit at one height, the fill
+  below them follows the layering observed across the map (superflat dirt and grass) instead of the vanilla
+  bedrock band and deepslate. `context` test world: all blocks 97.5% → 99.5%; vanilla unchanged.
+- Faster fill: gaps under builds copy from neighbouring columns in one pass per gap instead of a ring search
+  per cell, and `bmr` uses the mimalloc allocator (single window: structures test map 41 s → 26 s).
+- Downloads: a response is capped at 256 MiB (was 1 GiB); only timeouts, connection errors, 408, 429 and 5xx
+  are retried (4 attempts, honouring `Retry-After` up to 60 s); other 4xx fail at once. A tile that keeps
+  failing no longer stops the rest of its layer: the mirror finishes around it, then reports how many
+  failed (re-running retries them).
 
 ### Fixed
 
+- A corrupt or hand-made pack whose tables point out of range is an error naming the pack instead of a panic.
 - Nether caves just under the hidden roof band were filled with rock when one neighbouring block's face was
   drawn and another's missing; a drawn face now wins.
 - Flowing lava and water surfaces (sloped) were read as "more liquid above", filling Nether caves with lava up

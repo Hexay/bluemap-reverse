@@ -25,6 +25,9 @@ All notable changes to this project are documented here. The format follows
   (identical output).
 - `pull --crack-seed`: detects structures in the reconstructed overworld, cracks the world seed and writes
   the report (observations, candidates) to `OUT.seed.json`; replaces the manual `structures` → `seed` steps.
+- `--area x0,z0,x1,z1` on `pull` and `fetch`: mirror only the tiles around a block box (plus the reconstruction
+  halo) and reconstruct only the columns inside it, so one area of a big public map can be pulled. A later run
+  with another area, or none, resumes the same mirror.
 
 ### Changed (breaking)
 

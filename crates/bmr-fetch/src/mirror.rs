@@ -8,6 +8,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
 
+use crate::area::BlockBox;
 use crate::discover::discover;
 use crate::grid::{Grid, Tile, tile_file};
 use crate::http::Http;
@@ -21,6 +22,8 @@ pub struct Options {
     pub out: PathBuf,
     /// Empty = every map listed in settings.json.
     pub maps: Vec<String>,
+    /// Only tiles overlapping this column box (the caller adds any margin reconstruction needs).
+    pub area: Option<BlockBox>,
     pub concurrency: usize,
     pub delay: Duration,
     /// Receives retries and per-layer probing progress.
@@ -46,7 +49,7 @@ pub fn mirror(opts: &Options) -> Result<Vec<MapSummary>> {
     let ids: Vec<&String> = site.maps.iter().filter(|m| opts.maps.is_empty() || opts.maps.contains(m)).collect();
     pool.install(|| {
         ids.into_iter()
-            .map(|id| MapMirror::new(&http, &store, &site.map_data_root, id, opts.progress.as_ref())?.run())
+            .map(|id| MapMirror::new(&http, &store, &site.map_data_root, id, opts.progress.as_ref())?.run(opts.area))
             .collect()
     })
 }
@@ -79,7 +82,7 @@ impl<'a> MapMirror<'a> {
         Ok(Self { http, store, id: id.into(), root, settings, manifest_path, manifest, progress })
     }
 
-    fn run(mut self) -> Result<MapSummary> {
+    fn run(mut self, area: Option<BlockBox>) -> Result<MapSummary> {
         self.fetch_required("textures.json")?;
         self.fetch_optional("live/markers.json")?;
 
@@ -89,15 +92,22 @@ impl<'a> MapMirror<'a> {
         let mut seed_scale = 1;
         for lod in (1..=lod_count).rev() {
             let grid = self.settings.lowres_grid(lod);
-            let seeds = seeds_from(&grid, &seed_blocks, seed_scale);
-            self.discover_layer(lod, seeds)?;
+            let mut seeds = seeds_from(&grid, &seed_blocks, seed_scale);
+            if lod == lod_count {
+                // the start position may lie outside the area
+                seeds.extend(area.iter().flat_map(|a| a.tiles(&grid)));
+            }
+            self.discover_layer(lod, &grid, area, seeds)?;
             seed_blocks = self.visible_blocks(lod)?;
             seed_scale = self.settings.lod_scale(lod);
         }
         let hires = self.settings.hires_grid();
         let mut seeds = seeds_from(&hires, &seed_blocks, seed_scale);
         seeds.extend(start.iter().map(|&(x, z)| hires.tile_of(x, z)));
-        self.discover_layer(0, seeds)?;
+        if lod_count == 0 {
+            seeds.extend(area.iter().flat_map(|a| a.tiles(&hires)));
+        }
+        self.discover_layer(0, &hires, area, seeds)?;
 
         let layers = self.manifest.layers.iter().map(|(&l, p)| (l, p.present.len(), p.empty.len())).collect();
         Ok(MapSummary { id: self.id, layers })
@@ -117,7 +127,8 @@ impl<'a> MapMirror<'a> {
         }
     }
 
-    fn discover_layer(&mut self, lod: u32, seeds: BTreeSet<Tile>) -> Result<()> {
+    /// Flood-fill one layer, probing only tiles of `grid` that touch `area`.
+    fn discover_layer(&mut self, lod: u32, grid: &Grid, area: Option<BlockBox>, seeds: BTreeSet<Tile>) -> Result<()> {
         let mut probed = self.manifest.layers.remove(&lod).unwrap_or_default();
         let (http, store, root) = (self.http, self.store, &self.root);
         let fetch = |t: Tile| -> Result<bool> {
@@ -129,7 +140,8 @@ impl<'a> MapMirror<'a> {
         };
         let (manifest, path, map, progress) =
             (&mut self.manifest, &self.manifest_path, self.id.as_str(), self.progress);
-        let result = discover(&mut probed, seeds, fetch, |p| {
+        let keep = |t: &Tile| area.is_none_or(|a| a.touches(grid, *t));
+        let result = discover(&mut probed, seeds, keep, fetch, |p| {
             emit(progress, Progress::Layer { map, lod, present: p.present.len(), empty: p.empty.len() });
             Ok(())
         });

@@ -3,7 +3,8 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, ensure};
+use bmr_fetch::BlockBox;
 use bmr_world::{Area, World, export_schem, read_schem};
 
 use crate::WorldArgs;
@@ -16,9 +17,8 @@ pub struct Args {
     #[arg(short, long)]
     out: PathBuf,
     /// Columns x0,z0,x1,z1 (inclusive) [default: every region file of the world]
-    // no num_args: clap counts it before splitting on commas, so "--area=a,b,c,d" would be one value
-    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
-    area: Vec<i32>,
+    #[arg(long, allow_hyphen_values = true)]
+    area: Option<BlockBox>,
     /// Height range y0,y1 (inclusive)
     #[arg(long, value_delimiter = ',', allow_hyphen_values = true, default_values_t = [-64, 319])]
     y: Vec<i32>,
@@ -39,10 +39,9 @@ pub fn run(a: Args) -> Result<()> {
     ensure!(a.y.len() == 2, "--y takes y0,y1");
     let registry = a.world_args.registry()?;
     let world = a.world_args.open(&a.world, &registry)?;
-    let area = match a.area[..] {
-        [x0, z0, x1, z1] => Area { min: [x0.min(x1), a.y[0], z0.min(z1)], max: [x0.max(x1), a.y[1], z0.max(z1)] },
-        [] => world_extent(&world, [a.y[0], a.y[1]])?,
-        _ => bail!("--area takes x0,z0,x1,z1"),
+    let area = match a.area {
+        Some(b) => with_heights(b, [a.y[0], a.y[1]]),
+        None => world_extent(&world, [a.y[0], a.y[1]])?,
     };
     let name =
         a.name.clone().unwrap_or_else(|| a.out.file_stem().map_or("bmr".into(), |s| s.to_string_lossy().into_owned()));
@@ -66,6 +65,10 @@ pub fn run(a: Args) -> Result<()> {
         verify(&world, &s.area, &a.out)?;
     }
     Ok(())
+}
+
+pub fn with_heights(b: BlockBox, y: [i32; 2]) -> Area {
+    Area { min: [b.min[0], y[0], b.min[1]], max: [b.max[0], y[1], b.max[1]] }
 }
 
 /// Box covering every region file between heights `y` (trimming then shrinks it to the actual blocks).

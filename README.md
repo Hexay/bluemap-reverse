@@ -58,6 +58,7 @@ To build it yourself, see [Building from source](#building-from-source).
 bmr pull https://map.example.com/ -o world.zip            # mirror + check + reconstruct + zip
 bmr pull https://map.example.com/ --map world_nether      # only one of the site's maps
 bmr pull https://map.example.com/ --schem build.schem     # also a schematic (overworld, else the first map)
+bmr pull https://map.example.com/ --area=-500,-500,500,500 # only this block box of a big map
 bmr schem <world> -o part.schem --area=x0,z0,x1,z1 --y=60,120 # cut a schematic out of any world
 ```
 
@@ -86,6 +87,7 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 | Option | Default | Purpose |
 |---|---|---|
 | `--map <id>` | all maps | Reconstruct one map. Needed when a site has two maps of the same dimension. |
+| `--area x0,z0,x1,z1` | whole map | `pull`/`fetch` only the blocks in this box (inclusive), e.g. one town on a big public map. |
 | `--mask-y`, `--cave-y` | BlueMap's defaults | Map settings the site doesn't publish (Nether roof y 90..127 hidden, overworld caves below y 55). |
 | `--crack-seed` | off | Detect structures in the reconstructed overworld and crack the world seed (report in `OUT.seed.json`). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |

@@ -209,3 +209,14 @@ fn run(cmd: Cmd) -> Result<ExitCode> {
     }
     .map(|()| ExitCode::SUCCESS)
 }
+
+#[cfg(test)]
+mod tests {
+    use clap::CommandFactory;
+
+    // clap only panics on a bad definition in debug builds, and only when that subcommand is parsed
+    #[test]
+    fn cli_definition_is_valid() {
+        super::Cli::command().debug_assert();
+    }
+}

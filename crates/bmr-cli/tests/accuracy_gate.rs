@@ -46,7 +46,8 @@ fn bmr(cwd: &Path, args: &[&str]) {
 }
 
 fn percent(report: &Value, metric: &str) -> f64 {
-    let n = |path: &[&str]| path.iter().fold(report, |v, k| &v[k]).as_u64().unwrap_or_else(|| panic!("{path:?}")) as f64;
+    let n =
+        |path: &[&str]| path.iter().fold(report, |v, k| &v[k]).as_u64().unwrap_or_else(|| panic!("{path:?}")) as f64;
     let ratio = match metric {
         "occupied" | "rendered" | "exposed" => n(&[metric, "exact"]) / n(&[metric, "total"]),
         "rendered_alike" => n(&["rendered_alike"]) / n(&["rendered", "total"]),

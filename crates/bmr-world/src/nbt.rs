@@ -80,11 +80,13 @@ fn resolve(entry: StateNbt, registry: Option<&BlockRegistry>, style: &mut Option
 }
 
 pub fn decode_chunk(nbt: &[u8], registry: Option<&BlockRegistry>) -> Result<Chunk> {
+    crate::nbt_check::check(nbt)?;
     let c: ChunkNbt = fastnbt::from_bytes(nbt)?;
     let mut sections = Vec::with_capacity(c.sections.len());
     let mut style = None;
     for s in c.sections {
         let Some(bs) = s.block_states else { continue };
+        ensure!(!bs.palette.is_empty(), "section {}: empty block palette", s.y);
         let palette: Vec<BlockState> =
             bs.palette.into_iter().map(|p| resolve(p, registry, &mut style)).collect::<Result<_>>()?;
         let blocks = if palette.len() <= 1 { Vec::new() } else { unpack(bs.data.as_deref(), palette.len(), 4096, 4)? };
@@ -108,6 +110,8 @@ pub fn unpack(data: Option<&[i64]>, palette_len: usize, count: usize, min_bits: 
     if palette_len <= 1 {
         return Ok(vec![0; count]);
     }
+    // more entries than cells is corrupt, and would truncate indices to u16 past 65536
+    ensure!(palette_len <= count, "palette of {palette_len} entries for {count} cells");
     let bits = min_bits.max(usize::BITS - (palette_len - 1).leading_zeros());
     let per_long = (64 / bits) as usize;
     ensure!(data.len() * per_long >= count, "packed array too short ({} longs, {bits} bits)", data.len());
@@ -130,6 +134,30 @@ mod tests {
         longs[1] = 7;
         let v = unpack(Some(&longs), 17, 4096, 4).unwrap();
         assert_eq!((v[0], v[1], v[11], v[12]), (0, 3, 16, 7));
+    }
+
+    #[test]
+    fn malformed_nbt_is_an_error_not_a_fastnbt_panic() {
+        // fuzzer find: {"Y": [End; 3]}; fastnbt hit unreachable!() skipping the unknown key
+        let nbt = [10, 0, 0, 9, 0, 1, b'Y', 0, 0, 0, 0, 3, 0];
+        assert!(decode_chunk(&nbt, None).is_err());
+    }
+
+    #[test]
+    fn empty_block_palette_is_an_error() {
+        // fuzzer find: the section decoded, then Section::block indexed palette[0] and panicked
+        let nbt = fastnbt::to_bytes(&fastnbt::nbt!({
+            "DataVersion": 4189, "xPos": 0, "zPos": 0,
+            "sections": [{"Y": 0_i8, "block_states": {"palette": []}}],
+        }))
+        .unwrap();
+        let e = decode_chunk(&nbt, None).err().expect("expected an error");
+        assert!(e.to_string().contains("empty block palette"), "{e}");
+    }
+
+    #[test]
+    fn palette_longer_than_the_cells_is_an_error() {
+        assert!(unpack(Some(&[0; 4096]), 70_000, 4096, 4).is_err());
     }
 
     #[test]

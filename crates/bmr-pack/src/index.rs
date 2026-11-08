@@ -75,6 +75,9 @@ impl Index {
             "pack index format {} not supported (expects {INDEX_FORMAT})",
             index.format
         );
+        for e in &index.packs {
+            ensure!(is_plain_pack_name(&e.file), "pack index: bad file name {:?}", e.file);
+        }
         Ok(index)
     }
 
@@ -108,6 +111,36 @@ impl IndexEntry {
     }
 }
 
+/// Downloads are saved as `<data>/packs/<file>`, so the index (any URL) must not name a path.
+fn is_plain_pack_name(file: &str) -> bool {
+    let stem = file.strip_suffix(".pack").unwrap_or("");
+    !stem.is_empty() && stem.chars().all(|c| c.is_ascii_alphanumeric() || "-_.+".contains(c)) && !stem.starts_with('.')
+}
+
 fn sha256_hex(bytes: &[u8]) -> String {
     Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn index_naming(file: &str) -> Vec<u8> {
+        let entry = serde_json::json!({"file": file, "size": 1, "sha256": "", "pack_format": FORMAT,
+            "mc_version": "1.21.4", "bluemap_version": "5.27", "textures": ""});
+        serde_json::to_vec(&serde_json::json!({"format": INDEX_FORMAT, "textures": [], "packs": [entry]})).unwrap()
+    }
+
+    #[test]
+    fn released_pack_names_parse() {
+        assert!(Index::parse(&index_naming("bmr-mc1.21.11-bluemap5.27.pack")).is_ok());
+    }
+
+    #[test]
+    fn file_names_that_are_paths_are_refused() {
+        for bad in ["../../.bashrc.pack", "/etc/x.pack", "sub/x.pack", "a\\b.pack", ".pack", "x.zip", "..pack"] {
+            let e = Index::parse(&index_naming(bad)).err().expect(bad);
+            assert!(e.to_string().contains("bad file name"), "{bad}: {e}");
+        }
+    }
 }

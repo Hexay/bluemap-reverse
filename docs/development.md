@@ -14,6 +14,8 @@ python3 tools/test.py                    # tests of changed crates + their depen
 python3 tools/loop_timing.py --tests     # re-measure the loop
 ```
 
+Parsers of site, pack and region input have fuzz targets: see [fuzzing.md](fuzzing.md).
+
 ## Test loop
 
 ```

@@ -54,15 +54,20 @@ impl Texture {
 
     /// Filesystem-safe name, e.g. `minecraft_block_stone`.
     pub fn file_stem(&self) -> String {
-        self.resource_path.replace([':', '/'], "_")
+        let safe = |c: char| c.is_ascii_alphanumeric() || "-_.".contains(c);
+        self.resource_path.chars().map(|c| if safe(c) { c } else { '_' }).collect()
     }
 }
+
+/// Decoded size cap for embedded textures (vanilla's largest animated strips are well under 1 MB).
+const MAX_PNG_BYTES: usize = 64 << 20;
 
 fn crop_top_square(png_bytes: &[u8]) -> Result<Vec<u8>> {
     let mut decoder = png::Decoder::new(Cursor::new(png_bytes));
     decoder.set_transformations(png::Transformations::EXPAND);
     let mut reader = decoder.read_info()?;
-    let mut buf = vec![0; reader.output_buffer_size().context("png too large")?];
+    let size = reader.output_buffer_size().filter(|&n| n <= MAX_PNG_BYTES).context("png too large")?;
+    let mut buf = vec![0; size];
     let info = reader.next_frame(&mut buf)?;
     let side = info.width.min(info.height);
     let mut out = Vec::new();

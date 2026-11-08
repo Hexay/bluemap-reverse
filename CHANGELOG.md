@@ -85,6 +85,23 @@ All notable changes to this project are documented here. The format follows
 - Every command-line flag has help text; rustdoc warnings in bmr-cli.
 - Structure biome checks reject Minecraft versions newer than cubiomes knows instead of treating them as the newest.
 - Structure biome checks treat chunks outside the world border as not viable instead of overflowing.
+- Found by the new fuzz targets (`docs/fuzzing.md`):
+  - Malformed chunk NBT is an error instead of a panic inside fastnbt (a non-empty list of `End` tags) or a stack
+    overflow (deep nesting; capped at Minecraft's 512 levels).
+  - A chunk section with an empty block palette is an error instead of a panic when its blocks are read; palettes
+    with more entries than cells are refused.
+  - A lowres tile or embedded texture PNG whose header declares a huge image is refused before allocating its
+    buffer (a 71-byte PNG asked for 3.4 GB).
+  - A pack index naming a pack file with a path (`../x.pack`, `/etc/x.pack`) is refused; the download was written
+    there.
+  - Texture file names in `bmr obj` exports keep only `[A-Za-z0-9._-]`; a backslash or newline in a texture's
+    resource path could escape `textures/` on Windows or break the `.mtl` file.
+- A site's `settings.json` naming map ids or a data root with `..`, `/`-rooted or drive paths is refused; `fetch`
+  wrote the mirror there. Map settings with zero/negative tile sizes, a zero LOD factor, a LOD count over 16 or
+  grids that overflow are refused instead of dividing by zero, overflowing or looping for ever, and the start
+  position is clamped to the world border.
+- Pack files are decompressed with a memory cap (80 MiB of LZMA dictionary, 256 MiB of output): a pack declaring
+  a 4 GiB dictionary, or an xz bomb, is an error instead of exhausting memory.
 
 ## [0.1.0] - 2026-10-01
 

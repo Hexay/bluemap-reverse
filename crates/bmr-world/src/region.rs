@@ -20,10 +20,15 @@ pub type RegionChunks = Vec<((u8, u8), Vec<u8>)>;
 /// Decompressed chunks for present slots where `keep` holds (only those are decompressed).
 pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<RegionChunks> {
     let data = std::fs::read(path).with_context(|| path.display().to_string())?;
+    parse_region_where(&data, keep).with_context(|| path.display().to_string())
+}
+
+/// [`read_region_where`] on the bytes of a region file.
+pub fn parse_region_where(data: &[u8], keep: &(dyn Fn((u8, u8)) -> bool + Sync)) -> Result<RegionChunks> {
     if data.is_empty() {
         return Ok(Vec::new());
     }
-    ensure!(data.len() >= 2 * SECTOR, "{}: truncated header", path.display());
+    ensure!(data.len() >= 2 * SECTOR, "truncated header");
     // chunks decompress in parallel: one region can be the whole input (debug world)
     (0..1024usize)
         .into_par_iter()
@@ -32,7 +37,7 @@ pub fn read_region_where(path: &Path, keep: &(dyn Fn((u8, u8)) -> bool + Sync)) 
             (loc != 0 && keep(((slot % 32) as u8, (slot / 32) as u8))).then_some((slot, (loc >> 8) as usize * SECTOR))
         })
         .map(|(slot, offset)| {
-            let nbt = read_chunk(&data, offset).with_context(|| format!("{} slot {slot}", path.display()))?;
+            let nbt = read_chunk(data, offset).with_context(|| format!("slot {slot}"))?;
             Ok((((slot % 32) as u8, (slot / 32) as u8), nbt))
         })
         .collect()

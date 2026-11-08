@@ -4,6 +4,9 @@ use std::io::Cursor;
 
 use anyhow::{Context, Result, bail};
 
+/// Decoded size cap: real tiles are ~2 MB (501×1002 RGBA); the header's dimensions are the sender's to choose.
+const MAX_BYTES: usize = 64 << 20;
+
 pub struct LowresImage {
     /// Pixels per side of the colour half (tileSize + 1, the extra row/col duplicates the neighbour).
     pub width: usize,
@@ -16,7 +19,8 @@ impl LowresImage {
         let mut decoder = png::Decoder::new(Cursor::new(png_bytes));
         decoder.set_transformations(png::Transformations::EXPAND);
         let mut reader = decoder.read_info()?;
-        let mut rgba = vec![0; reader.output_buffer_size().context("png too large")?];
+        let size = reader.output_buffer_size().filter(|&n| n <= MAX_BYTES).context("png too large")?;
+        let mut rgba = vec![0; size];
         let info = reader.next_frame(&mut rgba)?;
         if info.color_type != png::ColorType::Rgba || info.bit_depth != png::BitDepth::Eight {
             bail!("expected 8-bit RGBA lowres tile, got {:?}/{:?}", info.color_type, info.bit_depth);
@@ -48,5 +52,22 @@ impl LowresImage {
             .filter(|&(x, z)| self.color(x, z)[3] > 0)
             .map(|(x, z)| (x as i32, z as i32))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn huge_declared_png_is_refused_before_allocating() {
+        // fuzzer find (texture_png target, IHDR CRC fixed): 71 bytes declaring 16×218M pixels, a 3.4 GB buffer
+        let png = [
+            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 16, 13, 0, 0, 0, 1, 0, 0, 0, 0, 197,
+            17, 39, 0, 0, 37, 0, 14, 73, 68, 65, 84, 120, 94, 99, 248, 255, 159, 129, 20, 4, 0, 253, 78, 31, 225, 190,
+            27, 58, 22, 0, 40, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+        ];
+        let e = LowresImage::decode(&png).err().expect("expected an error");
+        assert!(e.to_string().contains("png too large"), "{e:#}");
     }
 }

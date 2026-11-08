@@ -3,6 +3,7 @@
 mod block_entities;
 mod chunk;
 mod nbt;
+mod nbt_check;
 mod nbt_write;
 mod package;
 mod region;
@@ -15,7 +16,9 @@ mod world_write;
 
 pub use block_entities::block_entity_type;
 pub use chunk::{BlockState, Chunk, PaletteStyle, Section};
+pub use nbt::decode_chunk;
 pub use package::zip_world;
+pub use region::{RegionChunks, parse_region_where};
 pub use registry::{BlockInfo, BlockRegistry};
 pub use schem::{Area, SchemStats, export_schem, read_schem};
 pub use sparse::{ChunkBuilder, ChunkLayout};

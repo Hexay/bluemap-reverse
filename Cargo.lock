@@ -181,6 +181,7 @@ dependencies = [
  "bmr-invert",
  "bmr-prbm",
  "bmr-world",
+ "flate2",
  "lzma-rust2",
  "postcard",
  "serde",

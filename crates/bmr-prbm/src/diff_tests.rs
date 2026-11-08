@@ -89,6 +89,31 @@ fn faces_looking_out_of_the_render_are_skipped() {
 }
 
 #[test]
+fn liquid_faces_inset_by_a_thousandth_still_pair() {
+    let inset = |f: [[f32; 3]; 3], d: f32| f.map(|[x, y, z]| [x, y - d, z]);
+    let original = tile(&[(top_face(0.0, 64.0, 0.0), 255, 0), (top_face(1.0, 64.0, 0.0), 255, 0)]);
+    let reconstructed =
+        tile(&[(inset(top_face(0.0, 64.0, 0.0), 0.001), 255, 0), (inset(top_face(1.0, 64.0, 0.0), 0.001), 255, 0)]);
+    let n = names(&["minecraft:block/water_still", "minecraft:block/stone"]);
+    let mut d = RenderDiff::default();
+    d.add_tile(&original, &n, &reconstructed, &n, [0, 0], |_, _| false);
+    let r = d.finish(5);
+    assert_eq!((r.paired, r.identical), (1, 1));
+    assert_eq!(r.missing, [("minecraft:block/stone".to_string(), 1)]);
+    assert_eq!(r.extra, [("minecraft:block/stone".to_string(), 1)]);
+}
+
+#[test]
+fn liquid_faces_further_apart_than_the_inset_do_not_pair() {
+    let shifted = top_face(0.0, 64.0 - 0.01, 0.0);
+    let n = names(&["minecraft:block/lava_still"]);
+    let mut d = RenderDiff::default();
+    d.add_tile(&tile(&[(top_face(0.0, 64.0, 0.0), 255, 0)]), &n, &tile(&[(shifted, 255, 0)]), &n, [0, 0], |_, _| false);
+    let r = d.finish(5);
+    assert_eq!((r.paired, r.missing.len(), r.extra.len()), (0, 1, 1));
+}
+
+#[test]
 fn absent_tile_is_all_missing() {
     let t = tile(&[(top_face(0.0, 64.0, 0.0), 255, 0)]);
     let mut d = RenderDiff::default();

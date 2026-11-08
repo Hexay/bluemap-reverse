@@ -4,6 +4,7 @@
 
 mod report;
 #[cfg(test)]
+#[path = "diff_tests.rs"]
 mod tests;
 
 use std::collections::HashMap;
@@ -19,6 +20,9 @@ const SUNLIGHT: usize = 5;
 
 /// 1/4096 block: finer than any model coordinate, coarse enough to absorb f32 noise.
 const QUANT: f32 = 4096.0;
+/// Per-coordinate slack (in QUANT units, ~0.002 block) when pairing liquid faces left over from exact pairing:
+/// BlueMap after 5.29 (`fcef695`) insets liquid faces by 0.001 block, see research/bluemap-5.29-delta.md.
+const LIQUID_INSET: i32 = 8;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Key {
@@ -36,6 +40,24 @@ struct Attrs<'a> {
     blocklight: i8,
     sunlight: i8,
     cell: [i32; 3],
+    liquid: bool,
+}
+
+/// Same normal and every vertex within [`LIQUID_INSET`] of `b`'s.
+fn inset_of(a: &Key, b: &Key) -> bool {
+    a.normal == b.normal
+        && a.pos.iter().flatten().zip(b.pos.iter().flatten()).all(|(x, y)| x.abs_diff(*y) <= LIQUID_INSET as u32)
+}
+
+/// Removes and returns the candidate differing from `b` in the fewest aspects (first on ties), with its mask.
+fn take_closest<'a>(candidates: &mut Vec<Attrs<'a>>, b: &Attrs) -> (Attrs<'a>, u8) {
+    let (best, mask) = candidates
+        .iter()
+        .enumerate()
+        .map(|(i, a)| (i, differing(a, b)))
+        .min_by_key(|&(_, m)| m.count_ones())
+        .expect("non-empty");
+    (candidates.swap_remove(best), mask)
 }
 
 fn canonical<'a>(f: &Face, names: &'a [String], origin: [i32; 2]) -> (Key, Attrs<'a>) {
@@ -43,8 +65,10 @@ fn canonical<'a>(f: &Face, names: &'a [String], origin: [i32; 2]) -> (Key, Attrs
     let mut order = [0, 1, 2];
     order.sort_by_key(|&i| q[i]);
     let key = Key { pos: order.map(|i| q[i]), normal: f.normal };
+    let texture = names.get(f.material as usize).map_or("?", String::as_str);
     let attrs = Attrs {
-        texture: names.get(f.material as usize).map_or("?", String::as_str),
+        texture,
+        liquid: texture.contains("water") || texture.contains("lava"),
         uv: order.map(|i| f.uv[i].map(|c| (c * QUANT).round() as i32)),
         color: f.color,
         ao: order.map(|i| f.ao[i]),
@@ -129,22 +153,30 @@ impl RenderDiff {
         for (key, attrs) in original {
             unpaired.entry(key).or_default().push(attrs);
         }
+        let mut leftover = Vec::new();
         for (key, b) in reconstructed {
-            let Some(candidates) = unpaired.get_mut(&key).filter(|c| !c.is_empty()) else {
+            match unpaired.get_mut(&key).filter(|c| !c.is_empty()) {
+                Some(candidates) => {
+                    let (a, mask) = take_closest(candidates, &b);
+                    self.record_pair(&a, &b, mask);
+                }
+                None => leftover.push((key, b)),
+            }
+        }
+        let (mut liquid, solid): (Vec<_>, Vec<_>) =
+            unpaired.into_iter().flat_map(|(k, v)| v.into_iter().map(move |a| (k, a))).partition(|(_, a)| a.liquid);
+        for (key, b) in leftover {
+            let near: Vec<usize> =
+                if b.liquid { (0..liquid.len()).filter(|&i| inset_of(&liquid[i].0, &key)).collect() } else { vec![] };
+            let Some(&best) = near.iter().min_by_key(|&&i| differing(&liquid[i].1, &b).count_ones()) else {
                 *self.extra.entry(b.texture.to_owned()).or_default() += 1;
                 self.cells.entry(b.cell).or_default().extra += 1;
                 continue;
             };
-            let (best, mask) = candidates
-                .iter()
-                .enumerate()
-                .map(|(i, a)| (i, differing(a, &b)))
-                .min_by_key(|&(_, m)| m.count_ones())
-                .expect("non-empty");
-            let a = candidates.swap_remove(best);
-            self.record_pair(&a, &b, mask);
+            let (_, a) = liquid.swap_remove(best);
+            self.record_pair(&a, &b, differing(&a, &b));
         }
-        for a in unpaired.into_values().flatten() {
+        for (_, a) in solid.into_iter().chain(liquid) {
             *self.missing.entry(a.texture.to_owned()).or_default() += 1;
             self.cells.entry(a.cell).or_default().missing += 1;
         }

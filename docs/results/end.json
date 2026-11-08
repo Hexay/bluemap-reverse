@@ -4,13 +4,13 @@
   "columns": 82944,
   "all": {
     "total": 21233664,
-    "exact": 21216222,
-    "name": 21216222
+    "exact": 21233664,
+    "name": 21233664
   },
   "occupied": {
     "total": 729300,
-    "exact": 711858,
-    "name": 711858
+    "exact": 729300,
+    "name": 729300
   },
   "rendered": {
     "total": 64687,
@@ -36,13 +36,7 @@
     "total": 331776,
     "hits": 331776
   },
-  "confusions": [
-    {
-      "original": "minecraft:obsidian",
-      "reconstructed": "minecraft:end_stone",
-      "count": 17442
-    }
-  ],
+  "confusions": [],
   "rendered_confusions": [],
   "biome_confusions": [],
   "samples": []

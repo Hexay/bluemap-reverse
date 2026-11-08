@@ -109,6 +109,7 @@ pub fn complete(
         }
     }
 
+    let biomes = t.time("biomes", || Biomes::new(&blocks, &bounds.profile, &inv.tints, biome_tints));
     let seg_start = Instant::now();
     let segments = match regen {
         Some(regen) => {
@@ -142,7 +143,7 @@ pub fn complete(
                     a
                 })
         }
-        None => prior_segments(inv, lib, registry, bounds, &blocks, &all_gaps, &liquid_states, table),
+        None => prior_segments(inv, lib, registry, bounds, &blocks, &biomes, &all_gaps, &liquid_states, table),
     };
     t.record("segments", seg_start.elapsed());
     let water = table.intern(&liquid_states[&Liquid::Water]);
@@ -162,7 +163,6 @@ pub fn complete(
         };
         stats.adopted_from_regen = t.time("adopt", || regen::adopt_invisible(&mut blocks, regen, table, &same_render));
     }
-    let biomes = t.time("biomes", || Biomes::new(&blocks, &bounds.profile, &inv.tints, biome_tints));
     stats.timings = t;
     Filled { blocks, segments, biomes, stats }
 }
@@ -175,6 +175,7 @@ fn prior_segments(
     registry: &BlockRegistry,
     bounds: &Bounds,
     blocks: &FxHashMap<Cell, BlockState>,
+    biomes: &Biomes,
     all_gaps: &[Gap],
     liquid_states: &FxHashMap<Liquid, BlockState>,
     table: &mut StateTable,
@@ -203,7 +204,8 @@ fn prior_segments(
     }
     let full_cubes =
         inv.blocks.iter().filter(|&(_, &e)| lib.entries[e].full_cube).map(|(&c, &e)| (c, &lib.entries[e].state));
-    for r in solid_segments(&solid, &bounds.profile, registry, full_cubes) {
+    let rock_at = |(x, z): Column| biomes.at((x >> 2, 0, z >> 2)).and_then(material::biome_rock);
+    for r in solid_segments(&solid, &bounds.profile, registry, full_cubes, rock_at) {
         segments.push(Segment { column: r.column, ylo: r.ylo, yhi: r.yhi, state: table.intern(&r.state) });
     }
     segments

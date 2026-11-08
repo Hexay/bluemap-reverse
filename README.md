@@ -107,8 +107,8 @@ Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27)
 | Vanilla terrain, no seed | 98.94% | 99.99% | 75.3% | 95.7% |
 | Vanilla terrain, with seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
 | Blocks among neighbours¹ | 99.44% | 99.98% | 99.5% | 99.8% |
-| Nether | 99.99% | 99.99% | 82.3% | 96.0% |
-| End | 100% | 100% | 97.6% | 100% |
+| Nether | 99.99% | 99.99% | 82.9% | 96.0% |
+| End | 100% | 100% | 100% | 100% |
 
 ¹ The `context` fixture: stairs, fences, redstone, doors and a jumble of every block.
 

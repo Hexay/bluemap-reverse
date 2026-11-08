@@ -1,5 +1,5 @@
 //! Material pass 2: a gap under a build copies, per height, the nearest column that knows its block there
-//! (a pass-1 fill or an observed full cube), else the map's typical block, else the default by height.
+//! (a pass-1 fill or an observed full cube), else `material::default_at`.
 
 use rustc_hash::FxHashMap;
 
@@ -7,8 +7,6 @@ use bmr_world::BlockState;
 
 use crate::columns::{Column, ring};
 use crate::material::{Run, SolidGap};
-use crate::profile::Profile;
-use crate::typical::Typical;
 
 /// How far a gap searches for a column to copy (Chebyshev radius).
 const COPY_RADIUS: i32 = 16;
@@ -43,11 +41,10 @@ enum Pick<'a> {
 
 /// Per y, the first column in ring order that knows it wins: each column is visited once and claims every
 /// still-open height it covers (was a full ring search per cell, the fill's hottest loop).
-pub fn copy_nearest(
+pub fn copy_nearest<'d>(
     g: &SolidGap,
     src: &Sources,
-    typical: &Typical,
-    profile: &Profile,
+    default: impl Fn(i32) -> &'d str,
     named: &impl Fn(&str) -> BlockState,
 ) -> Vec<Run> {
     let (cx, cz) = g.column;
@@ -80,7 +77,7 @@ pub fn copy_nearest(
 
     let picks: Vec<Pick> = (g.ylo..)
         .zip(picks)
-        .map(|(y, p)| p.unwrap_or_else(|| Pick::Default(typical.at(y).unwrap_or(profile.default_block(y)))))
+        .map(|(y, p)| p.unwrap_or_else(|| Pick::Default(default(y))))
         .collect();
     let mut out: Vec<Run> = Vec::new();
     let mut last: Option<&Pick> = None;

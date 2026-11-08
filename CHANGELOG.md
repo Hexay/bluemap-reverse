@@ -54,6 +54,9 @@ All notable changes to this project are documented here. The format follows
 - Flat worlds keep their own layers under builds: where most terrain surfaces sit at one height, the fill
   below them follows the layering observed across the map (superflat dirt and grass) instead of the vanilla
   bedrock band and deepslate. `context` test world: all blocks 97.5% → 99.5%; vanilla unchanged.
+- Unseen rock in basalt deltas is basalt (58–71% of it on the Nether test world, at every depth) instead of
+  netherrack; End spikes are obsidian down to the floor instead of end stone inside. Nether all blocks
+  82.2% → 82.9%, End 97.6% → 100%.
 - Faster fill: gaps under builds copy from neighbouring columns in one pass per gap instead of a ring search
   per cell, and `bmr` uses the mimalloc allocator (single window: structures test map 41 s → 26 s).
 - Downloads: a response is capped at 256 MiB (was 1 GiB); only timeouts, connection errors, 408, 429 and 5xx

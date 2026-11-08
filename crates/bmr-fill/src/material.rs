@@ -13,7 +13,7 @@ use bmr_world::{BlockRegistry, BlockState};
 
 use crate::columns::Column;
 use crate::copy::{Sources, copy_nearest};
-use crate::profile::Profile;
+use crate::profile::{Kind, Profile};
 use crate::typical::Typical;
 
 /// Inclusive y range of one state within a column.
@@ -33,12 +33,14 @@ pub struct SolidGap<'a> {
     pub above: Option<&'a BlockState>,
 }
 
-/// `full_cubes`: observed full-cube blocks (pass 2 copies these as well as pass-1 results).
+/// `full_cubes`: observed full-cube blocks (pass 2 copies these as well as pass-1 results); `rock_at`: the
+/// column's biome rock (`biome_rock`).
 pub fn solid_segments<'a>(
     gaps: &[SolidGap],
     profile: &Profile,
     registry: &BlockRegistry,
     full_cubes: impl IntoIterator<Item = ((i32, i32, i32), &'a BlockState)>,
+    rock_at: impl Fn(Column) -> Option<&'static str>,
 ) -> Vec<Run> {
     let named = |name: &str| {
         let props = registry.get(name).map(|b| b.default.clone()).unwrap_or_default();
@@ -49,8 +51,8 @@ pub fn solid_segments<'a>(
     for g in gaps {
         // end bedrock is always built (pillar tops, exit portal): copy the walls instead
         let natural = |s: &&BlockState| profile.bedrock_floor() || s.name != "minecraft:bedrock";
-        match g.above.filter(natural).and_then(|s| surface_kind(&s.name).map(|k| (s, k))) {
-            Some((above, kind)) => layered.push((g, above, layers(kind, g, profile))),
+        match g.above.filter(natural).and_then(|s| surface_kind(&s.name, profile).map(|k| (s, k))) {
+            Some((above, kind)) => layered.push((g, above, layers(kind, g, profile, rock_at(g.column)))),
             None => deferred.push(g),
         }
     }
@@ -64,7 +66,7 @@ pub fn solid_segments<'a>(
     let mut out = Vec::new();
     let mut resolved: FxHashMap<Column, Vec<(i32, i32, BlockState)>> = FxHashMap::default();
     for (g, _, l) in &layered {
-        let rest = by_height_runs(g.ylo, l.rest_hi, profile, l.base.as_deref(), &typical);
+        let rest = by_height_runs(g.ylo, l.rest_hi, profile, l.base.as_deref(), &typical, rock_at(g.column));
         for (ylo, yhi, name) in l.runs.iter().cloned().chain(rest) {
             let state = named(&name);
             resolved.entry(g.column).or_default().push((ylo, yhi, state.clone()));
@@ -73,14 +75,18 @@ pub fn solid_segments<'a>(
     }
     let sources = Sources::new(&resolved, full_cubes);
     for g in deferred {
-        out.extend(copy_nearest(g, &sources, &typical, profile, &named));
+        out.extend(copy_nearest(g, &sources, |y| default_at(y, profile, &typical, rock_at(g.column)), &named));
     }
     out
 }
 
 /// What layering a surface block implies below it; `None` for builds and anything non-terrain.
-fn surface_kind(name: &str) -> Option<&str> {
+fn surface_kind<'n>(name: &'n str, profile: &Profile) -> Option<&'n str> {
     let s = name.strip_prefix("minecraft:")?;
+    // end spikes are obsidian from the world floor up; obsidian elsewhere in the end is rare
+    if profile.kind == Kind::End && s == "obsidian" {
+        return Some(s);
+    }
     let terrain = matches!(
         s,
         "grass_block"
@@ -136,7 +142,7 @@ struct Layers {
     base: Option<String>,
 }
 
-fn layers(kind: &str, g: &SolidGap, profile: &Profile) -> Layers {
+fn layers(kind: &str, g: &SolidGap, profile: &Profile, rock: Option<&str>) -> Layers {
     let layers: &[(&str, i32)] = match kind {
         // depths: medians under exposed surfaces on the vanilla fixture where it has enough samples
         // (sand 1 over stone, n=57k; gravel 1; exposed dirt 4; clay 1 over dirt 3); grass keeps 3 (n=31 there)
@@ -166,24 +172,42 @@ fn layers(kind: &str, g: &SolidGap, profile: &Profile) -> Layers {
         }
         y = lo - 1;
     }
-    Layers { runs, rest_hi: y, base: CONTINUING.contains(&kind).then(|| format!("minecraft:{kind}")) }
+    let continues = CONTINUING.contains(&kind) || kind == "obsidian";
+    let base = continues.then(|| rock.map_or_else(|| format!("minecraft:{kind}"), str::to_owned));
+    Layers { runs, rest_hi: y, base }
+}
+
+/// Rock that fills a biome's hidden volume instead of the dimension's default (measured on the nether
+/// fixture: basalt is 58–71% of hidden deltas cells at every depth, netherrack ~20%).
+pub fn biome_rock(biome: &str) -> Option<&'static str> {
+    (biome == "minecraft:basalt_deltas").then_some("minecraft:basalt")
+}
+
+/// Unseen block at `y` with no other evidence: the map's typical block, else the biome's rock (not over
+/// the dimension's bedrock), else the profile's default.
+pub fn default_at<'t>(y: i32, profile: &Profile, typical: &'t Typical, rock: Option<&'static str>) -> &'t str {
+    typical.at(y).unwrap_or_else(|| match profile.default_block(y) {
+        "minecraft:bedrock" => "minecraft:bedrock",
+        d => rock.unwrap_or(d),
+    })
 }
 
 /// Default fill for [ylo, yhi], one cell at a time merged into runs: `base` if given (not over the
-/// dimension's bedrock), else the map's typical block there, else the profile's default block.
+/// dimension's bedrock), else `default_at`.
 fn by_height_runs(
     ylo: i32,
     yhi: i32,
     profile: &Profile,
     base: Option<&str>,
     typical: &Typical,
+    rock: Option<&'static str>,
 ) -> Vec<(i32, i32, String)> {
     let mut runs: Vec<(i32, i32, String)> = Vec::new();
     for y in (ylo..=yhi).rev() {
         let default = profile.default_block(y);
         let name = match base {
             Some(b) if default != "minecraft:bedrock" => b.to_owned(),
-            _ => typical.at(y).unwrap_or(default).to_owned(),
+            _ => default_at(y, profile, typical, rock).to_owned(),
         };
         match runs.last_mut() {
             Some(r) if r.2 == name => r.0 = y,

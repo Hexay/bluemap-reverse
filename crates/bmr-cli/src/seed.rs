@@ -1,10 +1,12 @@
 //! `bmr seed`: crack the world seed from observed structure starts (docs/seed.md).
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use anyhow::{Context, Result};
-use bmr_seed::{Observation, crack, default_max_misses};
+use bmr_seed::detect::detect;
+use bmr_seed::{Observation, Report, crack, default_max_misses};
+use bmr_world::World;
 use serde::Deserialize;
 
 #[derive(clap::Args)]
@@ -40,8 +42,31 @@ pub fn run(a: Args) -> Result<ExitCode> {
     let status = if report.world_seed.is_some() { ExitCode::SUCCESS } else { ExitCode::from(NO_SEED) };
     if a.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
-        return Ok(status);
+    } else {
+        print_report(&report);
     }
+    Ok(status)
+}
+
+/// `bmr pull --crack-seed`: detect structures in a reconstructed overworld, crack its seed, print the
+/// result and write the full report as JSON to `report_path`. Returns the world seed if one was found.
+pub fn crack_world(world: &World, mc: &str, report_path: &Path) -> Result<Option<i64>> {
+    let scan = detect(world)?;
+    let structures = crate::structures::observations(&scan);
+    if structures.is_empty() {
+        println!("      no structures found to crack the seed from");
+        return Ok(None);
+    }
+    let report = crack(mc, &structures, default_max_misses(structures.len()))?;
+    let doc = serde_json::json!({ "mc": mc, "structures": structures, "report": report });
+    std::fs::write(report_path, serde_json::to_string_pretty(&doc)?)
+        .with_context(|| report_path.display().to_string())?;
+    print_report(&report);
+    Ok(report.world_seed)
+}
+
+fn print_report(report: &Report) {
+    let max_misses = report.max_misses;
     println!(
         "{} observations, <={:.0} bits, <={} misses, {} low-bit survivors",
         report.observations, report.bits, report.max_misses, report.low_survivors
@@ -65,5 +90,4 @@ pub fn run(a: Args) -> Result<ExitCode> {
         }
         (None, false) => println!("no single world seed: add structures in more biomes"),
     }
-    Ok(status)
 }

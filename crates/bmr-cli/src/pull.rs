@@ -10,6 +10,7 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use bmr_invert::timings::Timings;
 use bmr_pack::{Pack, Verdict};
+use plan::{OVERWORLD, Planned};
 
 use crate::fetch::DownloadArgs;
 use crate::pack_source::{IndexArgs, select_pack};
@@ -43,6 +44,10 @@ pub struct Args {
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for exact underground
     #[arg(long)]
     regen: Option<PathBuf>,
+    /// Find structures in the reconstructed overworld and crack the world seed from them (docs/seed.md);
+    /// the report goes next to the output as OUT.seed.json
+    #[arg(long)]
+    crack_seed: bool,
     /// Dimension of the (single) map [default: guessed from the map id, else from BlueMap's default sky colour]
     #[arg(long)]
     dimension: Option<String>,
@@ -167,6 +172,10 @@ pub fn run(a: Args) -> Result<()> {
         }
     }
 
+    if a.crack_seed {
+        crack_seed(&maps, &world_dir, &pack, &out, &mut t)?;
+    }
+
     progress!("[4/4] writing output");
     if zip {
         let files = t.time("zip", || bmr_world::zip_world(&world_dir, &out))?;
@@ -187,6 +196,25 @@ pub fn run(a: Args) -> Result<()> {
     progress!("done in {:.1?}", total.elapsed());
     if a.timings.is_some() {
         report(&t, a.timings.as_deref())?;
+    }
+    Ok(())
+}
+
+fn crack_seed(maps: &[Planned], world_dir: &Path, pack: &Pack, out: &Path, t: &mut Timings) -> Result<()> {
+    if !maps.iter().any(|m| m.dimension == OVERWORLD) {
+        println!("      --crack-seed: no overworld map, skipped (structure seeds come from overworld structures)");
+        return Ok(());
+    }
+    progress!("      cracking the world seed from structures in the overworld");
+    let world = bmr_world::World::open(world_dir, OVERWORLD, Some(pack.registry.clone()))?;
+    let report = out.with_extension("seed.json");
+    let seed = t.time("seed", || crate::seed::crack_world(&world, &pack.meta.mc_version, &report))?;
+    match seed {
+        Some(_) => println!(
+            "      seed report {}; with the seed, --regen fills hidden terrain exactly (docs/seed.md)",
+            report.display()
+        ),
+        None => println!("      seed report {}", report.display()),
     }
     Ok(())
 }

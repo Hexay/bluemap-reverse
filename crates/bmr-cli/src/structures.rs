@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use bmr_seed::Observation;
-use bmr_seed::detect::{detect, evaluate};
+use bmr_seed::detect::{Scan, detect, evaluate};
 use serde::Deserialize;
 
 use crate::WorldArgs;
@@ -61,11 +61,15 @@ pub fn run(a: Args) -> Result<()> {
         std::fs::write(path, serde_json::to_string_pretty(&scan.detections)?)?;
     }
     if let Some(out) = &a.out {
-        let structures: Vec<Observation> =
-            scan.detections.iter().filter(|d| !d.chunks.is_empty()).map(|d| d.observation()).collect();
+        let structures = observations(&scan);
         let doc = serde_json::json!({ "mc": a.mc, "structures": structures });
         std::fs::write(out, serde_json::to_string_pretty(&doc)?)?;
         println!("wrote {} observations to {}", structures.len(), out.display());
     }
     Ok(())
+}
+
+/// Detections that pin down candidate start chunks, as `bmr seed` observations.
+pub fn observations(scan: &Scan) -> Vec<Observation> {
+    scan.detections.iter().filter(|d| !d.chunks.is_empty()).map(|d| d.observation()).collect()
 }

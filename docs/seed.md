@@ -6,11 +6,11 @@ Goal: the world seed from what a map shows, so `--regen` can fill everything the
 ## Use
 
 ```
-bmr pull https://map.example.com/ -o site-world           # a folder (or any reconstructed world)
-bmr structures site-world -o obs.json                     # structures → observations
-bmr seed obs.json                                         # → "seed: <n>"
+bmr pull https://map.example.com/ --crack-seed            # reconstruct, detect, crack → "seed: <n>", SITE.seed.json
 py -3 tools/regen_world.py <mirror> --seed <n>            # same-seed terrain (needs Java), then pull/reverse --regen
 ```
+
+Step by step, or on any world: `bmr structures <world> -o obs.json`, then `bmr seed obs.json`.
 
 ## Pipeline
 

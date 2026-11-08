@@ -34,7 +34,8 @@ pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Optio
     Ok(out)
 }
 
-const ORDER: [&str; 3] = ["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"];
+pub const OVERWORLD: &str = "minecraft:overworld";
+const ORDER: [&str; 3] = [OVERWORLD, "minecraft:the_nether", "minecraft:the_end"];
 
 /// Dimension of a map from its id (`world_nether`, `world_the_end`, `nether`…), else from BlueMap's
 /// default sky colour for the dimension (nether #290000, end #080010), else the overworld.

@@ -29,6 +29,10 @@ use clap::{Parser, Subcommand};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
 
+// see the mimalloc note in the workspace Cargo.toml
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 const EXIT_CODES: &str = "Exit codes: 0 success, 1 error, 2 usage error, 3 `seed` found no seed.
 Downloads (site mirrors, packs) go to --data-dir, else $BMR_HOME, else the per-user data dir.";
 

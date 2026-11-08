@@ -26,6 +26,14 @@ Numbers live in `docs/results/bench.jsonl` (one line per benchmark run); this fi
 - **Windowed pipeline** (`bmr-cli/src/window.rs`): one region (512²) at a time with a 32-block halo, so memory
   does not grow with the map. Rules crossing cells stay within the halo; the prior fill also fills halo
   columns (its neighbour searches must see past the border), the regen fill does not. `--no-window` = whole map.
+- **Windows run concurrently** (`--window-jobs`, default 4; `reconstruct.rs`), each with its own `StateTable`:
+  finished chunks carry block states, not ids, and a window emits only its region, so no merge is needed.
+  Before, reverse was nearly serial (CPU ≈ wall on 16 cores). Structures fixture, 2026-11-07, Linux 16 cores:
+  1 job 0.92 GB peak, 3 jobs 18 s / 1.5 GB, 6 jobs 9 s / 2.2 GB.
+- **mimalloc** global allocator (`bmr-cli`): glibc spent ~25% of reverse CPU in free/heap-trim.
+- **Material pass 2 visits each neighbour column once per gap** (`bmr-fill/src/copy.rs`) instead of a 16-ring
+  search per cell with a hash lookup and a state clone per probe (was 19% self time). With mimalloc:
+  structures fixture single-window 41.4 s → 25.9 s, outputs identical.
 - Parallel: tile parsing, chunk decompress/decode (within a region), regen fill (fold per thread),
   evidence block pass, chunk encode + compress. Deliberately serial: liquid evidence (first-claim wins).
 
@@ -45,5 +53,7 @@ registry, face keys and signatures deduplicated (identical-looking states share 
 
 ## Next candidates
 
-- `invert.gather`: per-tile maps are merged into one map serially.
-- Run 2+ windows concurrently to recover the wall time windowing costs (per-window `StateTable` merge needed).
+- `invert.gather`: per-tile maps are merged into one map serially (~4 s of 26 s CPU on structures).
+- `fill.segments` (~6 s) and `fill.gaps` (~3.6 s) remain the largest serial stages per window.
+- Linux profiling: `perf record -F 499 -g --call-graph dwarf` on `target/profiling/bmr`; `tools/profile.py` is
+  Windows-only (samply via ETW).

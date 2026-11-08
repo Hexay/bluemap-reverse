@@ -2,7 +2,8 @@
 //! (library from a pack): windowed invert → fill → build → write.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 use bmr_fetch::LocalMap;
@@ -12,7 +13,7 @@ use bmr_invert::face::Tex;
 use bmr_invert::timings::Timings;
 use bmr_invert::tints::BiomeTint;
 use bmr_world::{
-    BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateId, StateTable, World, WorldWriter,
+    BlockRegistry, BlockState, Chunk, ChunkBuilder, ChunkLayout, PaletteStyle, StateTable, World, WorldWriter,
 };
 
 use crate::ui::progress;
@@ -25,6 +26,8 @@ pub struct Options {
     /// Whole map in one pass (memory grows with the map).
     pub no_window: bool,
     pub halo: i32,
+    /// Windows in flight at once.
+    pub window_jobs: usize,
     /// Build height, cave cut-off and render mask of the map's dimension.
     pub profile: Profile,
     pub show_unmatched: usize,
@@ -65,49 +68,74 @@ impl Totals {
     pub fn overlap_note(&self) -> &'static str {
         if self.windows > 1 { " (cell counts include window halo overlap)" } else { "" }
     }
+
+    fn add(&mut self, o: &Totals) {
+        self.cells += o.cells;
+        self.unmatched += o.unmatched;
+        self.solid += o.solid;
+        self.liquid += o.liquid;
+        self.adopted += o.adopted;
+        self.chunks += o.chunks;
+    }
 }
 
+/// Windows run `opts.window_jobs` at a time, each with its own state table: a window emits only its own
+/// region and finished chunks carry block states, not ids, so windows are independent. Stage timings are
+/// summed over windows (CPU-like, not wall time, when windows overlap).
 pub fn reconstruct(inp: &Inputs) -> Result<(Totals, Timings)> {
     let textures = bmr_invert::map_textures(inp.map)?;
     let windows =
         if inp.opts.no_window { window::whole_map(inp.map) } else { window::per_region(inp.map, inp.opts.halo) };
     let open = if inp.extend { WorldWriter::extend } else { WorldWriter::create };
     let writer = open(inp.out, inp.template, inp.dimension, inp.registry.clone(), inp.style)?;
-    let mut table = StateTable::default();
-    let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
 
-    let mut totals = Totals { windows: windows.len(), ..Totals::default() };
-    let mut t = Timings::default();
-    for (i, win) in windows.iter().enumerate() {
-        let (chunks, mut wt) = run_window(win, inp, &textures, air, &mut table, &mut totals)?;
-        totals.chunks += chunks.len();
+    let next = AtomicUsize::new(0);
+    let failed = AtomicBool::new(false);
+    let done = Mutex::new((Totals { windows: windows.len(), ..Totals::default() }, Timings::default(), 0usize));
+    let run_and_write = |win: &Window| -> Result<(Totals, Timings)> {
+        let (chunks, mut wt, mut totals) = run_window(win, inp, &textures)?;
+        totals.chunks = chunks.len();
         wt.time("write", || writer.write_chunks(chunks))?;
-        t.accumulate(wt);
-        if windows.len() > 1 {
-            progress!(
-                "  window {}/{} region {}: {} tiles, {} columns",
-                i + 1,
-                windows.len(),
-                win.region.map_or("all".to_string(), |(x, z)| format!("{x},{z}")),
-                win.tiles.len(),
-                win.columns.len()
-            );
+        Ok((totals, wt))
+    };
+    let worker = || -> Result<()> {
+        while !failed.load(Ordering::Relaxed) {
+            let Some(win) = windows.get(next.fetch_add(1, Ordering::Relaxed)) else { break };
+            let (totals, wt) = run_and_write(win).inspect_err(|_| failed.store(true, Ordering::Relaxed))?;
+            let mut d = done.lock().expect("window results lock");
+            d.0.add(&totals);
+            d.1.accumulate(wt);
+            d.2 += 1;
+            if windows.len() > 1 {
+                progress!(
+                    "  window {}/{} region {}: {} tiles, {} columns",
+                    d.2,
+                    windows.len(),
+                    win.region.map_or("all".to_string(), |(x, z)| format!("{x},{z}")),
+                    win.tiles.len(),
+                    win.columns.len()
+                );
+            }
         }
-    }
+        Ok(())
+    };
+    let jobs = inp.opts.window_jobs.clamp(1, windows.len().max(1));
+    std::thread::scope(|s| {
+        let handles: Vec<_> = (0..jobs).map(|_| s.spawn(worker)).collect();
+        handles.into_iter().try_for_each(|h| h.join().expect("window worker panicked"))
+    })?;
+    let (totals, t, _) = done.into_inner().expect("window results lock");
     Ok((totals, t))
 }
 
 /// Invert, fill and build one window; returns only the window's own chunks.
-fn run_window(
-    win: &Window,
-    inp: &Inputs,
-    textures: &[Tex],
-    air: StateId,
-    table: &mut StateTable,
-    totals: &mut Totals,
-) -> Result<(Vec<Chunk>, Timings)> {
+fn run_window(win: &Window, inp: &Inputs, textures: &[Tex]) -> Result<(Vec<Chunk>, Timings, Totals)> {
     let o = inp.opts;
     let mut t = Timings::default();
+    let mut totals = Totals::default();
+    let mut table = StateTable::default();
+    let table = &mut table;
+    let air = table.intern(&BlockState::new("minecraft:air".into(), Vec::new()));
     let inv = t.time("invert", || bmr_invert::reverse(inp.map, inp.lib, &win.tiles, textures))?;
     totals.cells += inv.stats.cells;
     totals.unmatched += inv.stats.unmatched;
@@ -169,7 +197,7 @@ fn run_window(
     }
     t.extend("invert", inv.stats.timings.clone());
     t.accumulate(inner);
-    Ok((chunks, t))
+    Ok((chunks, t, totals))
 }
 
 /// Table on stdout; JSON `{stage: seconds, "<stage>.mb": resident MB}` for tools/bench.py.

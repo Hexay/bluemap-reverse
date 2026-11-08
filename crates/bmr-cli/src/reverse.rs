@@ -49,6 +49,9 @@ pub struct OptionArgs {
     /// Halo around each region window, in blocks
     #[arg(long, default_value_t = 32)]
     halo: i32,
+    /// Region windows reconstructed at the same time; each adds ~0.25 GB peak memory (structures fixture)
+    #[arg(long, default_value_t = 4)]
+    window_jobs: usize,
     /// Lowest block y [default: the dimension's]
     #[arg(long, allow_hyphen_values = true)]
     min_y: Option<i32>,
@@ -88,6 +91,7 @@ impl OptionArgs {
             no_fill: self.no_fill,
             no_window: self.no_window,
             halo: self.halo,
+            window_jobs: self.window_jobs.max(1),
             profile,
             show_unmatched: self.show_unmatched,
         })

@@ -21,15 +21,15 @@ pub struct LocalMap {
 impl LocalMap {
     /// `id` may be omitted when the mirror holds exactly one map.
     pub fn open(mirror: &Path, id: Option<&str>) -> Result<Self> {
-        let site: SiteSettings = serde_json::from_slice(&read(&mirror.join("settings.json"))?)?;
+        let site = SiteSettings::parse(&read(&mirror.join("settings.json"))?)?;
         let id = match (id, site.maps.as_slice()) {
             (Some(id), _) => id.to_owned(),
             (None, [only]) => only.clone(),
             (None, maps) => bail!("mirror has maps {maps:?}; pick one"),
         };
         let dir = mirror.join(&site.map_data_root).join(&id);
-        let settings = serde_json::from_slice(&read(&dir.join("settings.json"))?)
-            .with_context(|| format!("{id}/settings.json"))?;
+        let settings =
+            MapSettings::parse(&read(&dir.join("settings.json"))?).with_context(|| format!("{id}/settings.json"))?;
         let manifest = Manifest::load(&mirror.join(manifest_rel(&id)))?;
         Ok(Self { id, bluemap_version: site.version.clone(), settings, manifest, dir })
     }

@@ -1,0 +1,98 @@
+[package]
+name = "bmr-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+# not a workspace member (needs nightly + libFuzzer); see docs/fuzzing.md
+[workspace]
+members = ["."]
+
+[dependencies]
+base64 = "0.22"
+libfuzzer-sys = "0.4"
+lzma-rust2 = { version = "0.21", default-features = false, features = ["std", "encoder", "xz"] }
+postcard = { version = "1.1", default-features = false, features = ["use-std"] }
+bmr-compress = { path = "../crates/bmr-compress" }
+bmr-fetch = { path = "../crates/bmr-fetch" }
+bmr-pack = { path = "../crates/bmr-pack" }
+bmr-prbm = { path = "../crates/bmr-prbm" }
+bmr-world = { path = "../crates/bmr-world" }
+serde_json = "1"
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "prbm"
+path = "fuzz_targets/prbm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "decompress"
+path = "fuzz_targets/decompress.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "lowres"
+path = "fuzz_targets/lowres.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "region"
+path = "fuzz_targets/region.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "chunk_nbt"
+path = "fuzz_targets/chunk_nbt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pack"
+path = "fuzz_targets/pack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pack_index"
+path = "fuzz_targets/pack_index.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "textures_json"
+path = "fuzz_targets/textures_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "texture_png"
+path = "fuzz_targets/texture_png.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "settings_json"
+path = "fuzz_targets/settings_json.rs"
+test = false
+doc = false
+bench = false

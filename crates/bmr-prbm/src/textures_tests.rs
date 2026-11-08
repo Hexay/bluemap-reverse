@@ -127,4 +127,20 @@ fn animated_non_png_errors() {
 #[test]
 fn file_stem_is_filesystem_safe() {
     assert_eq!(texture(&[], None).file_stem(), "minecraft_block_test");
+    let mut t = texture(&[], None);
+    t.resource_path = "a:..\\..\\evil\nnewmtl x".into();
+    assert_eq!(t.file_stem(), "a_.._.._evil_newmtl_x");
+}
+
+/// Fuzzer find (IHDR CRC fixed): a 71-byte PNG declaring 16×218M pixels (a 3.4 GB buffer).
+const HUGE_PNG: [u8; 71] = [
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 16, 13, 0, 0, 0, 1, 0, 0, 0, 0, 197, 17, 39,
+    0, 0, 37, 0, 14, 73, 68, 65, 84, 120, 94, 99, 248, 255, 159, 129, 20, 4, 0, 253, 78, 31, 225, 190, 27, 58, 22, 0,
+    40, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+];
+
+#[test]
+fn huge_declared_png_is_refused_before_allocating() {
+    let e = texture(&HUGE_PNG, Some(serde_json::json!({}))).frame_png().unwrap_err();
+    assert!(format!("{e:#}").contains("png too large"), "{e:#}");
 }

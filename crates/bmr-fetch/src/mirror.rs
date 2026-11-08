@@ -44,7 +44,7 @@ pub fn mirror(opts: &Options) -> Result<Vec<MapSummary>> {
 
     let site_bytes = http.get("settings.json")?.context("site has no settings.json")?;
     store.write("settings.json", &site_bytes)?;
-    let site: SiteSettings = serde_json::from_slice(&site_bytes).context("settings.json")?;
+    let site = SiteSettings::parse(&site_bytes)?;
 
     let ids: Vec<&String> = site.maps.iter().filter(|m| opts.maps.is_empty() || opts.maps.contains(m)).collect();
     pool.install(|| {
@@ -76,7 +76,7 @@ impl<'a> MapMirror<'a> {
         let root = format!("{maps_root}/{id}");
         let bytes = http.get(&format!("{root}/settings.json"))?.context("map settings.json missing")?;
         store.write(&format!("{root}/settings.json"), &bytes)?;
-        let settings = serde_json::from_slice(&bytes).with_context(|| format!("{root}/settings.json"))?;
+        let settings = MapSettings::parse(&bytes).with_context(|| format!("{root}/settings.json"))?;
         let manifest_path = store.path(&manifest_rel(id));
         let manifest = Manifest::load(&manifest_path)?;
         Ok(Self { http, store, id: id.into(), root, settings, manifest_path, manifest, progress })

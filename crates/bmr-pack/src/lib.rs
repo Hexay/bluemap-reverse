@@ -3,11 +3,11 @@
 //! and the texture list it was learned from (compatibility baseline + version fingerprint).
 
 mod compat;
+mod container;
 mod format;
 mod index;
 mod select;
 
-use std::io::{Read, Write};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -16,11 +16,11 @@ use bmr_fetch::LocalMap;
 use bmr_invert::Library;
 use bmr_invert::tints::BiomeTint;
 use bmr_world::{BlockRegistry, PaletteStyle, TemplateFiles, World};
-use lzma_rust2::{XzOptions, XzReader, XzWriter};
 
 pub use compat::{Compat, Verdict, check};
-use format::{Body, FORMAT, MAGIC, decode, encode};
-pub use format::{Header, Meta};
+use container::{compress, read_body, split};
+pub use format::{FORMAT, Header, MAGIC, Meta};
+use format::{decode, encode};
 pub use index::{Index, IndexEntry};
 pub use select::{Candidate, Ranked, Source, indexed, installed, rank};
 
@@ -104,13 +104,18 @@ impl Pack {
     /// Header only: versions and texture fingerprint, without decompressing the body.
     pub fn read_header(path: &Path) -> Result<Header> {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
-        Ok(split(&bytes, path)?.0)
+        Self::header_from_bytes(&bytes).with_context(|| path.display().to_string())
+    }
+
+    /// [`Pack::read_header`] on the bytes of a pack file.
+    pub fn header_from_bytes(bytes: &[u8]) -> Result<Header> {
+        Ok(split(bytes)?.0)
     }
 
     /// Bytes per part: the header and compressed body as stored, then each body field uncompressed.
     pub fn sizes(path: &Path) -> Result<Vec<(&'static str, usize)>> {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
-        let (_, compressed) = split(&bytes, path)?;
+        let (_, compressed) = split(&bytes).with_context(|| path.display().to_string())?;
         let body = read_body(compressed)?;
         let len = |v: Result<Vec<u8>, postcard::Error>| v.map(|b| b.len());
         Ok(vec![
@@ -128,13 +133,18 @@ impl Pack {
 
     pub fn load(path: &Path) -> Result<Self> {
         let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
-        let (header, compressed) = split(&bytes, path)?;
+        Self::from_bytes(&bytes).with_context(|| path.display().to_string())
+    }
+
+    /// [`Pack::load`] on the bytes of a pack file.
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        let (header, compressed) = split(bytes)?;
         let mut body = read_body(compressed)?;
         let biome_tints = std::mem::take(&mut body.biome_tints)
             .into_iter()
             .map(|(biome, tints)| BiomeTint { biome, tints })
             .collect();
-        let (entries, registry, template) = decode(body).with_context(|| path.display().to_string())?;
+        let (entries, registry, template) = decode(body)?;
         Ok(Self {
             library: Library::from_entries(entries, header.meta.data_version),
             meta: header.meta,
@@ -144,38 +154,4 @@ impl Pack {
             biome_tints,
         })
     }
-}
-
-fn read_body(compressed: &[u8]) -> Result<Body> {
-    postcard::from_bytes(&decompress(compressed)?).context("corrupt pack body")
-}
-
-fn compress(raw: &[u8]) -> Result<Vec<u8>> {
-    let mut opts = XzOptions::with_preset(9);
-    // the reader allocates the whole declared dictionary (64 MB at preset 9)
-    opts.lzma_options.dict_size = (raw.len() as u32).next_power_of_two().clamp(1 << 12, opts.lzma_options.dict_size);
-    let mut xz = XzWriter::new(Vec::new(), opts)?;
-    xz.write_all(raw)?;
-    Ok(xz.finish()?)
-}
-
-fn decompress(compressed: &[u8]) -> Result<Vec<u8>> {
-    let mut raw = Vec::new();
-    XzReader::new(compressed, false).read_to_end(&mut raw)?;
-    Ok(raw)
-}
-
-/// (header, compressed body) after validating magic and format.
-fn split<'a>(bytes: &'a [u8], path: &Path) -> Result<(Header, &'a [u8])> {
-    ensure!(bytes.len() > 12 && bytes.starts_with(MAGIC), "{} is not a bmr pack", path.display());
-    let len = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
-    ensure!(bytes.len() >= 12 + len, "{}: truncated header", path.display());
-    let header: Header = decompress(&bytes[12..12 + len])
-        .ok()
-        .and_then(|raw| postcard::from_bytes(&raw).ok())
-        .with_context(|| format!("{}: unreadable header (older pack format?)", path.display()))?;
-    if header.format != FORMAT {
-        bail!("{}: pack format {} not supported by this bmr (expects {FORMAT})", path.display(), header.format);
-    }
-    Ok((header, &bytes[12 + len..]))
 }

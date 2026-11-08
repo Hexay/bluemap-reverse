@@ -20,3 +20,6 @@ bmr-fetch.workspace = true
 bmr-invert.workspace = true
 bmr-prbm.workspace = true
 bmr-world.workspace = true
+
+[dev-dependencies]
+flate2.workspace = true

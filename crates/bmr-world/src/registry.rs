@@ -6,6 +6,8 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::BlockState;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockInfo {
     /// Property name → allowed values, in report order.
@@ -64,6 +66,11 @@ impl BlockRegistry {
 
     pub fn get(&self, name: &str) -> Option<&BlockInfo> {
         self.blocks.get(name)
+    }
+
+    /// `name` in its default state; an unknown block gets no properties.
+    pub fn default_state(&self, name: &str) -> BlockState {
+        BlockState::new(name.to_owned(), self.get(name).map(|b| b.default.clone()).unwrap_or_default())
     }
 
     pub fn len(&self) -> usize {

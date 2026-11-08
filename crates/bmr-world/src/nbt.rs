@@ -63,8 +63,7 @@ fn resolve(entry: StateNbt, registry: Option<&BlockRegistry>, style: &mut Option
             let Some(reg) = registry else {
                 bail!("palette uses the 26.3 default-state shorthand ({name}); a block registry is required");
             };
-            let default = reg.get(&name).map(|b| b.default.clone()).unwrap_or_default();
-            (name, default)
+            return Ok(reg.default_state(&name));
         }
         StateNbt::Compound { id: Some(name), properties, .. } => {
             *style = Some(PaletteStyle::Compact);

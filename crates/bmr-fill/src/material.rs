@@ -42,10 +42,7 @@ pub fn solid_segments<'a>(
     full_cubes: impl IntoIterator<Item = ((i32, i32, i32), &'a BlockState)>,
     rock_at: impl Fn(Column) -> Option<&'static str>,
 ) -> Vec<Run> {
-    let named = |name: &str| {
-        let props = registry.get(name).map(|b| b.default.clone()).unwrap_or_default();
-        BlockState::new(name.to_owned(), props)
-    };
+    let named = |name: &str| registry.default_state(name);
     let mut layered = Vec::new();
     let mut deferred = Vec::new();
     for g in gaps {

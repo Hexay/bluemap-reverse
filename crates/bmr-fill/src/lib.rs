@@ -83,10 +83,7 @@ pub fn complete(
     biome_tints: &[BiomeTint],
     table: &mut StateTable,
 ) -> Filled {
-    let named = |name: &str| {
-        let props = registry.get(name).map(|b| b.default.clone()).unwrap_or_default();
-        BlockState::new(name.to_owned(), props)
-    };
+    let named = |name: &str| registry.default_state(name);
     let mut blocks: FxHashMap<Cell, BlockState> =
         inv.blocks.iter().map(|(&c, &e)| (c, lib.entries[e].state.clone())).collect();
     let liquid_states: FxHashMap<Liquid, BlockState> =

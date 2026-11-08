@@ -9,6 +9,7 @@ use rayon::prelude::*;
 use rustc_hash::FxHashMap;
 
 use crate::chunk::{Chunk, PaletteStyle};
+use crate::dimension::Dimension;
 use crate::nbt::decode_chunk;
 use crate::region::read_region_where;
 use crate::registry::BlockRegistry;
@@ -21,24 +22,25 @@ pub struct World {
     registry: Option<Arc<BlockRegistry>>,
 }
 
-/// Region folder of `dimension` (e.g. `minecraft:overworld`) under a world root: 26.1+ moved dimensions to
-/// `dimensions/<ns>/<name>/region`; before that the overworld used `region/`, nether `DIM-1/`, end `DIM1/`.
-pub fn region_dir(root: &Path, dimension: &str, modern: bool) -> PathBuf {
-    let (ns, name) = dimension.split_once(':').unwrap_or(("minecraft", dimension));
+/// Region folder of `dimension` under a world root: 26.1+ moved dimensions to `dimensions/<ns>/<name>/region`;
+/// before that the overworld used `region/`, nether `DIM-1/`, end `DIM1/`.
+pub fn region_dir(root: &Path, dimension: &Dimension, modern: bool) -> PathBuf {
+    let (ns, name) = dimension.namespaced();
+    let namespaced = root.join("dimensions").join(ns).join(name).join("region");
     if modern {
-        return root.join("dimensions").join(ns).join(name).join("region");
+        return namespaced;
     }
-    match (ns, name) {
-        ("minecraft", "overworld") => root.join("region"),
-        ("minecraft", "the_nether") => root.join("DIM-1").join("region"),
-        ("minecraft", "the_end") => root.join("DIM1").join("region"),
-        _ => root.join("dimensions").join(ns).join(name).join("region"),
+    match dimension {
+        Dimension::Overworld => root.join("region"),
+        Dimension::Nether => root.join("DIM-1").join("region"),
+        Dimension::End => root.join("DIM1").join("region"),
+        Dimension::Other(_) => namespaced,
     }
 }
 
 impl World {
     /// Tries the 26.1+ layout, then the legacy one (see `region_dir`).
-    pub fn open(root: &Path, dimension: &str, registry: Option<Arc<BlockRegistry>>) -> Result<Self> {
+    pub fn open(root: &Path, dimension: &Dimension, registry: Option<Arc<BlockRegistry>>) -> Result<Self> {
         for dir in [region_dir(root, dimension, true), region_dir(root, dimension, false)] {
             if dir.is_dir() {
                 return Ok(Self { region_dir: dir, registry });

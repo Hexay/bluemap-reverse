@@ -9,6 +9,7 @@ use anyhow::{Context, Result, bail};
 use rayon::prelude::*;
 
 use crate::chunk::{Chunk, PaletteStyle};
+use crate::dimension::Dimension;
 use crate::nbt_write::encode_chunk;
 use crate::region::write_region;
 use crate::registry::BlockRegistry;
@@ -59,7 +60,7 @@ impl WorldWriter {
     pub fn create(
         out: &Path,
         template: &[(String, Vec<u8>)],
-        dimension: &str,
+        dimension: &Dimension,
         registry: Arc<BlockRegistry>,
         style: PaletteStyle,
     ) -> Result<Self> {
@@ -81,7 +82,7 @@ impl WorldWriter {
     pub fn extend(
         out: &Path,
         template: &[(String, Vec<u8>)],
-        dimension: &str,
+        dimension: &Dimension,
         registry: Arc<BlockRegistry>,
         style: PaletteStyle,
     ) -> Result<Self> {
@@ -98,7 +99,7 @@ impl WorldWriter {
     fn for_dimension(
         out: &Path,
         template: &[(String, Vec<u8>)],
-        dimension: &str,
+        dimension: &Dimension,
         registry: Arc<BlockRegistry>,
         style: PaletteStyle,
     ) -> Result<Self> {

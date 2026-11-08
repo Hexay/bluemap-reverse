@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use bmr_world::{BlockInfo, BlockRegistry, BlockState, Chunk, PaletteStyle, World, WorldWriter};
+use bmr_world::{BlockInfo, BlockRegistry, BlockState, Chunk, Dimension, PaletteStyle, World, WorldWriter};
 
 const DATA_VERSION: i32 = 4800;
 const STAIRS_DEFAULT: [(&str, &str); 4] =
@@ -74,13 +74,13 @@ fn roundtrip(style: PaletteStyle, name: &str) {
     let out = temp_dir(name);
     let registry = Arc::new(registry());
     let template = vec![("level.dat".to_owned(), b"stub".to_vec()), ("data/raids.dat".to_owned(), Vec::new())];
-    let writer = WorldWriter::create(&out, &template, "minecraft:overworld", registry.clone(), style).expect("create");
+    let writer = WorldWriter::create(&out, &template, &Dimension::Overworld, registry.clone(), style).expect("create");
     let positions = [(0, 0), (31, 31), (-1, 33), (40, 0)];
     let regions = writer.write_chunks(positions.iter().map(|&(x, z)| sample_chunk(x, z)).collect()).unwrap();
     assert_eq!(regions, 3);
     assert_eq!(std::fs::read(out.join("data/raids.dat")).unwrap(), Vec::<u8>::new());
 
-    let world = World::open(&out, "minecraft:overworld", Some(registry)).unwrap();
+    let world = World::open(&out, &Dimension::Overworld, Some(registry)).unwrap();
     assert_eq!(world.regions().unwrap(), vec![(-1, 1), (0, 0), (1, 0)]);
     assert_eq!(world.palette_style().unwrap(), Some(style));
     for (x, z) in positions {
@@ -109,11 +109,11 @@ fn compact_palette_needs_a_registry_to_read() {
     let out = temp_dir("compact-no-registry");
     let template = vec![("level.dat".to_owned(), Vec::new())];
     let writer =
-        WorldWriter::create(&out, &template, "minecraft:overworld", Arc::new(registry()), PaletteStyle::Compact)
+        WorldWriter::create(&out, &template, &Dimension::Overworld, Arc::new(registry()), PaletteStyle::Compact)
             .unwrap();
     writer.write_chunks(vec![sample_chunk(0, 0)]).unwrap();
     let e =
-        World::open(&out, "minecraft:overworld", None).unwrap().read_region((0, 0)).err().expect("read should fail");
+        World::open(&out, &Dimension::Overworld, None).unwrap().read_region((0, 0)).err().expect("read should fail");
     assert!(format!("{e:#}").contains("block registry is required"), "{e:#}");
 }
 
@@ -122,7 +122,7 @@ fn compact_writer_rejects_unknown_blocks() {
     let out = temp_dir("compact-unknown");
     let template = vec![("level.dat".to_owned(), Vec::new())];
     let writer =
-        WorldWriter::create(&out, &template, "minecraft:overworld", Arc::new(registry()), PaletteStyle::Compact)
+        WorldWriter::create(&out, &template, &Dimension::Overworld, Arc::new(registry()), PaletteStyle::Compact)
             .unwrap();
     let mut c = sample_chunk(0, 0);
     c.sections[0].palette = vec![state("not_a_block", &[])];
@@ -135,18 +135,19 @@ fn modern_template_layout_and_overwrite_guards() {
     let out = temp_dir("modern-layout");
     let template =
         vec![("level.dat".to_owned(), Vec::new()), ("dimensions/minecraft/overworld/data/x".to_owned(), Vec::new())];
-    let new =
-        |dim: &str| WorldWriter::extend(&out, &template, dim, Arc::new(registry()), PaletteStyle::Legacy).map(|_| ());
-    assert!(new("minecraft:the_nether").is_err(), "extend needs an existing world");
+    let new = |dim: &Dimension| {
+        WorldWriter::extend(&out, &template, dim, Arc::new(registry()), PaletteStyle::Legacy).map(|_| ())
+    };
+    assert!(new(&Dimension::Nether).is_err(), "extend needs an existing world");
     let writer =
-        WorldWriter::create(&out, &template, "minecraft:overworld", Arc::new(registry()), PaletteStyle::Legacy)
+        WorldWriter::create(&out, &template, &Dimension::Overworld, Arc::new(registry()), PaletteStyle::Legacy)
             .unwrap();
     writer.write_chunks(vec![sample_chunk(0, 0)]).unwrap();
     assert!(out.join("dimensions/minecraft/overworld/region/r.0.0.mca").is_file());
     assert!(
-        WorldWriter::create(&out, &template, "minecraft:overworld", Arc::new(registry()), PaletteStyle::Legacy)
+        WorldWriter::create(&out, &template, &Dimension::Overworld, Arc::new(registry()), PaletteStyle::Legacy)
             .is_err()
     );
-    assert!(new("minecraft:overworld").is_err(), "overworld already has chunks");
-    new("minecraft:the_nether").unwrap();
+    assert!(new(&Dimension::Overworld).is_err(), "overworld already has chunks");
+    new(&Dimension::Nether).unwrap();
 }

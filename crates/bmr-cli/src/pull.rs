@@ -10,7 +10,8 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use bmr_invert::timings::Timings;
 use bmr_pack::{Pack, Verdict};
-use plan::{OVERWORLD, Planned};
+use bmr_world::Dimension;
+use plan::Planned;
 
 use crate::fetch::DownloadArgs;
 use crate::pack_source::{IndexArgs, select_pack};
@@ -50,7 +51,7 @@ pub struct Args {
     crack_seed: bool,
     /// Dimension of the (single) map [default: guessed from the map id, else from BlueMap's default sky colour]
     #[arg(long)]
-    dimension: Option<String>,
+    dimension: Option<Dimension>,
     /// Continue even if the pack does not fit the site
     #[arg(long)]
     force: bool,
@@ -72,7 +73,7 @@ pub fn run(a: Args) -> Result<()> {
     let fetch_opts = a.download.options(&a.url, cache.clone(), a.map.iter().cloned().collect(), a.opts.halo);
     let summaries = t.time("fetch", || bmr_fetch::mirror(&fetch_opts))?;
     let ids: Vec<String> = summaries.iter().map(|s| s.id.clone()).collect();
-    let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_deref())?;
+    let maps = plan::choose(&cache, &ids, a.map.as_deref(), a.dimension.as_ref())?;
     for m in &maps {
         progress!(
             "      map `{}` ({}) → {}, {} hires tiles",
@@ -207,12 +208,12 @@ pub fn run(a: Args) -> Result<()> {
 }
 
 fn crack_seed(maps: &[Planned], world_dir: &Path, pack: &Pack, out: &Path, t: &mut Timings) -> Result<()> {
-    if !maps.iter().any(|m| m.dimension == OVERWORLD) {
+    if !maps.iter().any(|m| m.dimension == Dimension::Overworld) {
         println!("      --crack-seed: no overworld map, skipped (structure seeds come from overworld structures)");
         return Ok(());
     }
     progress!("      cracking the world seed from structures in the overworld");
-    let world = bmr_world::World::open(world_dir, OVERWORLD, Some(pack.registry.clone()))?;
+    let world = bmr_world::World::open(world_dir, &Dimension::Overworld, Some(pack.registry.clone()))?;
     let report = out.with_extension("seed.json");
     let seed = t.time("seed", || crate::seed::crack_world(&world, &pack.meta.mc_version, &report))?;
     match seed {

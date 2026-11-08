@@ -2,6 +2,7 @@
 
 mod block_entities;
 mod chunk;
+mod dimension;
 mod nbt;
 mod nbt_check;
 mod nbt_write;
@@ -16,6 +17,7 @@ mod world_write;
 
 pub use block_entities::block_entity_type;
 pub use chunk::{BlockState, Chunk, PaletteStyle, Section};
+pub use dimension::Dimension;
 pub use nbt::decode_chunk;
 pub use package::zip_world;
 pub use region::{RegionChunks, parse_region_where};

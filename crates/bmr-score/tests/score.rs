@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use bmr_score::{Report, Scope, score};
-use bmr_world::{BlockRegistry, BlockState, Chunk, PaletteStyle, World, WorldWriter};
+use bmr_world::{BlockRegistry, BlockState, Chunk, Dimension, PaletteStyle, World, WorldWriter};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 const PLAINS: &str = "minecraft:plains";
@@ -35,9 +35,9 @@ fn write_world(name: &str, chunks: Vec<Chunk>) -> World {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(format!("bmr-score-{name}"));
     let _ = std::fs::remove_dir_all(&root);
     let registry = Arc::new(BlockRegistry::from_blocks([]));
-    let w = WorldWriter::create(&root, &[], "minecraft:overworld", registry, PaletteStyle::Legacy).unwrap();
+    let w = WorldWriter::create(&root, &[], &Dimension::Overworld, registry, PaletteStyle::Legacy).unwrap();
     w.write_chunks(chunks).unwrap();
-    World::open(&root, "minecraft:overworld", None).unwrap()
+    World::open(&root, &Dimension::Overworld, None).unwrap()
 }
 
 fn original(name: &str) -> World {

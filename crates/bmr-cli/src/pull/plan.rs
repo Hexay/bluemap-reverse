@@ -4,16 +4,17 @@ use std::path::Path;
 
 use anyhow::{Result, bail};
 use bmr_fetch::LocalMap;
+use bmr_world::Dimension;
 
 pub struct Planned {
     pub id: String,
     pub map: LocalMap,
-    pub dimension: String,
+    pub dimension: Dimension,
 }
 
 /// Every mirrored map (or only `only`), overworld first. Two maps of one dimension are separate worlds
 /// and cannot share the output: the caller must pick one.
-pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Option<&str>) -> Result<Vec<Planned>> {
+pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Option<&Dimension>) -> Result<Vec<Planned>> {
     let ids: Vec<&str> = match only {
         Some(m) => vec![m],
         None => ids.iter().map(String::as_str).collect(),
@@ -24,7 +25,7 @@ pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Optio
     let mut out = Vec::new();
     for id in ids {
         let map = LocalMap::open(cache, Some(id))?;
-        let dimension = dimension.map_or_else(|| guess_dimension(id, map.settings.sky_color), str::to_owned);
+        let dimension = dimension.map_or_else(|| guess_dimension(id, map.settings.sky_color), Clone::clone);
         if let Some(other) = out.iter().find(|p: &&Planned| p.dimension == dimension) {
             bail!("maps `{}` and `{id}` are both {dimension}, i.e. separate worlds: pick one with --map", other.id);
         }
@@ -34,22 +35,20 @@ pub fn choose(cache: &Path, ids: &[String], only: Option<&str>, dimension: Optio
     Ok(out)
 }
 
-pub const OVERWORLD: &str = "minecraft:overworld";
-const ORDER: [&str; 3] = [OVERWORLD, "minecraft:the_nether", "minecraft:the_end"];
+const ORDER: [Dimension; 3] = [Dimension::Overworld, Dimension::Nether, Dimension::End];
 
 /// Dimension of a map from its id (`world_nether`, `world_the_end`, `nether`…), else from BlueMap's
 /// default sky colour for the dimension (nether #290000, end #080010), else the overworld.
-pub fn guess_dimension(map_id: &str, sky: Option<[f32; 4]>) -> String {
+pub fn guess_dimension(map_id: &str, sky: Option<[f32; 4]>) -> Dimension {
     let id = map_id.to_ascii_lowercase();
     let near = |c: [f32; 4], hex: [u8; 3]| (0..3).all(|i| (c[i] - hex[i] as f32 / 255.0).abs() < 0.01);
-    let dim = if id.contains("nether") || sky.is_some_and(|c| near(c, [0x29, 0, 0])) {
-        ORDER[1]
+    if id.contains("nether") || sky.is_some_and(|c| near(c, [0x29, 0, 0])) {
+        Dimension::Nether
     } else if id == "end" || id.ends_with("_end") || sky.is_some_and(|c| near(c, [0x08, 0, 0x10])) {
-        ORDER[2]
+        Dimension::End
     } else {
-        ORDER[0]
-    };
-    dim.to_owned()
+        Dimension::Overworld
+    }
 }
 
 #[cfg(test)]
@@ -58,9 +57,9 @@ mod tests {
 
     #[test]
     fn dimension_from_id_or_sky() {
-        assert_eq!(guess_dimension("world_nether", None), "minecraft:the_nether");
-        assert_eq!(guess_dimension("world_the_end", None), "minecraft:the_end");
-        assert_eq!(guess_dimension("survival", Some([0x29 as f32 / 255.0, 0.0, 0.0, 1.0])), "minecraft:the_nether");
-        assert_eq!(guess_dimension("world", Some([0.49, 0.67, 1.0, 1.0])), "minecraft:overworld");
+        assert_eq!(guess_dimension("world_nether", None), Dimension::Nether);
+        assert_eq!(guess_dimension("world_the_end", None), Dimension::End);
+        assert_eq!(guess_dimension("survival", Some([0x29 as f32 / 255.0, 0.0, 0.0, 1.0])), Dimension::Nether);
+        assert_eq!(guess_dimension("world", Some([0.49, 0.67, 1.0, 1.0])), Dimension::Overworld);
     }
 }

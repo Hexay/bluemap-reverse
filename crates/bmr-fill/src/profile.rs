@@ -1,6 +1,8 @@
 //! What a dimension looks like to the fill: its build height, how BlueMap renders it by default (sites do
 //! not publish their map config), and the block hidden volumes default to.
 
+use bmr_world::Dimension;
+
 use crate::gradient::Gradients;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,10 +29,11 @@ pub struct Profile {
 }
 
 impl Profile {
-    /// BlueMap's default map for the dimension (overworld.conf / nether.conf / end.conf).
-    pub fn for_dimension(id: &str) -> Self {
-        match id {
-            "minecraft:the_nether" => Self {
+    /// BlueMap's default map for the dimension (overworld.conf / nether.conf / end.conf); a datapack dimension
+    /// gets the overworld's.
+    pub fn for_dimension(dimension: impl Into<Dimension>) -> Self {
+        match dimension.into() {
+            Dimension::Nether => Self {
                 kind: Kind::Nether,
                 min_y: 0,
                 max_y: 255,
@@ -39,7 +42,7 @@ impl Profile {
                 roof_from: 108,
                 gradients: None,
             },
-            "minecraft:the_end" => Self {
+            Dimension::End => Self {
                 kind: Kind::End,
                 min_y: 0,
                 max_y: 255,
@@ -48,7 +51,7 @@ impl Profile {
                 roof_from: 0,
                 gradients: None,
             },
-            _ => Self {
+            Dimension::Overworld | Dimension::Other(_) => Self {
                 kind: Kind::Overworld,
                 min_y: -64,
                 max_y: 319,

@@ -10,6 +10,7 @@ use bmr_fill::{Given, Inferred, Profile};
 use bmr_invert::Library;
 use bmr_invert::drawn::DrawnHeights;
 use bmr_invert::timings::Timings;
+use bmr_world::Dimension;
 
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
 use crate::ui::progress;
@@ -95,9 +96,12 @@ impl OptionArgs {
 
     /// Options for `map`: render settings not given on the command line are inferred from its drawn faces (one
     /// pass over its hires tiles, see bmr-fill infer.rs) and printed as one line.
-    pub fn options_for_map(&self, map: &LocalMap, dimension: &str) -> Result<Options> {
+    pub fn options_for_map(&self, map: &LocalMap, dimension: &Dimension) -> Result<Options> {
         let given = self.given()?;
-        let defaults = Profile::for_dimension(dimension);
+        if let Dimension::Other(id) = dimension {
+            eprintln!("warning: unknown dimension {id}: assuming overworld render defaults");
+        }
+        let defaults = Profile::for_dimension(dimension.clone());
         let mut profile = if given.complete() {
             given.apply(defaults)
         } else {

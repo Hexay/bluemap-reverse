@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use bmr_world::World;
+use bmr_world::{Dimension, World};
 
 fn bucket(d: i32) -> &'static str {
     match d {
@@ -22,8 +22,9 @@ fn main() -> anyhow::Result<()> {
     let reg = Some(std::sync::Arc::new(bmr_world::BlockRegistry::load(Path::new(
         "work/data/reports-26.3/reports/blocks.json",
     ))?));
-    let orig = World::open(Path::new(&a[1]), &a[3], reg.clone())?;
-    let rec = World::open(Path::new(&a[2]), &a[3], reg)?;
+    let dimension = Dimension::parse(&a[3]);
+    let orig = World::open(Path::new(&a[1]), &dimension, reg.clone())?;
+    let rec = World::open(Path::new(&a[2]), &dimension, reg)?;
     let max_y: i32 = a.get(4).map_or(10_000, |s| s.parse().unwrap());
     let min_y: i32 = a.get(5).map_or(-10_000, |s| s.parse().unwrap());
     let mut counts: BTreeMap<(String, &str), BTreeMap<String, u64>> = BTreeMap::new();

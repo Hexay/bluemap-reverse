@@ -24,7 +24,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use bmr_fetch::LocalMap;
-use bmr_world::{BlockRegistry, World};
+use bmr_world::{BlockRegistry, Dimension, World};
 use clap::{Parser, Subcommand};
 
 use crate::copy_world::DEFAULT_TEMPLATE;
@@ -104,8 +104,8 @@ impl MirrorArgs {
 #[derive(clap::Args)]
 struct WorldArgs {
     /// Dimension to read or write
-    #[arg(long, default_value = "minecraft:overworld")]
-    dimension: String,
+    #[arg(long, default_value_t = Dimension::Overworld)]
+    dimension: Dimension,
     /// Vanilla blocks.json report (tools/setup.py); needed for 26.3+ palettes
     #[arg(long, default_value = DEFAULT_BLOCKS)]
     blocks: PathBuf,
@@ -154,13 +154,13 @@ struct LibraryArgs {
 }
 
 /// The debug and biome fixtures live in the overworld whatever dimension is being reversed.
-const FIXTURE_DIMENSION: &str = "minecraft:overworld";
+const FIXTURE_DIMENSION: Dimension = Dimension::Overworld;
 
 impl LibraryArgs {
     /// The debug world's mirror and the world itself.
     fn library_sources(&self, registry: &Arc<BlockRegistry>) -> Result<(LocalMap, World)> {
         let map = LocalMap::open(&self.library_mirror, None)?;
-        Ok((map, World::open(&self.library_world, FIXTURE_DIMENSION, Some(registry.clone()))?))
+        Ok((map, World::open(&self.library_world, &FIXTURE_DIMENSION,Some(registry.clone()))?))
     }
 
     fn library(&self, registry: &Arc<BlockRegistry>) -> Result<bmr_invert::Library> {
@@ -171,7 +171,7 @@ impl LibraryArgs {
     /// The biome fixture's mirror and world, or `None` with a warning when either is missing.
     fn biomes_or_warn(&self, registry: &Arc<BlockRegistry>) -> Option<(LocalMap, World)> {
         let opened = LocalMap::open(&self.biome_mirror, None)
-            .and_then(|m| Ok((m, World::open(&self.biome_world, FIXTURE_DIMENSION, Some(registry.clone()))?)));
+            .and_then(|m| Ok((m, World::open(&self.biome_world, &FIXTURE_DIMENSION,Some(registry.clone()))?)));
         opened.map_err(|e| eprintln!("warning: no biome tint table ({e}); overworld biomes stay plains")).ok()
     }
 }

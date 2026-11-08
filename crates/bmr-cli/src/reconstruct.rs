@@ -44,7 +44,7 @@ pub struct Inputs<'a> {
     pub template: &'a [(String, Vec<u8>)],
     /// Palette encoding of the target Minecraft version.
     pub style: PaletteStyle,
-    pub dimension: &'a str,
+    pub dimension: &'a bmr_world::Dimension,
     pub regen: Option<&'a World>,
     pub out: &'a Path,
     /// `out` already holds a world (another dimension of the same site): add this dimension to it.

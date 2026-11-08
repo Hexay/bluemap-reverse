@@ -7,16 +7,17 @@ use std::sync::Arc;
 
 use bmr_fill::Profile;
 use bmr_fill::gradient::Gradients;
-use bmr_world::{BlockRegistry, World};
+use bmr_world::{BlockRegistry, Dimension, World};
 
 fn main() -> anyhow::Result<()> {
     let a: Vec<String> = std::env::args().collect();
     let reg = Arc::new(BlockRegistry::load(Path::new("work/data/reports-26.3/reports/blocks.json"))?);
-    let world = World::open(Path::new(&a[1]), &a[2], Some(reg))?;
-    let profile = Profile::for_dimension(&a[2]);
+    let dimension = Dimension::parse(&a[2]);
+    let world = World::open(Path::new(&a[1]), &dimension, Some(reg))?;
+    let profile = Profile::for_dimension(dimension.clone());
     let g = Gradients::new(a[3].parse()?, &profile);
-    let bands: Vec<i32> = match a[2].as_str() {
-        "minecraft:the_nether" => (0..=5).chain(122..=127).collect(),
+    let bands: Vec<i32> = match dimension {
+        Dimension::Nether => (0..=5).chain(122..=127).collect(),
         _ => (-64..=-59).chain(0..=8).collect(),
     };
     let (mut n, mut seeded, mut majority) = (0u64, 0u64, 0u64);

@@ -72,7 +72,12 @@ pub fn solid_segments<'a>(
     }
     let sources = Sources::new(&resolved, full_cubes);
     for g in deferred {
-        out.extend(copy_nearest(g, &sources, |y| default_at(g.column, y, profile, &typical, rock_at(g.column)), &named));
+        out.extend(copy_nearest(
+            g,
+            &sources,
+            |y| default_at(g.column, y, profile, &typical, rock_at(g.column)),
+            &named,
+        ));
     }
     out
 }

@@ -10,6 +10,7 @@ mod paths;
 mod probe;
 mod pull;
 mod reconstruct;
+mod regen;
 mod reverse;
 mod schem;
 mod score;

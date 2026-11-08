@@ -83,7 +83,8 @@ fn seed_gradients_place_bedrock_per_cell() {
             assert_eq!(r.state.name, seeded.block_at(x, y, 0), "({x}, {y})");
         }
     }
-    let bedrock_at = |y| runs.iter().filter(|r| r.state.name == "minecraft:bedrock" && r.ylo <= y && y <= r.yhi).count();
+    let bedrock_at =
+        |y| runs.iter().filter(|r| r.state.name == "minecraft:bedrock" && r.ylo <= y && y <= r.yhi).count();
     assert_eq!(bedrock_at(-64), 64);
     assert!((1..64).contains(&bedrock_at(-61)), "the gradient band mixes bedrock and deepslate");
 }

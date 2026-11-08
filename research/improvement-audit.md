@@ -5,8 +5,8 @@ docs/results/*.json + history.jsonl + bench.jsonl, docs/performance.md, docs/see
 research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
-A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C8.
-Open: F1b (managed regen), F4, C2, C9.
+A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F1b (`pull --regen-seed`; no JRE download, by decision),
+F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C9 except C2. Open: F4, C2.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's

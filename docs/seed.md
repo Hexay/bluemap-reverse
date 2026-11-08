@@ -8,10 +8,29 @@ Goal: the world seed from what a map shows, so `--regen` can fill everything the
 ```
 bmr pull https://map.example.com/ --crack-seed            # reconstruct, detect, crack → "seed: <n>", SITE.seed.json
 bmr pull https://map.example.com/ --seed <n>              # exact bedrock and deepslate layers (no Java)
-python3 tools/regen_world.py <mirror> --seed <n>          # same-seed terrain (needs Java), then pull/reverse --regen
+bmr pull https://map.example.com/ --regen-seed <n> --accept-eula   # same-seed terrain for everything hidden (needs Java)
 ```
 
 Step by step, or on any world: `bmr structures <world> -o obs.json`, then `bmr seed obs.json`.
+
+## Regen (`--regen-seed`)
+
+Opt-in, and the only path that needs Java. `<n>` is the seed as number or text, or a `SITE.seed.json` report. After
+choosing the pack, `pull` runs the vanilla server of the pack's Minecraft version headless, force-loads exactly the
+chunks the hires tiles touch (in batches, released as it goes, so memory stays flat), stops it and fills from that
+world.
+
+- It lives on `pull` because `pull` already owns the mirror, the pack choice (which gives the Minecraft version) and
+  the fill. `--regen <world>` still takes a world you generated yourself.
+- Java: `--java <path>`, else `java` on PATH, checked against the version Mojang lists for that Minecraft release.
+  bmr never installs a JRE; without a suitable one it says where to get it.
+- Server jar: `--server-jar <jar>`, else downloaded from Mojang's version manifest (sha1-verified) into
+  `<data>/minecraft`.
+- `--accept-eula` is required: running the server means agreeing to the [Minecraft EULA](https://aka.ms/MinecraftEULA).
+- `--server-heap` (default `3G`), `--level-type` (default `minecraft:normal`).
+- The world is kept in `<data>/cache/<site>/regen` and reused while the seed, version and chunk set are unchanged.
+
+`tools/regen_world.py` does the same for fixtures in the dev loop.
 
 ## Pipeline
 

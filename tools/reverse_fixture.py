@@ -20,7 +20,7 @@ from pathlib import Path
 from mirror_fixture import bmr_exe
 from paths import DEFAULT, EXE, FIXTURES, OUT, RESULTS, ROOT, WORK, WORLDS
 
-METRICS = ["occupied", "rendered", "rendered_alike", "exposed", "solid_iou", "surface"]
+METRICS = ["occupied", "rendered", "rendered_alike", "exposed", "solid_iou", "surface", "biomes"]
 
 
 def pct(acc: dict) -> float:
@@ -35,6 +35,7 @@ def summary(r: dict) -> dict:
         "exposed": pct(r["exposed"]),
         "solid_iou": round(100.0 * r["solid"]["both"] / max(r["solid"]["original"] + r["solid"]["reconstructed"] - r["solid"]["both"], 1), 3),
         "surface": round(100.0 * r["surface"]["hits"] / max(r["surface"]["total"], 1), 3),
+        "biomes": round(100.0 * r["biomes"]["hits"] / max(r["biomes"]["total"], 1), 3),
     }
 
 
@@ -73,7 +74,8 @@ def reverse_and_score(exe: Path, fixture: str, extra: list[str], record: bool, v
     t1 = time.perf_counter()
     if record:
         RESULTS.mkdir(exist_ok=True)
-    report = (RESULTS if record else out.parent) / f"{fixture}.json"
+    # a --regen run must not replace the fixture's no-seed report
+    report = (RESULTS if record else out.parent) / f"{fixture}{'-regen' if '--regen' in extra else ''}.json"
     run([exe, "score", WORLDS / fixture / "world", out, "--mirror", mirror, "--top", "25", "--json", report,
          "--pack", DEFAULT.pack, *dim], logs and logs / "score.log")
     return summary(json.loads(report.read_text())), t1 - t0, time.perf_counter() - t1

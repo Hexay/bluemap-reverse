@@ -91,6 +91,7 @@ packs). It refuses a clearly wrong pack unless you pass `--force`.
 | `--mask-y`, `--cave-y`, `--min-y`, `--max-y` | inferred from the tiles | Map settings the site doesn't publish. BlueMap's defaults (Nether roof y 90..127 hidden, overworld caves below y 55, the dimension's build height) unless the tiles contradict them: caves drawn deeper, faces inside the mask or outside the build height. A one-line report says which; the flags override it. |
 | `--seed <n>` | none | The world seed (number or text): unseen bedrock and deepslate layers are generated exactly as vanilla does. |
 | `--crack-seed` | off | Detect structures in the reconstructed overworld and crack the world seed (report in `OUT.seed.json`). |
+| `--regen-seed <n> --accept-eula` | off | Optional, and the one feature that needs Java: runs the vanilla server to generate the same-seed world for the rendered chunks and fills hidden terrain from it. See [docs/seed.md](docs/seed.md). |
 | `--concurrency`, `--delay-ms` | 4, 25 ms | Download politeness. |
 | `--data-dir <dir>` | `$BMR_HOME` or the data dir | Where mirrors (`<dir>/cache`) and downloaded packs (`<dir>/packs`) go. |
 | `-q`, `--quiet` | off | Only results, warnings and errors. |
@@ -108,7 +109,7 @@ Scored block by block against the original worlds (Minecraft 26.3, BlueMap 5.27)
 |---|--:|--:|--:|--:|
 | Superflat with builds | 99.86% | 100% | 99.92% | 100% |
 | Vanilla terrain, no seed | 98.94% | 99.99% | 75.3% | 97.0% |
-| Vanilla terrain, with seed (`--regen`) | 99.86% | 99.99% | 99.93% | 100% |
+| Vanilla terrain, with seed (`--regen-seed`) | 99.87% | 99.99% | 99.92% | 100% |
 | Blocks among neighbours¹ | 99.44% | 99.98% | 99.5% | 99.8% |
 | Nether | 99.99% | 99.99% | 82.9% | 96.0% |
 | End | 100% | 100% | 100% | 100% |

@@ -17,6 +17,7 @@ use crate::fetch::DownloadArgs;
 use crate::pack_source::{IndexArgs, select_pack};
 use crate::paths::site_slug;
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
+use crate::regen;
 use crate::reverse::OptionArgs;
 use crate::schem::{with_heights, world_extent};
 use crate::ui::progress;
@@ -42,9 +43,11 @@ pub struct Args {
     schem: Option<PathBuf>,
     #[command(flatten)]
     download: DownloadArgs,
-    /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for exact underground
+    /// An existing same-seed world for exact underground; --regen-seed generates one instead
     #[arg(long)]
     regen: Option<PathBuf>,
+    #[command(flatten)]
+    managed_regen: regen::Args,
     /// Find structures in the reconstructed overworld and crack the world seed from them (docs/seed.md);
     /// the report goes next to the output as OUT.seed.json
     #[arg(long)]
@@ -65,6 +68,7 @@ pub struct Args {
 pub fn run(a: Args) -> Result<()> {
     let total = Instant::now();
     let mut t = Timings::default();
+    let java = a.managed_regen.preflight()?;
     let slug = site_slug(&a.url);
     let data_dir = a.download.data.data_dir()?;
     let cache = a.download.data.mirror_dir(&a.url)?;
@@ -131,6 +135,16 @@ pub fn run(a: Args) -> Result<()> {
         let _ = std::fs::remove_dir_all(world_dir.parent().context("world dir")?);
     }
 
+    let generated = java
+        .map(|java| {
+            let maps =
+                maps.iter().map(|m| (m.dimension.as_str(), regen::rendered_chunks(&m.map, a.download.area))).collect();
+            let site = regen::Site { data_dir: &data_dir, mirror: &cache, mc: &pack.meta.mc_version, maps };
+            t.time("regen", || a.managed_regen.generate(&java, &site))
+        })
+        .transpose()?;
+    let regen_world = a.regen.clone().or(generated);
+
     let mut profiles = Vec::with_capacity(maps.len());
     for (i, m) in maps.iter().enumerate() {
         let opts = t.time("settings", || a.opts.options_for_map(&m.map, &m.dimension))?;
@@ -139,8 +153,7 @@ pub fn run(a: Args) -> Result<()> {
         profiles.push(p);
         let mask = p.mask.map_or(String::new(), |(lo, hi)| format!(", y {lo}..{hi} hidden by the map"));
         progress!("[3/4] reconstructing `{}` ({}, y {}..{}{mask})", m.id, m.dimension, p.min_y, p.max_y);
-        let regen = a
-            .regen
+        let regen = regen_world
             .as_ref()
             .map(|r| bmr_world::World::open(r, &m.dimension, Some(pack.registry.clone())))
             .transpose()?;
@@ -218,8 +231,8 @@ fn crack_seed(maps: &[Planned], world_dir: &Path, pack: &Pack, out: &Path, t: &m
     let seed = t.time("seed", || crate::seed::crack_world(&world, &pack.meta.mc_version, &report))?;
     match seed {
         Some(s) => println!(
-            "      seed report {}; re-run with --seed {s} for exact bedrock and deepslate layers, or --regen to \
-             fill hidden terrain exactly (docs/seed.md)",
+            "      seed report {}; re-run with --seed {s} for exact bedrock and deepslate layers, or --regen-seed {s} \
+             to fill hidden terrain exactly (needs Java, docs/seed.md)",
             report.display()
         ),
         None => println!("      seed report {}", report.display()),

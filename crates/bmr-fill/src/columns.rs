@@ -9,7 +9,7 @@ use bmr_invert::evidence::Evidence;
 use bmr_invert::face::Liquid;
 
 use crate::profile::Profile;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 pub type Column = (i32, i32);
 
@@ -90,6 +90,8 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
     let mut out = Vec::new();
     let empty = ColumnEvidence::default();
     let p = &bounds.profile;
+    let mut rock_columns: FxHashSet<Column> = FxHashSet::default();
+    let mut open_roofs: Vec<(Column, i32, i32, bool)> = Vec::new();
     for &col in &bounds.columns {
         let mut ys = observed_ys.get(&col).cloned().unwrap_or_default();
         ys.sort_unstable_by(|a, b| b.cmp(a));
@@ -112,9 +114,12 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
                     };
                     if p.masked(ylo) {
                         // left out of the render (nether roof): its drawn faces say nothing
-                        let roof = if rock_under { ylo } else { p.roof_from.max(ylo) };
-                        push(ylo, roof - 1, Fill::Air, floored);
-                        push(roof, yhi, Fill::Solid, floored);
+                        if rock_under {
+                            rock_columns.insert(col);
+                            push(ylo, yhi, Fill::Solid, floored);
+                        } else {
+                            open_roofs.push((col, ylo, yhi, floored));
+                        }
                     } else if yhi == p.max_y {
                         // open to the sky: anything in it would show its top face
                         push(ylo, yhi, Fill::Air, floored);
@@ -128,8 +133,26 @@ pub fn gaps(observed_ys: &FxHashMap<Column, Vec<i32>>, by_col: &EvidenceByColumn
             cursor = cursor.min(y - 1);
         }
     }
+    for (column, ylo, yhi, floored) in open_roofs {
+        let roof = (p.roof_from - roof_drop(column, &rock_columns)).max(ylo);
+        if ylo < roof {
+            out.push(Gap { column, ylo, yhi: roof - 1, fill: Fill::Air, floored });
+        }
+        if roof <= yhi {
+            out.push(Gap { column, ylo: roof, yhi, fill: Fill::Solid, floored });
+        }
+    }
     flood_beside_liquid(&mut out, p);
     out
+}
+
+/// Blocks the masked roof comes down by near rock reaching the mask (ceilings slope down to cave walls): one per
+/// step closer than `ROOF_RAMP` (Manhattan). Measured on the nether fixture, see research/improvement-audit.md A7.
+fn roof_drop((x, z): Column, rock: &FxHashSet<Column>) -> i32 {
+    const ROOF_RAMP: i32 = 4;
+    let within =
+        |d: i32| (-d..=d).any(|dx| [d - dx.abs(), dx.abs() - d].iter().any(|&dz| rock.contains(&(x + dx, z + dz))));
+    (1..ROOF_RAMP).find(|&d| within(d)).map_or(0, |d| ROOF_RAMP - d)
 }
 
 /// Enclosed air that shares heights with a neighbour column's liquid is that liquid: still water or lava next

@@ -11,6 +11,22 @@ fn column_gaps(observed: &[i32], ce: ColumnEvidence) -> Vec<(i32, i32, Fill)> {
 }
 
 #[test]
+fn masked_roof_comes_down_near_rock_reaching_the_mask() {
+    let p = Profile::for_dimension("minecraft:the_nether");
+    let bounds = Bounds { columns: (0..6).map(|x| (x, 0)).collect(), profile: p };
+    // column 0: rock drawn at the mask's lower edge; the others: open floor far below it
+    let observed = FxHashMap::from_iter((0..6).map(|x| ((x, 0), vec![if x == 0 { 89 } else { 40 }])));
+    let roof = |x: i32| {
+        let all = gaps(&observed, &FxHashMap::default(), &bounds);
+        all.iter().filter(|g| g.column == (x, 0) && g.fill == Fill::Solid && p.masked(g.ylo)).map(|g| g.ylo).min()
+    };
+    assert_eq!(roof(0), Some(90), "rock under the mask carries on up");
+    assert_eq!(roof(1), Some(105));
+    assert_eq!(roof(3), Some(107));
+    assert_eq!(roof(4), Some(p.roof_from), "out of the ramp's reach");
+}
+
+#[test]
 fn air_gap_under_the_cave_cutoff_turns_solid_below_its_evidence() {
     // seabed block at 47, open evidence at 46 (its bottom face was drawn), nothing below
     let ce = ColumnEvidence { open: vec![46], ..Default::default() };

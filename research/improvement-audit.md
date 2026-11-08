@@ -96,6 +96,14 @@ have tractable losses without a seed.
   (`profile.rs:35`) scores 88% in the band.
 - **Approach:** fit P(rock | y, distance to the nearest drawn rock under the mask, local ceiling slope) on the
   fixture instead of using one cut. The ceiling is truly hidden, so expect at most +1–2pp.
+- **Result 2026-11-08 (small positive, kept):** open columns within 3 steps of a column with rock reaching the
+  mask lower the cut by `4 - distance` (`columns.rs::roof_drop`). Nether occupied 82.913 → 82.945, exposed 88.063
+  → 88.274, solid IoU 94.091 → 94.144; other fixtures unchanged. Measured with
+  `crates/bmr-score/examples/roof_band.rs`. Leave-one-quadrant-out on the fixture: +0.033pp in total, positive in
+  3 of 4 quadrants (one fixture only: no second nether world exists).
+- **Dropped (held-out occupied, per-bucket cuts):** distance buckets −0.019pp, floor height −0.123, biome −0.239,
+  distance + biome −0.342; rock fraction within 8 or 24 columns +0.05 but more parameters than the ramp. Cells
+  of the band stay ambiguous at any feature tried: expect tenths of a pp at most, not the +1–2pp estimated above.
 
 ### Don't pursue
 Andesite, diorite, granite and tuff blobs, ores, hidden dry caves and buried aquifers are seed-only. That is

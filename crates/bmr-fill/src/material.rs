@@ -222,3 +222,7 @@ fn by_height_runs(
     }
     runs
 }
+
+#[cfg(test)]
+#[path = "material_tests.rs"]
+mod tests;

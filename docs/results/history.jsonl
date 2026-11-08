@@ -228,3 +228,4 @@
 {"time": "2026-11-08T00:31:36", "commit": "2bf34a6", "fixture": "nether", "args": [], "occupied": 82.913, "rendered": 99.994, "rendered_alike": 99.994, "exposed": 88.063, "solid_iou": 94.091, "surface": 100.0}
 {"time": "2026-11-08T02:23:25", "commit": "cbf0d9b", "fixture": "structures", "args": [], "occupied": 74.54, "rendered": 98.794, "rendered_alike": 99.98, "exposed": 84.554, "solid_iou": 94.081, "surface": 99.712}
 {"time": "2026-11-08T14:02:59", "commit": "b7885a8", "fixture": "nether", "args": [], "occupied": 82.945, "rendered": 99.994, "rendered_alike": 99.994, "exposed": 88.274, "solid_iou": 94.144, "surface": 100.0}
+{"time": "2026-11-08T14:05:17", "commit": "ab21ac9", "fixture": "vanilla", "args": [], "occupied": 75.346, "rendered": 98.937, "rendered_alike": 99.99, "exposed": 87.951, "solid_iou": 95.222, "surface": 99.941}

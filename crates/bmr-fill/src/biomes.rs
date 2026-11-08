@@ -6,7 +6,7 @@
 use std::collections::VecDeque;
 use std::collections::hash_map::Entry;
 
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 
 use bmr_invert::face::Cell;
 use bmr_invert::tints::{BiomeTint, TintSum, ranked};
@@ -120,15 +120,15 @@ fn overworld_columns(
     tints: &FxHashMap<(i32, i32), TintSum>,
     table: &[BiomeTint],
 ) -> FxHashMap<(i32, i32), String> {
-    let sandy = sandy_columns(blocks);
+    let surfaces = surfaces(blocks);
     let mut out: FxHashMap<(i32, i32), String> = FxHashMap::default();
     for (&col, t) in tints {
         let ranked = ranked(table, &t.means());
         let Some(&(best, first)) = ranked.first() else { continue };
-        let tied = ranked.iter().take_while(|(d, _)| *d <= best + TIE).map(|&(_, b)| b);
-        // mostly sand on top: a beach, if one draws these colours (water depth does not tell ocean from
-        // deep ocean or river from beach: measured on the vanilla fixture, all overlap)
-        let b = if sandy.contains(&col) { tied.clone().find(|b| b.ends_with("beach")).unwrap_or(first) } else { first };
+        let tied: Vec<&str> = ranked.iter().take_while(|(d, _)| *d <= best + TIE).map(|&(_, b)| b).collect();
+        let sandy = surfaces.get(&col).is_some_and(|s| s.sand > s.land());
+        let beach = sandy.then(|| tied.iter().copied().find(|b| b.ends_with("beach"))).flatten();
+        let b = beach.or_else(|| water_biome(&tied, &surfaces, col)).unwrap_or(first);
         out.insert(col, b.to_owned());
     }
     spread(&mut out, SPREAD);
@@ -155,29 +155,130 @@ fn spread(out: &mut FxHashMap<(i32, i32), String>, max: i32) {
 /// Tint distance (mean squared RGB error) within which biomes count as drawing the same colours.
 const TIE: u32 = 20;
 
-/// 4×4 columns whose top blocks are mostly sand or sandstone (water not counted).
-fn sandy_columns(blocks: &FxHashMap<Cell, BlockState>) -> FxHashSet<(i32, i32)> {
-    let mut top: FxHashMap<(i32, i32), (i32, &str)> = FxHashMap::default();
+/// What the top blocks of a 4×4 column (or a window of them) are.
+#[derive(Default, Clone, Copy)]
+struct Surface {
+    sand: u32,
+    water: u32,
+    blocks: u32,
+    /// Sum over the blocks of the height of the highest block that isn't water.
+    floor: i64,
+}
+
+impl Surface {
+    fn land(&self) -> u32 {
+        self.blocks - self.sand - self.water
+    }
+
+    fn add(&mut self, o: &Surface) {
+        self.sand += o.sand;
+        self.water += o.water;
+        self.blocks += o.blocks;
+        self.floor += o.floor;
+    }
+}
+
+fn surfaces(blocks: &FxHashMap<Cell, BlockState>) -> FxHashMap<(i32, i32), Surface> {
+    let mut top: FxHashMap<(i32, i32), (i32, &str, i32)> = FxHashMap::default();
     for (&(x, y, z), s) in blocks {
-        if top.get(&(x, z)).is_none_or(|&(ty, _)| y > ty) {
-            top.insert((x, z), (y, s.name.as_str()));
+        let e = top.entry((x, z)).or_insert((i32::MIN, "", i32::MIN));
+        if y > e.0 {
+            (e.0, e.1) = (y, s.name.as_str());
+        }
+        if s.name != "minecraft:water" && y > e.2 {
+            e.2 = y;
         }
     }
-    let mut count: FxHashMap<(i32, i32), (u32, u32)> = FxHashMap::default();
-    for (&(x, z), &(_, name)) in &top {
-        let (sand, land) = count.entry((x >> 2, z >> 2)).or_default();
-        match name {
-            "minecraft:sand" | "minecraft:sandstone" => *sand += 1,
-            "minecraft:water" => {}
-            _ => *land += 1,
-        }
+    let mut out: FxHashMap<(i32, i32), Surface> = FxHashMap::default();
+    for (&(x, z), &(_, name, floor)) in &top {
+        let s = out.entry((x >> 2, z >> 2)).or_default();
+        s.blocks += 1;
+        s.floor += i64::from(floor);
+        s.sand += u32::from(matches!(name, "minecraft:sand" | "minecraft:sandstone"));
+        s.water += u32::from(name == "minecraft:water");
     }
-    count.into_iter().filter(|(_, (sand, land))| sand > land).map(|(c, _)| c).collect()
+    out
+}
+
+fn window(surfaces: &FxHashMap<(i32, i32), Surface>, (x, z): (i32, i32), r: i32) -> Surface {
+    let mut sum = Surface::default();
+    (-r..=r)
+        .flat_map(|dx| (-r..=r).map(move |dz| (x + dx, z + dz)))
+        .filter_map(|c| surfaces.get(&c))
+        .for_each(|s| sum.add(s));
+    sum
+}
+
+/// Radii (4-block columns), share of sand, share of water and floor depth below sea level that split the biomes
+/// drawing the same colours; fitted on the vanilla and structures fixtures, see research/improvement-audit.md A6.
+const BEACH_RADIUS: i32 = 2;
+const BEACH_SAND: f32 = 0.02;
+const OPEN_RADIUS: i32 = 8;
+const OPEN_WATER: f32 = 0.95;
+const DEEP_FLOOR: f32 = 24.0;
+const SEA_LEVEL: f32 = 63.0;
+
+/// Picks among biomes tied on colour by the seabed around `col`. `None`: not a tie between water biomes.
+fn water_biome(tied: &[&'_ str], surfaces: &FxHashMap<(i32, i32), Surface>, col: (i32, i32)) -> Option<&'static str> {
+    let has = |b: &str| tied.iter().any(|t| t.trim_start_matches("minecraft:") == b);
+    let open = window(surfaces, col, OPEN_RADIUS);
+    let blocks = open.blocks.max(1) as f32;
+    let deep = SEA_LEVEL - open.floor as f32 / blocks >= DEEP_FLOOR;
+    if has("river") && has("ocean") && has("deep_ocean") {
+        let near = window(surfaces, col, BEACH_RADIUS);
+        if near.sand as f32 > BEACH_SAND * near.blocks.max(1) as f32 {
+            return Some("minecraft:beach");
+        }
+        if open.water as f32 >= OPEN_WATER * blocks {
+            return Some(if deep { "minecraft:deep_ocean" } else { "minecraft:ocean" });
+        }
+        return Some("minecraft:river");
+    }
+    [
+        ("lukewarm_ocean", "minecraft:lukewarm_ocean", "minecraft:deep_lukewarm_ocean"),
+        ("cold_ocean", "minecraft:cold_ocean", "minecraft:deep_cold_ocean"),
+        ("frozen_ocean", "minecraft:frozen_ocean", "minecraft:deep_frozen_ocean"),
+    ]
+    .into_iter()
+    .find(|(shallow, _, _)| has(shallow) && has(&format!("deep_{shallow}")))
+    .map(|(_, shallow, deep_one)| if deep { deep_one } else { shallow })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn surface(sand: u32, water: u32, depth: i64) -> Surface {
+        Surface { sand, water, blocks: 16, floor: (63 - depth) * 16 }
+    }
+
+    /// `f` for every column of a 17×17 window around the origin.
+    fn map(f: impl Fn(i32, i32) -> Surface) -> FxHashMap<(i32, i32), Surface> {
+        (-8..=8).flat_map(|x| (-8..=8).map(move |z| (x, z))).map(|(x, z)| ((x, z), f(x, z))).collect()
+    }
+
+    const DEFAULT_WATER: [&str; 4] = ["minecraft:plains", "minecraft:ocean", "minecraft:deep_ocean", "minecraft:river"];
+
+    #[test]
+    fn water_columns_tied_on_colour_are_told_by_the_seabed() {
+        let at = |m: &FxHashMap<(i32, i32), Surface>| water_biome(&DEFAULT_WATER, m, (0, 0));
+        assert_eq!(at(&map(|_, _| surface(0, 16, 10))), Some("minecraft:ocean"));
+        assert_eq!(at(&map(|_, _| surface(0, 16, 30))), Some("minecraft:deep_ocean"));
+        assert_eq!(at(&map(|x, _| surface(0, if x.abs() < 3 { 16 } else { 0 }, 3))), Some("minecraft:river"));
+        let sand = |x, z| if (x, z) == (1, 1) { 12 } else { 0 };
+        assert_eq!(at(&map(|x, z| surface(sand(x, z), 16 - sand(x, z), 5))), Some("minecraft:beach"));
+    }
+
+    #[test]
+    fn deep_warm_family_needs_a_deep_floor_and_other_ties_are_left_alone() {
+        let tied = ["minecraft:lukewarm_ocean", "minecraft:deep_lukewarm_ocean"];
+        assert_eq!(water_biome(&tied, &map(|_, _| surface(0, 16, 30)), (0, 0)), Some("minecraft:deep_lukewarm_ocean"));
+        assert_eq!(water_biome(&tied, &map(|_, _| surface(0, 16, 15)), (0, 0)), Some("minecraft:lukewarm_ocean"));
+        assert_eq!(
+            water_biome(&["minecraft:plains", "minecraft:beach"], &map(|_, _| surface(0, 16, 30)), (0, 0)),
+            None
+        );
+    }
 
     #[test]
     fn nether_biome_holds_for_the_whole_column_and_spreads() {

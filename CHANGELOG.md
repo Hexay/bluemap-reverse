@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - The hidden Nether roof comes down next to rock reaching the masked band instead of starting at one fixed height.
+- Open water told apart by its surroundings when biome colours tie: beach, river, ocean or deep ocean.
 - `bmr --version`.
 - Seed detection (`bmr structures`, `pull --crack-seed`) matches structure templates for villages, igloos, swamp
   huts and (new) woodland mansions: a candidate start is kept only when the town centre, igloo dome, hut or

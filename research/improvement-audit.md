@@ -5,8 +5,8 @@ docs/results/*.json + history.jsonl + bench.jsonl, docs/performance.md, docs/see
 research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
-A3, A4, A5 (`--seed`), F1a (`pull --crack-seed`), F2, F3, F5, F6, R1–R4, C1 (material tests), C8. Open: A6,
-A7, F1b (managed regen), F4, F7, R5, C2–C7, C9.
+A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F2, F3, F5, F6, R1–R4, C1 (material tests), C8. Open:
+F1b (managed regen), F4, F7, R5, C2–C7, C9.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's
@@ -90,6 +90,16 @@ have tractable losses without a seed.
   (deep ocean), the width of a water channel between land (river), and sand bordering ocean (beach, relaxing the
   per-4×4 `sandy_columns` majority at `:162-179`). Run this as a measured experiment and drop it if the
   classes still overlap.
+- **Result 2026-11-08 (positive, kept):** among biomes tied on colour, `biomes.rs::water_biome` picks by the
+  seabed: sand over 2% of the 20-block window → beach; water over 95% of the 68-block window → ocean, or deep
+  ocean when the mean floor is 24+ below sea level; else river. Lukewarm, cold and frozen oceans take the same
+  depth cut. Biome accuracy: vanilla 95.737 → 97.029, `biomes` 51.875 → 51.938; occupied unchanged everywhere.
+- **Structures not yet scored with this rule** (the run was stopped for memory). Offline, on that fixture's dumped
+  tints and surface biomes, the rule gets 17 148 more of 76 092 tinted columns right. The thresholds were chosen
+  on that data and vanilla together, so this is not a held-out figure. Cold and frozen oceans were not measured.
+- **Limits:** vanilla's 8 928 deep_lukewarm misses remain: its deep columns are not deeper than its shallow ones
+  (depth AUC 0.28–0.62), and a lower cut costs vanilla. At 24, 13 717 of 26 664 deep_lukewarm columns on
+  structures stay lukewarm; a cut of 22 fixes more there but gives back 13 columns on vanilla.
 
 ### A7. Nether roof band (masked y 90..127). Impact medium, effort M, research
 - **Evidence:** air→netherrack 3.45pp and netherrack→air 1.93pp. The fixed `roof_from: 108`

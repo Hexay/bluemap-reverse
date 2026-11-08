@@ -1,7 +1,8 @@
-//! `bmr reverse`: reconstruct from a local mirror with the library built from local debug-world files
-//! (development path; users run `bmr pull` with a pack).
+//! `bmr reverse`: reconstruct from a local mirror with the library built from local debug-world files or
+//! taken from a pack with `--pack` (development path; users run `bmr pull` with a pack).
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result};
@@ -10,7 +11,8 @@ use bmr_fill::{Given, Inferred, Profile};
 use bmr_invert::Library;
 use bmr_invert::drawn::DrawnHeights;
 use bmr_invert::timings::Timings;
-use bmr_world::Dimension;
+use bmr_invert::tints::BiomeTint;
+use bmr_world::{BlockRegistry, Dimension, PaletteStyle};
 
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
 use crate::ui::progress;
@@ -25,6 +27,9 @@ pub struct Args {
     out: PathBuf,
     #[command(flatten)]
     library: LibraryArgs,
+    /// Take library, biome tints, registry and template from this pack instead of the local debug-world files
+    #[arg(long)]
+    pack: Option<PathBuf>,
     /// Same-seed regeneration of the untouched terrain (tools/regen_world.py) for unseen cells + biomes
     #[arg(long)]
     regen: Option<PathBuf>,
@@ -137,23 +142,52 @@ fn settings_line(i: &Inferred) -> String {
     )
 }
 
-pub fn run(a: Args) -> Result<()> {
-    let total = Instant::now();
-    let mut t = Timings::default();
+/// What `reverse` needs besides the mirror, from a pack or from the local debug-world files.
+struct Sources {
+    lib: Library,
+    biome_tints: Vec<BiomeTint>,
+    registry: Arc<BlockRegistry>,
+    template: Vec<(String, Vec<u8>)>,
+    style: PaletteStyle,
+}
+
+fn sources_from_pack(path: &Path, t: &mut Timings) -> Result<Sources> {
+    let pack = t.time("pack_load", || bmr_pack::Pack::load(path))?;
+    let style = pack.palette_style();
+    Ok(Sources {
+        lib: pack.library,
+        biome_tints: pack.biome_tints,
+        registry: pack.registry,
+        template: pack.template,
+        style,
+    })
+}
+
+fn sources_from_debug_world(a: &Args, t: &mut Timings) -> Result<Sources> {
     let registry = t.time("registry", || a.world_args.registry())?.context("reverse needs the block registry")?;
     let (lib_map, lib_world) = a.library.library_sources(&registry)?;
     let style = lib_world.palette_style()?.context("library world has no palettes")?;
     let lib = t.time("library", || Library::build(&lib_map, &lib_world, &registry))?;
     t.extend("library", lib.stats.timings.clone());
-    progress!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
     let biome_tints = t.time("biome_tints", || match a.library.biomes_or_warn(&registry) {
         Some((m, w)) => bmr_invert::tints::learn(&m, &w),
         None => Ok(Vec::new()),
     })?;
+    let template = bmr_world::read_template(&a.library.template)?;
+    Ok(Sources { lib, biome_tints, registry, template, style })
+}
+
+pub fn run(a: Args) -> Result<()> {
+    let total = Instant::now();
+    let mut t = Timings::default();
+    let Sources { lib, biome_tints, registry, template, style } = match &a.pack {
+        Some(p) => sources_from_pack(p, &mut t)?,
+        None => sources_from_debug_world(&a, &mut t)?,
+    };
+    progress!("library: {} states ({} with overhanging geometry)", lib.stats.states, lib.stats.overhang_states);
 
     let map = a.mirror.open()?;
     let regen = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
-    let template = bmr_world::read_template(&a.library.template)?;
     let opts = t.time("settings", || a.opts.options_for_map(&map, &a.world_args.dimension))?;
     let inputs = Inputs {
         map: &map,

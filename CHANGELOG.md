@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `cargo test` gate on reconstruction accuracy: a committed crop of the `context` fixture is reversed with the
+  committed 26.3 pack and must stay above score floors (`tools/gen_accuracy_gate.py` regenerates the crop). Tests
+  also check that committed packs load and match `packs/index.json`; releases smoke-test the built binaries.
+- `bmr reverse --pack` takes the library from a pack instead of the local debug-world files; `bmr score --pack`
+  supplies the block registry when `--blocks` is missing.
 - The hidden Nether roof comes down next to rock reaching the masked band instead of starting at one fixed height.
 - Open water told apart by its surroundings when biome colours tie: beach, river, ocean or deep ocean.
 - `bmr --version`.

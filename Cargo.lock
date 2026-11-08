@@ -111,6 +111,7 @@ dependencies = [
  "bmr-seed",
  "bmr-world",
  "clap",
+ "flate2",
  "mimalloc",
  "rustc-hash",
  "serde",

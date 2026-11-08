@@ -1,8 +1,9 @@
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Instant;
 
 use anyhow::Result;
+use bmr_invert::Library;
 use bmr_world::World;
 use rustc_hash::FxHashMap;
 
@@ -36,23 +37,26 @@ pub struct Args {
     #[arg(long)]
     json: Option<PathBuf>,
     /// Pack whose library defines look-alike states: adds the look-alike-tolerant rendered metric and
-    /// drops look-alikes from the rendered confusions
+    /// drops look-alikes from the rendered confusions. Its registry is used when --blocks is missing
     #[arg(long)]
     pack: Option<PathBuf>,
 }
 
 /// State label → look-alike group id.
-fn lookalike_groups(pack: &Path) -> Result<FxHashMap<String, u32>> {
-    let lib = bmr_pack::Pack::load(pack)?.library;
+fn lookalike_groups(lib: &Library) -> FxHashMap<String, u32> {
     let mut groups = FxHashMap::default();
     for (id, g) in lib.lookalikes().into_iter().enumerate() {
         groups.extend(g.into_iter().map(|i| (lib.entries[i].state.to_string(), id as u32)));
     }
-    Ok(groups)
+    groups
 }
 
 pub fn run(a: Args) -> Result<()> {
-    let registry = a.world_args.registry()?;
+    let pack = a.pack.as_deref().map(bmr_pack::Pack::load).transpose()?;
+    let registry = match &pack {
+        Some(p) if !a.world_args.blocks.exists() => Some(p.registry.clone()),
+        _ => a.world_args.registry()?,
+    };
     let original = a.world_args.open(&a.original, &registry)?;
     let reconstructed = match &a.reconstructed {
         Some(p) => a.world_args.open(p, &registry)?,
@@ -75,7 +79,7 @@ pub fn run(a: Args) -> Result<()> {
 
     let t = Instant::now();
     let sample = a.sample.as_deref().and_then(|s| s.split_once("->")).map(|(o, r)| (o.trim(), r.trim()));
-    let lookalikes = a.pack.as_deref().map(lookalike_groups).transpose()?;
+    let lookalikes = pack.as_ref().map(|p| lookalike_groups(&p.library));
     let scope =
         bmr_score::Scope { columns: &filter, rendered: rendered.as_ref(), sample, lookalikes: lookalikes.as_ref() };
     let report = bmr_score::score(&original, &reconstructed, &scope, a.top)?;

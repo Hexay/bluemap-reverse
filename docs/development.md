@@ -14,7 +14,9 @@ python3 tools/test.py                    # tests of changed crates + their depen
 python3 tools/loop_timing.py --tests     # re-measure the loop
 ```
 
-Parsers of site, pack and region input have fuzz targets: see [fuzzing.md](fuzzing.md).
+Parsers of site, pack and region input have fuzz targets: see [fuzzing.md](fuzzing.md). `cargo test` includes an
+accuracy gate on a committed fixture crop (`crates/bmr-cli/tests/accuracy_gate.rs`; `tools/gen_accuracy_gate.py`
+regenerates the crop, floors live in the test).
 
 Unit tests go in a sibling `x_tests.rs` (`#[cfg(test)] #[path = "x_tests.rs"] mod tests;`); a block under ~60
 lines may stay inline.
@@ -68,7 +70,8 @@ bmr score <orig> [recon] --mirror <dir> # block-by-block score over rendered col
                                         # --pack <p>: also rendered accuracy counting look-alike states as correct
 bmr pack build --mc 26.3 [-o <file>]    # pack from the debug/biomes fixtures (tools/build_pack.py drives it)
 bmr pack lookalikes <pack> -o out.json  # groups of states BlueMap draws identically (unrecoverable from tiles)
-bmr reverse --mirror <dir> -o <world>   # reconstruct (needs work/cache/debug + work/worlds/debug, see Fixtures)
+bmr reverse --mirror <dir> -o <world>   # reconstruct (needs work/cache/debug + work/worlds/debug, see Fixtures;
+                                        # --pack <p>: library from a pack instead)
 bmr reverse … --zip out.zip             # also package the world folder (extracts to <folder>/, drop into saves/)
 bmr explain --mirror <dir> x,y,z --original <world>   # why a cell matched / didn't
 bmr explain --mirror <dir> x,z          # a column's matched blocks + fill evidence

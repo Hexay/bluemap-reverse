@@ -2,3 +2,4 @@
 *.png binary
 *.jar binary
 *.pack binary
+*.gz binary

@@ -6,7 +6,7 @@ research/bluemap-5.29-delta.md, a sweep of crates/*, and .github/workflows/*.
 
 **Status 2026-11-08:** done: A1, A2 (nether: basalt deltas; overworld measured, layering already matches),
 A3, A4, A5 (`--seed`), A6, A7, F1a (`pull --crack-seed`), F1b (`pull --regen-seed`; no JRE download, by decision),
-F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C3–C9 except C2. Open: F4, C2.
+F2, F3, F5, F6, F7, R1–R5, C1 (material tests), C2 (CI gaps 1, 2, 5, 6), C3–C9. Open: F4.
 
 Ranking = impact × (1 / effort). Effort: XS < 2 h, S ≈ half a day, M = 1–3 days, L = a week or more.
 "pp" = percentage points of the fixture's occupied voxels (`occupied.total`), taken from the result JSON's
@@ -227,7 +227,7 @@ non-empty sets or RwLock unwraps (`texture.rs:41-56`), which are fine.
   output equals `--no-window` output on a synthetic map, a pack-ranking table test, a `mirror` test against a
   local `tiny_http` server serving fixture bytes, and `assert_cmd` tests for exit codes (`seed` exits 3).
 
-### C2. CI has no accuracy regression gate (see CI gaps below). Impact high, effort M
+### C2. CI has no accuracy regression gate (see CI gaps below). Impact high, effort M — done (`crates/bmr-cli/tests/accuracy_gate.rs`)
 
 ### C3. Files close to the 300-line cap. Impact low now, effort S each — done (`face.rs`, `library.rs` split)
 No `.rs` or `.py` file is over 300 lines; the largest is 294. The ones close to the cap:
@@ -289,19 +289,19 @@ Sibling files fit the 300-line rule best.
 
 ## CI gaps (.github/workflows)
 
-1. **No accuracy gate.** Fixtures need Java, a server and BlueMap, and their worlds are git-ignored. Results are
+1. **No accuracy gate (done, option a).** Fixtures need Java, a server and BlueMap, and their worlds are git-ignored. Results are
    produced locally and committed by hand. Options: (a) commit a small cropped mirror plus its truth region (a few
    hundred KB, e.g. part of `context` and `superflat`) and add a `cargo test` that reverses it with the committed
    26.3 pack and asserts score floors; (b) a nightly workflow with `setup-java` and cached jars that runs
    `tools/reverse_fixture.py` on superflat and vanilla and fails on regressions against docs/results.
-2. **Committed packs are not validated.** No test loads `packs/*.pack` against `FORMAT = 5`
+2. **Committed packs are not validated (done, `bmr-pack/tests/committed_packs.rs`).** No test loads `packs/*.pack` against `FORMAT = 5`
    (`bmr-pack/src/format.rs:17`) or checks `packs/index.json` fingerprints and sha256 against the files. A format
    bump without a rebuild would ship packs the bundled binary cannot read.
 3. **Ignored tests never run.** `block_entities.rs:93` and `structure_set.rs:117` need `work/data` from
    `tools/setup.py`. A nightly job could run setup and then `cargo test -- --include-ignored`.
 4. **Python tools are only byte-compiled** (`ci.yml:62-70`). There are no tests and no lint (ruff) for 2 672
    lines, including `context_rules.py`, which ports game rules.
-5. **The release does not smoke-test its binaries.** `release.yml` builds and publishes without running
+5. **The release does not smoke-test its binaries (done, except x86_64-apple-darwin on the arm64 runner).** `release.yml` builds and publishes without running
    `bmr --version` or `bmr pack list` against the bundled `packs/`.
 6. **Minor:** the MSRV job only runs `cargo check` (`ci.yml:60`). `ci.yml` has no `permissions:` block and no
    `concurrency` cancel. Actions are pinned by tag, not SHA. There is no fuzz job (R4).

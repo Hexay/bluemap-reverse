@@ -4,6 +4,7 @@
 
 mod biomes;
 mod columns;
+mod copy;
 mod liquid;
 mod material;
 mod note_block;
@@ -12,6 +13,7 @@ mod redstone;
 mod regen;
 mod rules;
 mod stairs;
+mod typical;
 mod waterlog;
 
 use std::time::Instant;
@@ -199,9 +201,9 @@ fn prior_segments(
             Fill::Air => {}
         }
     }
-    let full_cube_at =
-        |c: Cell| inv.blocks.get(&c).filter(|&&e| lib.entries[e].full_cube).map(|&e| lib.entries[e].state.clone());
-    for r in solid_segments(&solid, &bounds.profile, registry, &full_cube_at) {
+    let full_cubes =
+        inv.blocks.iter().filter(|&(_, &e)| lib.entries[e].full_cube).map(|(&c, &e)| (c, &lib.entries[e].state));
+    for r in solid_segments(&solid, &bounds.profile, registry, full_cubes) {
         segments.push(Segment { column: r.column, ylo: r.ylo, yhi: r.yhi, state: table.intern(&r.state) });
     }
     segments

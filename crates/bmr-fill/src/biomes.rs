@@ -1,7 +1,7 @@
 //! Biomes without a seed. Minecraft stores one biome per 4×4×4 cell. Overworld biomes are told by the grass,
 //! foliage and water tints BlueMap drew (nearest entry of the pack's learned table, per 4×4 column); the
-//! nether's by what grows there (nylium, stems, soul sand, basalt), voted over each cell and its neighbours;
-//! the end's by distance from the main island.
+//! nether's by what grows there (nylium, stems, soul sand, basalt), voted over each 4×4 column and its
+//! neighbours; the end's by distance from the main island.
 
 use std::collections::VecDeque;
 use std::collections::hash_map::Entry;
@@ -46,11 +46,12 @@ const END_ISLAND: i64 = 1024;
 /// How far (in 4-block columns) an overworld column without tints looks for a tinted one.
 const SPREAD: i32 = 8;
 
+/// How far (in 4-block columns) a nether column without markers looks for a decided one.
+const NETHER_SPREAD: i32 = 64;
+
 pub struct Biomes {
     kind: Kind,
-    /// Nether: winning biome per 4×4×4 cell with evidence nearby.
-    cells: FxHashMap<Cell, &'static str>,
-    /// Overworld: biome per 4×4 column, spread from the tinted ones.
+    /// Overworld and nether: biome per 4×4 column, spread from the ones with evidence.
     columns: FxHashMap<(i32, i32), String>,
 }
 
@@ -62,17 +63,16 @@ impl Biomes {
         tints: &FxHashMap<(i32, i32), TintSum>,
         table: &[BiomeTint],
     ) -> Self {
-        let mut me = Self { kind: profile.kind, cells: FxHashMap::default(), columns: FxHashMap::default() };
-        match profile.kind {
-            Kind::Nether => me.cells = nether_cells(blocks),
-            Kind::Overworld if !table.is_empty() => me.columns = overworld_columns(blocks, tints, table),
-            _ => {}
-        }
-        me
+        let columns = match profile.kind {
+            Kind::Nether => nether_columns(blocks),
+            Kind::Overworld if !table.is_empty() => overworld_columns(blocks, tints, table),
+            _ => FxHashMap::default(),
+        };
+        Self { kind: profile.kind, columns }
     }
 
     /// Biome of the 4×4×4 cell at cell coordinates `c`; `None` keeps the chunk's default.
-    pub fn at(&self, c @ (cx, cy, cz): Cell) -> Option<&str> {
+    pub fn at(&self, (cx, _, cz): Cell) -> Option<&str> {
         match self.kind {
             Kind::Overworld => self.columns.get(&(cx, cz)).map(String::as_str),
             Kind::End => {
@@ -83,41 +83,34 @@ impl Biomes {
                     "minecraft:end_highlands"
                 })
             }
-            // no evidence within a cell: the nearest decided cell straight up or down, else the commonest biome
-            Kind::Nether => Some(
-                self.cells
-                    .get(&c)
-                    .or_else(|| {
-                        (1..16).find_map(|d| self.cells.get(&(cx, cy - d, cz)).or(self.cells.get(&(cx, cy + d, cz))))
-                    })
-                    .copied()
-                    .unwrap_or(NETHER[0]),
-            ),
+            Kind::Nether => Some(self.columns.get(&(cx, cz)).map_or(NETHER[0], String::as_str)),
         }
     }
 }
 
-fn nether_cells(blocks: &FxHashMap<Cell, BlockState>) -> FxHashMap<Cell, &'static str> {
-    let mut votes: FxHashMap<Cell, [f32; 5]> = FxHashMap::default();
-    for (&(x, y, z), s) in blocks {
+/// Nether biomes don't vary with height (the climate noise is 2D), so a column's markers vote at every depth:
+/// open caves and the floor far below decide the cells in between. Columns with no markers take the
+/// nearest decided column's biome.
+fn nether_columns(blocks: &FxHashMap<Cell, BlockState>) -> FxHashMap<(i32, i32), String> {
+    let mut votes: FxHashMap<(i32, i32), [f32; 5]> = FxHashMap::default();
+    for (&(x, _, z), s) in blocks {
         let name = s.name.trim_start_matches("minecraft:");
         if let Some(&(_, biome, w)) = MARKERS.iter().find(|(m, _, _)| name.contains(m)) {
-            votes.entry((x >> 2, y >> 2, z >> 2)).or_default()[biome] += w;
+            votes.entry((x >> 2, z >> 2)).or_default()[biome] += w;
         }
     }
-    let mut decided = FxHashMap::default();
-    for &c in votes.keys() {
-        for n in neighbours(c) {
-            decided.entry(n).or_insert_with(|| {
-                let mut sum = [0f32; 5];
-                for v in neighbours(n).filter_map(|m| votes.get(&m)) {
-                    (0..5).for_each(|i| sum[i] += v[i]);
-                }
-                NETHER[(0..5).max_by(|&a, &b| sum[a].total_cmp(&sum[b])).unwrap_or(0)]
-            });
+    let mut out = FxHashMap::default();
+    for &(x, z) in votes.keys() {
+        let mut sum = [0f32; 5];
+        let votes = &votes;
+        for v in (-1..=1).flat_map(|dx| (-1..=1).filter_map(move |dz| votes.get(&(x + dx, z + dz)))) {
+            (0..5).for_each(|i| sum[i] += v[i]);
         }
+        let best = (0..5).max_by(|&a, &b| sum[a].total_cmp(&sum[b])).unwrap_or(0);
+        out.insert((x, z), NETHER[best].to_owned());
     }
-    decided
+    spread(&mut out, NETHER_SPREAD);
+    out
 }
 
 /// Tinted columns take the nearest biome of `table`, ties (beach = plains colours) settled by the surface;
@@ -129,7 +122,6 @@ fn overworld_columns(
 ) -> FxHashMap<(i32, i32), String> {
     let sandy = sandy_columns(blocks);
     let mut out: FxHashMap<(i32, i32), String> = FxHashMap::default();
-    let mut queue = VecDeque::new();
     for (&col, t) in tints {
         let ranked = ranked(table, &t.means());
         let Some(&(best, first)) = ranked.first() else { continue };
@@ -138,10 +130,16 @@ fn overworld_columns(
         // deep ocean or river from beach: measured on the vanilla fixture, all overlap)
         let b = if sandy.contains(&col) { tied.clone().find(|b| b.ends_with("beach")).unwrap_or(first) } else { first };
         out.insert(col, b.to_owned());
-        queue.push_back((col, 0));
     }
+    spread(&mut out, SPREAD);
+    out
+}
+
+/// Breadth-first: every undecided column within `max` steps of a decided one takes the nearest one's biome.
+fn spread(out: &mut FxHashMap<(i32, i32), String>, max: i32) {
+    let mut queue: VecDeque<((i32, i32), i32)> = out.keys().map(|&c| (c, 0)).collect();
     while let Some(((x, z), d)) = queue.pop_front() {
-        if d == SPREAD {
+        if d == max {
             continue;
         }
         let b = out[&(x, z)].clone();
@@ -152,7 +150,6 @@ fn overworld_columns(
             }
         }
     }
-    out
 }
 
 /// Tint distance (mean squared RGB error) within which biomes count as drawing the same colours.
@@ -178,6 +175,25 @@ fn sandy_columns(blocks: &FxHashMap<Cell, BlockState>) -> FxHashSet<(i32, i32)> 
     count.into_iter().filter(|(_, (sand, land))| sand > land).map(|(c, _)| c).collect()
 }
 
-fn neighbours((x, y, z): Cell) -> impl Iterator<Item = Cell> {
-    (-1..=1).flat_map(move |dx| (-1..=1).flat_map(move |dy| (-1..=1).map(move |dz| (x + dx, y + dy, z + dz))))
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nether_biome_holds_for_the_whole_column_and_spreads() {
+        let soul = BlockState::new("minecraft:soul_sand".into(), vec![]);
+        let blocks: FxHashMap<Cell, BlockState> = (0..4).map(|x| ((x, 30, 0), soul.clone())).collect();
+        let b = Biomes::new(&blocks, &Profile::for_dimension("minecraft:the_nether"), &FxHashMap::default(), &[]);
+        let valley = Some("minecraft:soul_sand_valley");
+        assert_eq!(b.at((0, 7, 0)), valley, "marker cell");
+        assert_eq!(b.at((0, 25, 0)), valley, "far above the marker, same column");
+        assert_eq!(b.at((5, 2, 3)), valley, "column without markers takes the nearest decided one");
+        let empty = Biomes::new(
+            &FxHashMap::default(),
+            &Profile::for_dimension("minecraft:the_nether"),
+            &FxHashMap::default(),
+            &[],
+        );
+        assert_eq!(empty.at((0, 0, 0)), Some(NETHER[0]));
+    }
 }

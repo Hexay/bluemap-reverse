@@ -4,13 +4,13 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9830320,
-    "name": 9830394
+    "exact": 9830323,
+    "name": 9830397
   },
   "occupied": {
     "total": 103068,
-    "exact": 102988,
-    "name": 103062
+    "exact": 102991,
+    "name": 103065
   },
   "rendered": {
     "total": 51557,
@@ -89,18 +89,8 @@
     },
     {
       "original": "minecraft:dirt",
-      "reconstructed": "minecraft:bedrock",
-      "count": 2
-    },
-    {
-      "original": "minecraft:dirt",
       "reconstructed": "minecraft:sandstone",
       "count": 2
-    },
-    {
-      "original": "minecraft:grass_block[snowy=false]",
-      "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 1
     },
     {
       "original": "minecraft:grass_block[snowy=false]",

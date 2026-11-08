@@ -4,13 +4,13 @@
   "columns": 25600,
   "all": {
     "total": 9830400,
-    "exact": 9827625,
-    "name": 9827701
+    "exact": 9829894,
+    "name": 9829970
   },
   "occupied": {
     "total": 111474,
-    "exact": 108699,
-    "name": 108775
+    "exact": 110968,
+    "name": 111044
   },
   "rendered": {
     "total": 55502,
@@ -37,16 +37,6 @@
     "hits": 153312
   },
   "confusions": [
-    {
-      "original": "minecraft:dirt",
-      "reconstructed": "minecraft:bedrock",
-      "count": 1538
-    },
-    {
-      "original": "minecraft:grass_block[snowy=false]",
-      "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 731
-    },
     {
       "original": "minecraft:dirt",
       "reconstructed": "minecraft:sandstone",
@@ -160,6 +150,16 @@
     {
       "original": "minecraft:oak_leaves[distance=7,persistent=false,waterlogged=false]",
       "reconstructed": "minecraft:oak_leaves[distance=7,persistent=true,waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:waxed_exposed_copper_lantern[hanging=false,waterlogged=false]",
+      "reconstructed": "minecraft:exposed_copper_lantern[hanging=false,waterlogged=false]",
+      "count": 3
+    },
+    {
+      "original": "minecraft:waxed_oxidized_copper",
+      "reconstructed": "minecraft:oxidized_copper",
       "count": 3
     }
   ],

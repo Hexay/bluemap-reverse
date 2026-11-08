@@ -4,29 +4,29 @@
   "columns": 82944,
   "all": {
     "total": 31850496,
-    "exact": 29251679,
-    "name": 29254049
+    "exact": 29251728,
+    "name": 29254083
   },
   "occupied": {
-    "total": 10541062,
-    "exact": 7942245,
-    "name": 7944615
+    "total": 10541057,
+    "exact": 7942289,
+    "name": 7944644
   },
   "rendered": {
-    "total": 223054,
-    "exact": 220682,
-    "name": 223037
+    "total": 222868,
+    "exact": 220500,
+    "name": 222851
   },
-  "rendered_alike": 223032,
+  "rendered_alike": 222845,
   "exposed": {
-    "total": 419224,
-    "exact": 368614,
-    "name": 368700
+    "total": 419212,
+    "exact": 368701,
+    "name": 368788
   },
   "solid": {
-    "original": 10037765,
-    "reconstructed": 10540922,
-    "both": 10037625
+    "original": 10037587,
+    "reconstructed": 10540917,
+    "both": 10037447
   },
   "surface": {
     "total": 82944,
@@ -40,52 +40,52 @@
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 429840
+      "count": 429969
     },
     {
       "original": "minecraft:tuff",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 348191
+      "count": 348223
     },
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:stone",
-      "count": 257348
+      "count": 257332
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:stone",
-      "count": 245050
+      "count": 245633
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:stone",
-      "count": 237187
+      "count": 237178
     },
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:stone",
-      "count": 234741
+      "count": 234152
     },
     {
       "original": "minecraft:water[level=0]",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 84449
+      "count": 84463
     },
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 78389
+      "count": 78367
     },
     {
       "original": "minecraft:air",
       "reconstructed": "minecraft:stone",
-      "count": 71347
+      "count": 71391
     },
     {
       "original": "minecraft:dirt",
       "reconstructed": "minecraft:stone",
-      "count": 60267
+      "count": 60274
     },
     {
       "original": "minecraft:deepslate[axis=y]",
@@ -100,12 +100,12 @@
     {
       "original": "minecraft:gravel",
       "reconstructed": "minecraft:stone",
-      "count": 47999
+      "count": 47991
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:sand",
-      "count": 45469
+      "count": 45465
     },
     {
       "original": "minecraft:deepslate[axis=y]",
@@ -120,42 +120,42 @@
     {
       "original": "minecraft:granite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 24205
+      "count": 24229
     },
     {
       "original": "minecraft:diorite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 23801
+      "count": 23798
     },
     {
       "original": "minecraft:andesite",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 22035
+      "count": 21981
     },
     {
       "original": "minecraft:copper_ore",
       "reconstructed": "minecraft:stone",
-      "count": 19940
+      "count": 19953
     },
     {
       "original": "minecraft:coal_ore",
       "reconstructed": "minecraft:stone",
-      "count": 15848
+      "count": 15787
     },
     {
       "original": "minecraft:stone",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 15332
+      "count": 15383
     },
     {
       "original": "minecraft:iron_ore",
       "reconstructed": "minecraft:stone",
-      "count": 14061
+      "count": 14059
     },
     {
       "original": "minecraft:deepslate_redstone_ore[lit=false]",
       "reconstructed": "minecraft:deepslate[axis=y]",
-      "count": 10407
+      "count": 10412
     },
     {
       "original": "minecraft:lava[level=0]",
@@ -177,7 +177,7 @@
     {
       "original": "minecraft:water[level=1]",
       "reconstructed": "minecraft:water[level=0]",
-      "count": 1
+      "count": 2
     }
   ],
   "biome_confusions": [

@@ -9,6 +9,10 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - `bmr --version`.
+- `reverse` and `pull` infer the map's render settings from its tiles: caves drawn below BlueMap's y 55
+  cut-off, a Nether roof mask with faces inside it (shrunk or dropped), geometry beyond the build height. They
+  print one line with the settings used and warn where they differ from BlueMap's defaults; `--cave-y`,
+  `--mask-y`, `--min-y` and `--max-y` still override.
 - Global `-q`/`--quiet`: progress lines off; results, warnings and errors still print.
 - `bmr seed` exits with status 3 when it finishes without a world seed (exit codes in `bmr --help`).
 - `--data-dir` on `fetch`, `pack list` and `pack fetch`; `BMR_HOME` sets the data dir for all of them.

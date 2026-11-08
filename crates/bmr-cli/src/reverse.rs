@@ -5,8 +5,10 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use anyhow::{Context, Result};
-use bmr_fill::Profile;
+use bmr_fetch::LocalMap;
+use bmr_fill::{Given, Inferred, Profile};
 use bmr_invert::Library;
+use bmr_invert::drawn::DrawnHeights;
 use bmr_invert::timings::Timings;
 
 use crate::reconstruct::{Inputs, Options, reconstruct, report};
@@ -55,18 +57,18 @@ pub struct OptionArgs {
     /// Region windows reconstructed at the same time; each adds ~0.25 GB peak memory (structures fixture)
     #[arg(long, default_value_t = 4)]
     window_jobs: usize,
-    /// Lowest block y [default: the dimension's]
+    /// Lowest block y [default: the dimension's, lower if the tiles draw below it]
     #[arg(long, allow_hyphen_values = true)]
     min_y: Option<i32>,
-    /// Highest block y [default: the dimension's]
+    /// Highest block y [default: the dimension's, higher if the tiles draw above it]
     #[arg(long, allow_hyphen_values = true)]
     max_y: Option<i32>,
     /// The map's BlueMap `remove-caves-below-y`, not published by the site [default: BlueMap's for the
-    /// dimension: 55 overworld, none nether/end]
+    /// dimension (55 overworld, none nether/end), lower if the tiles draw dark caves below it]
     #[arg(long, allow_hyphen_values = true)]
     cave_y: Option<i32>,
-    /// Heights the map's `render-mask` leaves out, `lo,hi` or `none` [default: BlueMap's for the dimension:
-    /// 90,127 in the nether]
+    /// Heights the map's `render-mask` leaves out, `lo,hi` or `none` [default: BlueMap's for the dimension
+    /// (90,127 in the nether), shrunk or none if the tiles draw inside it]
     #[arg(long)]
     mask_y: Option<String>,
     /// World seed, a number or text as in server.properties (`bmr seed` finds it): unseen bedrock and
@@ -79,21 +81,30 @@ pub struct OptionArgs {
 }
 
 impl OptionArgs {
-    /// BlueMap's default map for `dimension`, with any heights given on the command line.
-    pub fn options(&self, dimension: &str) -> Result<Options> {
-        let mut profile = Profile::for_dimension(dimension);
-        profile.min_y = self.min_y.unwrap_or(profile.min_y);
-        profile.max_y = self.max_y.unwrap_or(profile.max_y);
-        profile.cave_y = self.cave_y.unwrap_or(profile.cave_y);
-        if let Some(m) = &self.mask_y {
-            profile.mask = match m.as_str() {
-                "none" => None,
-                _ => {
-                    let (lo, hi) = m.split_once(',').context("--mask-y takes lo,hi or none")?;
-                    Some((lo.trim().parse()?, hi.trim().parse()?))
-                }
-            };
-        }
+    fn given(&self) -> Result<Given> {
+        let mask = match self.mask_y.as_deref() {
+            None => None,
+            Some("none") => Some(None),
+            Some(m) => {
+                let (lo, hi) = m.split_once(',').context("--mask-y takes lo,hi or none")?;
+                Some(Some((lo.trim().parse()?, hi.trim().parse()?)))
+            }
+        };
+        Ok(Given { min_y: self.min_y, max_y: self.max_y, cave_y: self.cave_y, mask })
+    }
+
+    /// Options for `map`: render settings not given on the command line are inferred from its drawn faces (one
+    /// pass over its hires tiles, see bmr-fill infer.rs) and printed as one line.
+    pub fn options_for_map(&self, map: &LocalMap, dimension: &str) -> Result<Options> {
+        let given = self.given()?;
+        let defaults = Profile::for_dimension(dimension);
+        let mut profile = if given.complete() {
+            given.apply(defaults)
+        } else {
+            let inferred = bmr_fill::infer(defaults, &DrawnHeights::scan(map)?, &given);
+            println!("{}", settings_line(&inferred));
+            inferred.profile
+        };
         if let Some(s) = &self.seed {
             let seed = s.parse().unwrap_or_else(|_| i64::from(bmr_seed::java_random::string_hash(s)));
             profile = profile.with_seed(seed);
@@ -108,6 +119,18 @@ impl OptionArgs {
             show_unmatched: self.show_unmatched,
         })
     }
+}
+
+fn settings_line(i: &Inferred) -> String {
+    if i.changed.is_empty() {
+        return format!("render settings: {} (the tiles agree with BlueMap's defaults)", i.summary);
+    }
+    let flags: Vec<String> = i.changed.iter().map(|f| format!("--{f}")).collect();
+    format!(
+        "render settings: {} — warning: the tiles contradict BlueMap's defaults for {} (set them explicitly to override)",
+        i.summary,
+        flags.join(", ")
+    )
 }
 
 pub fn run(a: Args) -> Result<()> {
@@ -127,7 +150,7 @@ pub fn run(a: Args) -> Result<()> {
     let map = a.mirror.open()?;
     let regen = a.regen.as_ref().map(|p| a.world_args.open(p, &Some(registry.clone()))).transpose()?;
     let template = bmr_world::read_template(&a.library.template)?;
-    let opts = a.opts.options(&a.world_args.dimension)?;
+    let opts = t.time("settings", || a.opts.options_for_map(&map, &a.world_args.dimension))?;
     let inputs = Inputs {
         map: &map,
         lib: &lib,

@@ -9,6 +9,11 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - `bmr --version`.
+- Seed detection (`bmr structures`, `pull --crack-seed`) matches structure templates for villages, igloos, swamp
+  huts and (new) woodland mansions: a candidate start is kept only when the town centre, igloo dome, hut or
+  mansion entrance is actually there block for block, so house and player bells, snowy houses and spruce builds
+  no longer give wrong observations. Templates come from the server jar (`tools/gen_structure_templates.py`);
+  the `--truth` table gains an `unplaced` column and counts only detections that became observations.
 - `reverse` and `pull` infer the map's render settings from its tiles: caves drawn below BlueMap's y 55
   cut-off, a Nether roof mask with faces inside it (shrunk or dropped), geometry beyond the build height. They
   print one line with the settings used and warn where they differ from BlueMap's defaults; `--cave-y`,

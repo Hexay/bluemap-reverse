@@ -21,7 +21,7 @@ Step by step, or on any world: `bmr structures <world> -o obs.json`, then `bmr s
 | Structure seed (lower 48 bits) | done: `bmr-seed::solve` | observations → 48-bit candidates |
 | World seed (upper 16 bits) | done: `bmr-seed::upper` + `bmr-cubiomes` | 2^16 seeds ranked by how many observed structures their biomes allow; ties → shortcuts |
 | Shortcuts (tie-break) | done: `bmr-seed::world_seed` | text seed (`String.hashCode`) or blank-field random seed (`nextLong`, 2^48 reachable) |
-| Villages, igloos, swamp huts, mansions | TODO | need town-centre / dome / entrance isolation (rules in the research notes) |
+| Villages, igloos, swamp huts, mansions | done: `detect/verified.rs` | bell / dome / hut / plank clusters → placements confirmed by template match; on fixtures only villages occur (2/2) |
 | Nether floor bedrock, End pillars | TODO | alternative 48-bit sources for maps without structures |
 
 Observations: `{"mc": "26.3", "structures": [{"set": "shipwrecks", "chunks": [[x, z], …]}]}` — `set` is the
@@ -34,6 +34,12 @@ Observations: `{"mc": "26.3", "structures": [{"set": "shipwrecks", "chunks": [[x
   corner sits at a known offset from it (`research/seed-recovery/structure_start_rules.md`). Offsets are snapped to
   multiples of 16 within a small tolerance, which usually leaves one chunk; ambiguous ones keep all candidates.
   Ocean-ruin satellites (small ruins near a big one or each other) never sit on the start chunk and are dropped.
+- **Template match** (`detect/verified.rs`): villages (each bell → every town-centre template, bell and rotation
+  whose origin lands on a chunk corner), igloos (dome bbox → top template per rotation), swamp huts (7×9 spruce
+  bbox → `SwampHutPiece` boxes per orientation) and mansions (every chunk corner under the plank cluster → entrance
+  piece at its fixed offset per rotation). A start counts only if enough of the placed template's blocks are there
+  (`MIN_SCORE`, calibration in its doc), so house bells and player builds drop out. Templates: `detect/templates.json`,
+  regenerated from the server jar by `python3 tools/gen_structure_templates.py`.
 - **Lower 48**: each `random_spread` region draws its candidate chunk from `Random(seed + rx·341873128712 +
   rz·132897987541 + salt)`. For a linear set with range r = 2^k·m, the offset mod 2^k is bits [17, 17+k) of the LCG
   state, so the low 17+K seed bits are enumerated and filtered first (lifting), then the rest per survivor. An
@@ -54,8 +60,9 @@ Observations: `{"mc": "26.3", "structures": [{"set": "shipwrecks", "chunks": [[x
 - **Upper 16**: 10 viability checks leave a handful tied, 20 pick the true seed alone; a typed numeric seed (no
   shortcut) is found by biomes alone.
 - **End to end** (`fixtures/structures`: BlueMap render → reverse → detect → crack): monuments, jungle temples,
-  outposts, camps exact; shipwrecks 16/17, ocean ruins 14/18, portals 8/9 (~2.5 candidates each); the seed comes
-  out right from ~50 observations, ~10 s.
+  outposts, camps, villages (2/2, town centres match 0.82 and 1.0) exact; shipwrecks 16/17, ocean ruins 14/18,
+  portals 8/9 (~2.5 candidates each); 50 of 52 observations right; the seed comes out right from them, ~10 s. The
+  fixture has no igloos, swamp huts or mansions: those rules are checked on stamped templates (unit tests) only.
 
 ## Tests
 

@@ -47,13 +47,13 @@ pub fn run(a: Args) -> Result<()> {
         let present: HashSet<[i32; 2]> = scan.chunks.iter().copied().collect();
         let scores = evaluate(&scan.detections, &truth.structures, |c| present.contains(&c));
         println!(
-            "{:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7}",
-            "set", "truth", "found", "correct", "misplaced", "false", "options"
+            "{:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>8} {:>7}",
+            "set", "truth", "found", "correct", "misplaced", "false", "unplaced", "options"
         );
         for (set, s) in &scores {
             println!(
-                "{set:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7.1}",
-                s.truth, s.detections, s.correct, s.misplaced, s.false_positives, s.options
+                "{set:<20} {:>5} {:>5} {:>7} {:>9} {:>6} {:>8} {:>7.1}",
+                s.truth, s.detections, s.correct, s.misplaced, s.false_positives, s.unplaced, s.options
             );
         }
     }

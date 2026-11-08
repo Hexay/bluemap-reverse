@@ -66,6 +66,20 @@ jobs:
           else
             tar czf "$name.tar.gz" "$name"
           fi
+      # macos-latest is arm64 and cannot be assumed to run the x86_64 binary
+      - name: Smoke test
+        if: matrix.target != 'x86_64-apple-darwin'
+        shell: bash
+        run: |
+          dist="$PWD/dist/bluemap-reverse-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          bin="$dist/bmr"
+          [ -f "$bin.exe" ] && bin="$bin.exe"
+          # outside the checkout, so only packs/ next to the binary can be found
+          cd "$RUNNER_TEMP"
+          "$bin" --version
+          "$bin" pack list --offline --data-dir "$RUNNER_TEMP/bmr-empty" | tee packs.txt
+          [ "$(grep -c '^Minecraft' packs.txt)" -eq "$(ls "$dist"/packs/*.pack | wc -l)" ]
+          "$bin" pack info "$(ls "$dist"/packs/*.pack | head -n 1)"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}

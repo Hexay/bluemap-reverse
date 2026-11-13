@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -40,7 +40,7 @@ jobs:
           - { os: macos-latest, target: aarch64-apple-darwin, archive: tar.gz }
           - { os: macos-latest, target: x86_64-apple-darwin, archive: tar.gz }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -80,7 +80,7 @@ jobs:
           "$bin" pack list --offline --data-dir "$RUNNER_TEMP/bmr-empty" | tee packs.txt
           [ "$(grep -c '^Minecraft' packs.txt)" -eq "$(ls "$dist"/packs/*.pack | wc -l)" ]
           "$bin" pack info "$(ls "$dist"/packs/*.pack | head -n 1)"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
           path: dist/*.${{ matrix.archive }}
@@ -89,8 +89,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
